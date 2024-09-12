@@ -1,122 +1,179 @@
+<?php
+$nama_dokumen = "ICT_Tools_Request";
+require("pdf/mpdf60/mpdf.php");
+$mpdf = new mPDF('utf-8', 'A4');
+ob_start();
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ICT Tools and Equipment Request</title>
     <style>
     body {
         font-family: Arial, sans-serif;
-        margin: 20px;
+        font-size: 12px;
+    }
+
+    h1,
+    h2 {
+        text-align: right;
+        font-size: 16px;
+        margin-bottom: 5px;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
 
-    table,
     th,
     td {
         border: 1px solid black;
-    }
-
-    th,
-    td {
-        padding: 10px;
+        padding: 5px;
         text-align: left;
     }
 
-    .header {
-        font-weight: bold;
-        text-align: center;
+    th {
+        background-color: #f2f2f2;
     }
 
-    .note,
     .approval {
-        margin-top: 20px;
+        text-align: center;
     }
 
     .approval td {
         height: 50px;
-        text-align: center;
+    }
+
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+
+    .footer .note {
+        margin-bottom: 10px;
+    }
+
+    .footer .approval {
+        margin-top: 10px;
+    }
+
+    .note-box {
+        border: 1px solid black;
+        padding: 10px;
+        min-height: 50px;
+        margin-bottom: 10px;
+    }
+
+    /* Add layout for the logo and header */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     </style>
 </head>
 
 <body>
+    <div class="header">
+        <!-- Display the company logo on the left -->
+        <div>
+            <img src="<?php echo base_url('application/assets/img/' . $company_logo); ?>" alt="Company Logo"
+                height="100">
+        </div>
 
-    <h1 class="header">ICT TOOLS AND EQUIPMENT REQUEST</h1>
-    <h2 class="header">PERMINTAAN ALAT DAN PERLENGKAPAN ICT</h2>
+        <!-- Titles on the right -->
+        <div>
+            <h1>ICT TOOLS AND EQUIPMENT REQUEST</h1>
+            <h2>PERMINTAAN ALAT DAN PERLENGKAPAN ICT</h2>
+        </div>
+    </div>
 
+    <!-- Main Table -->
     <table>
         <tr>
-            <th>Project Reference<br>Referensi Proyek</th>
-            <td><?= isset($form->project_reference) ? $form->project_reference : 'N/A'; ?></td>
+            <th>Project Reference / Referensi Proyek</th>
+            <td><?php echo isset($form->project_reference) ? $form->project_reference : 'N/A'; ?></td>
         </tr>
         <tr>
-            <th>Purpose<br>Kebutuhan</th>
-            <td><?= isset($form->purpose) ? $form->purpose : 'N/A'; ?></td>
+            <th>Purpose / Kebutuhan</th>
+            <td><?php echo isset($form->purpose) ? $form->purpose : 'N/A'; ?></td>
         </tr>
         <tr>
-            <th>Required Date<br>Tanggal Dibutuhkan</th>
-            <td><?= isset($form->required_date) ? $form->required_date : 'N/A'; ?></td>
+            <th>Required Date / Tanggal Dibutuhkan</th>
+            <td><?php echo isset($form->required_date) ? $form->required_date : 'N/A'; ?></td>
         </tr>
         <tr>
-            <th>Department / Company<br>Departemen / Perusahaan</th>
-            <td><?= isset($form->company) ? $form->company : 'N/A'; ?></td>
+            <th>Company / Perusahaan</th>
+            <td><?php echo isset($form->company) ? $form->company : 'N/A'; ?></td>
         </tr>
         <tr>
-            <th>Location<br>Lokasi</th>
-            <td><?= isset($form->location) ? $form->location : 'N/A'; ?></td>
+            <th>Location / Lokasi</th>
+            <td><?php echo isset($form->location) ? $form->location : 'N/A'; ?></td>
         </tr>
     </table>
 
+    <!-- Details Table -->
     <table>
         <thead>
             <tr>
-                <th>[CODE] DESCRIPTION<br>[KODE] DESKRIPSI</th>
-                <th>TYPE / BRAND<br>TYPE / MEREK</th>
+                <th>DESKRIPSI</th>
+                <th>TYPE / BRAND</th>
                 <th>QTY</th>
-                <th>PURPOSE / REASON<br>KEGUNAAN / ALASAN</th>
+                <th>REASON / ALASAN</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($form_details as $detail): ?>
             <tr>
-                <td><?= isset($detail->description) ? $detail->description : 'N/A'; ?></td>
-                <td><?= isset($detail->type) ? $detail->type : 'N/A'; ?></td>
-                <td><?= isset($detail->quantity) ? $detail->quantity : 'N/A'; ?></td>
-                <td><?= isset($detail->reason) ? $detail->reason : 'N/A'; ?></td>
+                <td><?php echo isset($detail->description) ? $detail->description : 'N/A'; ?></td>
+                <td><?php echo isset($detail->type) ? $detail->type : 'N/A'; ?></td>
+                <td><?php echo isset($detail->quantity) ? $detail->quantity : 'N/A'; ?></td>
+                <td><?php echo isset($detail->reason) ? $detail->reason : 'N/A'; ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
 
-    <div class="note">
-        <strong>Note:</strong><br>
-        <?= isset($form->note) ? $form->note : 'N/A'; ?>
+    <!-- Footer Section -->
+    <div class="footer">
+        <div class="note">
+            <strong>Note:</strong>
+            <div class="note-box">
+                <?php echo isset($form->note) ? $form->note : 'N/A'; ?>
+            </div>
+        </div>
+
+        <div class="approval">
+            <table>
+                <tr>
+                    <td>Proposed by<br>........................</td>
+                    <td>Acknowledge by<br>........................</td>
+                    <td>Approved by<br>........................</td>
+                </tr>
+                <tr>
+                    <td>Date<br>........................</td>
+                    <td>Date<br>........................</td>
+                    <td>Date<br>........................</td>
+                </tr>
+            </table>
+        </div>
     </div>
-
-    <div class="approval">
-        <table>
-            <tr>
-                <td>Proposed by<br>........................</td>
-                <td>Acknowledge by<br>........................</td>
-                <td>Approved by<br>........................</td>
-            </tr>
-            <tr>
-                <td>Date<br>........................</td>
-                <td>Date<br>........................</td>
-                <td>Date<br>........................</td>
-            </tr>
-        </table>
-    </div>
-
-    <button onclick="window.print()">Print</button>
-
 </body>
 
 </html>
+
+<?php
+$html = ob_get_contents();
+ob_end_clean();
+$mpdf->WriteHTML(utf8_encode($html));
+$mpdf->Output($nama_dokumen . ".pdf", 'I');
+exit;
+?>

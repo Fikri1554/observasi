@@ -92,10 +92,9 @@
         $('#btnSaveFormDetail').click(function(e) {
             e.preventDefault();
 
-            // Buat FormData baru untuk mengirimkan data
+
             var formData = new FormData();
 
-            // Ambil data dari form sesuai dengan ID input masing-masing
             formData.append('description', $('#txtdescription').val());
             formData.append('type', $('#txttype').val());
             formData.append('reason', $('#txtreason').val());
@@ -103,16 +102,13 @@
             formData.append('required_date', $('#txtRequiredDate').val());
             formData.append('note', $('#txtnote').val());
 
-            // Pastikan Form ID diisi
             if ($('#txtIdForm').val() === "") {
                 alert('Form ID is missing!');
                 return;
             }
 
-            // Tambahkan ID form ke FormData
             formData.append('id_form', $('#txtIdForm').val());
 
-            // AJAX request untuk menyimpan detail form
             $.ajax({
                 url: '<?php echo base_url("form/saveFormRequestDetail"); ?>',
                 type: 'POST',
@@ -175,22 +171,8 @@
 
     }
 
-    function ViewPrint(id) {
-        $.ajax({
-            url: '<?= base_url("form/previewPrint"); ?>' + '/' +
-                id, // URL yang sesuai dengan fungsi controller
-            type: 'GET',
-            success: function(response) {
-                // Memasukkan isi halaman preview ke dalam modal
-                $('#printPreviewModal .modal-body').html(response);
-
-                // Menampilkan modal
-                $('#printPreviewModal').modal('show');
-            },
-            error: function() {
-                alert('Gagal memuat pratinjau cetak.');
-            }
-        });
+    function ViewPrint(id = '') {
+        window.open('<?php echo base_url('form/previewPrint');?>' + '/' + id, '_blank');
     }
 
 
@@ -367,29 +349,6 @@
                     </div>
                 </div>
 
-                <!-- Modal untuk preview print -->
-                <div id="printPreviewModal" class="modal fade" tabindex="-1" role="dialog"
-                    aria-labelledby="printPreviewLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="printPreviewLabel">Print Preview</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <!-- Konten pratinjau cetak akan dimasukkan di sini -->
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-primary" onclick="window.print();">Print</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
                 <div class="form-panel" id="idFormDetail" style="display:none;">
                     <div id="idFieldDetail">
                         <div class="row" style="margin-bottom: 15px;">
@@ -503,8 +462,6 @@
                     <button type="button" id="btnBack" class="btn btn-danger btn-sm"
                         onclick="reloadPage();">Kembali</button>
                 </div>
-
-
 
             </section>
         </section>

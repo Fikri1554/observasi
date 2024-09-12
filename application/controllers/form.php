@@ -25,7 +25,7 @@ class Form extends CI_Controller
 
 		foreach($data as $key => $value) {
 			$btnDetail = "<button onclick=\"addDetail('".$value->id."');\" title=\"Add Detail\" class=\"btn btn-primary btn-xs\" id=\"btnAdd\" type=\"button\"><i class=\"glyphicon glyphicon-plus\" ></i></button>";
-			$btnView = "<button onclick=\"ViewPrint('".$value->id."');\" class=\"btn btn-info btn-xs\" id=\"btnEdit\" type=\"button\"><i class=\"fa fa-eye\"></i> View</button>";
+			$btnExport = "<button onclick=\"ViewPrint('".$value->id."');\" class=\"btn btn-success btn-xs\" id=\"btnEdit\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
 			
 			$tr .= "<tr>";
 				$tr .= "<td align=\"center\" style=\"font-size:12px;vertical-align:top;\">".$no."</td>";
@@ -35,7 +35,7 @@ class Form extends CI_Controller
 				$tr .= "<td align=\"left\" style=\"font-size:12px;vertical-align:top;\">".$value->company."</td>";
 				$tr .= "<td align=\"center\" style=\"font-size:12px;vertical-align:top;\">".$value->location."</td>";
 				$tr .= "<td align=\"left\" style=\"font-size:12px;vertical-align:top;\">".$value->divisi."</td>";
-				$tr .= "<td align=\"center\" style=\"font-size:12px;vertical-align:top;\">".$btnView."</td>";
+				$tr .= "<td align=\"center\" style=\"font-size:12px;vertical-align:top;\">".$btnExport."</td>";
 			$tr .= "</tr>";
 			
 			$no++;
@@ -48,25 +48,37 @@ class Form extends CI_Controller
 		$this->load->view('myApps/form', $dataOut);
 	}
 
-	public function previewPrint($id) {
+	function previewPrint($id) {
 		$id = intval($id);
 
+		
 		$queryForm = "SELECT * FROM `form` WHERE `id` = $id AND `sts_delete` = 0";
 		$form = $this->myapp->getDataQueryDB6($queryForm);
 
-		$queryFormDetail = "SELECT * FROM `form_detail` WHERE `id_form` = $id AND `sts_delete` = 0";
-		$form_details = $this->myapp->getDataQueryDB6($queryFormDetail);
-
 		
-		$data = array(
-			'form' => $form[0], 
-			'form_details' => $form_details
-		);
+		if (count($form) > 0) {
+			
+			$company_name = $form[0]->company;
+			error_log("Company name from DB: " . $company_name); 
 
-		$this->load->view('myApps/previewPrint', $data);
+			$company_logo = $this->getCompanyLogo($company_name);
+
+			$queryFormDetail = "SELECT * FROM `form_detail` WHERE `id_form` = $id AND `sts_delete` = 0";
+			$form_details = $this->myapp->getDataQueryDB6($queryFormDetail);
+
+			$data = array(
+				'form' => $form[0],
+				'form_details' => $form_details,
+				'company_logo' => $company_logo
+			);
+
+			
+			$this->load->view('myApps/previewPrint', $data);
+		} else {
+		
+			show_error('Form not found', 404);
+		}
 	}
-
-
 
 
 	function saveFormRequest()
@@ -154,12 +166,13 @@ class Form extends CI_Controller
 		try {
 			// Insert data baru
 			$this->myapp->insDataDb6($dataInsDet, "form_detail");
-
+			$response['status'] = "Insert Success!";
+			
 			$this->db->select('*');
 			$this->db->where('sts_delete', 0);
-			$query = $this->db->get('form_detail');
+			$query = $this->myapp->getDataQueryDB6('form_detail');
 			$response['data'] = $query->result_array(); 
-			$response['status'] = "Insert Success!";
+			
 		} catch (Exception $e) {
 			$response['status'] = "Failed to Insert: " . $e->getMessage();
 		}
@@ -167,8 +180,6 @@ class Form extends CI_Controller
 		echo json_encode($response);
 	}
 
-
-	
 	function getOptMstDivisi($userDiv = "")
 	{
 		$opt = "<option value=\"\">- Select -</option>";
@@ -193,17 +204,24 @@ class Form extends CI_Controller
     
     function getOptCompany()
 	{
-		$optNya = "";
-
-		$sql = "SELECT nmcmp FROM tblMstCmpNSrt WHERE deletests = '0' ORDER BY nmcmp ASC";
+		$optNya = "<option value=\"\">- Select -</option>";
+	
+		$sql = "SELECT kdcmp, nmcmp 
+				FROM tblMstCmpNSrt 
+				WHERE kdcmp IN ('02', '01', '21', '63', '09', '67') 
+				AND deletests = '0' 
+				ORDER BY FIELD(kdcmp, '02', '01', '21', '63', '09', '67') 
+				LIMIT 6";
+		
 		$rsl = $this->myapp->getDataQueryDB6($sql);
 
 		foreach ($rsl as $key => $value)
 		{
-			$optNya .= "<option value=\"".$value->nmcmp."\">".$value->nmcmp."</option>";
+			$optNya .= "<option value=\"".$value->nmcmp."\" data-logo=\"".$logo_url."\">".$value->nmcmp."</option>";
 		}
 		return $optNya;
 	}
-    
 
+
+    
 }
