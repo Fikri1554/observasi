@@ -67,8 +67,11 @@
                 <td align="center" style="font-size:12px;vertical-align:top;">${$('#txtlocation').val()}</td>
                 <td align="left" style="font-size:12px;vertical-align:top;">${$('#slcDivisi').val()}</td>
                 <td align="center" style="font-size:12px;vertical-align:top;">
-                    <button onclick="editData('${id}');" class="btn btn-info btn-xs" type="button">
-                        <i class="fa fa-edit"></i> Edit
+                    <button onclick="ViewPrint('${id}');" class="btn btn-succes btn-xs" type="button">
+                        <i class="fa fa-eye"></i> View
+                    </button>
+                    <button onclick="deleteData('${id}');" class="btn btn-danger btn-xs" type="button">
+                        <i class="fa fa-trash-o"></i> View
                     </button>
                 </td>
             </tr>`;
@@ -91,7 +94,6 @@
     $(document).ready(function() {
         $('#btnSaveFormDetail').click(function(e) {
             e.preventDefault();
-
 
             var formData = new FormData();
 
@@ -142,7 +144,6 @@
         var filteredData = data.filter(function(item) {
             return item.sts_delete == 0;
         });
-
         if (filteredData.length === 0) {
             var emptyRow = $(
                 '<tr><td colspan="7" style="text-align:center; padding:10px;">No data available</td></tr>');
@@ -164,15 +165,120 @@
                 tbody.append(row);
             });
         }
-
         table.append(tbody);
-
         $('#tableFormDetail').show();
-
     }
 
+    function editData(id = "") {
+        $("#idLoading").show();
+
+        $.post('<?php echo base_url("form/editData"); ?>', {
+                idForm: id
+            },
+            function(data) {
+                console.log("Data received:", data);
+                $("#idLoading").hide();
+
+                if (Array.isArray(data) && data.length > 0) {
+                    $("#DataTableRequest").hide();
+                    $("#idFormDetail").show(200);
+
+
+                    $("#idFieldDetail").empty();
+
+                    data.forEach(function(record, index) {
+
+                        let formDetail = `
+                    <div class="row" style="margin-bottom: 15px;">
+                        <div class="col-md-12">
+                            <legend><label id="lblForm"> Edit Request Detail #${index + 1}</label></legend>
+                            <div class="form-row">
+                                <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                    <div class="form-group">
+                                        <label for="txtdescription_${index}"><u>Description:</u></label>
+                                        <input type="text" name="description[]" class="form-control input-sm"
+                                            id="txtdescription_${index}" placeholder="Description" autocomplete="off" value="${record.description || ''}">
+                                    </div>
+                                </div>
+                                <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                    <div class="form-group">
+                                        <label for="txttype_${index}"><u>Type:</u></label>
+                                        <input type="text" name="type[]" class="form-control input-sm"
+                                            id="txttype_${index}" placeholder="Type" autocomplete="off" value="${record.type || ''}">
+                                    </div>
+                                </div>
+                                <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                    <div class="form-group">
+                                        <label for="txtreason_${index}"><u>Reason:</u></label>
+                                        <input type="text" name="reason[]" class="form-control input-sm"
+                                            id="txtreason_${index}" placeholder="Reason" autocomplete="off" value="${record.reason || ''}">
+                                    </div>
+                                </div>
+                                <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                    <div class="form-group">
+                                        <label for="txtquantity_${index}"><u>Quantity:</u></label>
+                                        <input type="text" name="quantity[]" class="form-control input-sm"
+                                            id="txtquantity_${index}" value="${record.quantity || 0}" onkeypress="return isNumber(event)"
+                                            autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                    <div class="form-group">
+                                        <label for="txtRequiredDate_${index}"><u>Required Date:</u></label>
+                                        <input type="date" name="required_date[]" class="form-control input-sm"
+                                            id="txtRequiredDate_${index}" autocomplete="off" value="${record.required_date || ''}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                    <div class="form-group">
+                                        <label for="txtnote_${index}"><u>Note:</u></label>
+                                        <input type="text" name="note[]" class="form-control input-sm" id="txtnote_${index}"
+                                            autocomplete="off" value="${record.note || ''}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                        $("#idFieldDetail").append(formDetail);
+                    });
+                } else {
+                    alert("No data found.");
+                }
+            },
+            "json"
+        ).fail(function() {
+            alert("Failed to retrieve data. Please try again.");
+            $("#idLoading").hide();
+        });
+    }
+
+
     function ViewPrint(id = '') {
-        window.open('<?php echo base_url('form/previewPrint');?>' + '/' + id, '_blank');
+        window.open('<?php echo base_url('form/previewPrint');?>' + '/' + id,
+            '_blank');
+    }
+
+    function delData(id) {
+        var cfm = confirm("Yakin Hapus..??");
+        if (cfm) {
+            $.post('<?php echo base_url("form/delData"); ?>', {
+                    id: id,
+                    typeDel: "delForm"
+                },
+                function(response) {
+                    if (response.status === "Delete Success..!!") {
+                        alert("Data berhasil dihapus!");
+                        $("#row_" + id).remove();
+                    } else {
+                        alert("Gagal menghapus data: " + response);
+                    }
+                },
+                "json"
+            ).fail(function() {
+                alert("Terjadi kesalahan pada server, coba lagi nanti.");
+            });
+        }
     }
 
 
@@ -258,7 +364,6 @@
                                                             <div class="form-group">
                                                                 <label for="slcCompany"><b><u>Company :</u></b></label>
                                                                 <select id="slcCompany" class="form-control input-sm">
-                                                                    <option value="">- Select -</option>
                                                                     <?php echo $getOptCompany; ?>
                                                                 </select>
                                                             </div>
@@ -415,7 +520,6 @@
                         <div class="col-md-12 col-xs-12">
                             <div class="form-group" align="center">
                                 <input type="hidden" name="txtIdForm" id="txtIdForm" value="">
-                                <input type="hidden" name="txtidFormDetail" id="txtidFormDetail" value="">
                                 <button id="btnSaveFormDetail" class="btn btn-primary btn-sm" name="btnSave"
                                     title="Save">
                                     <i class="fa fa-check-square-o"></i> Save
@@ -428,7 +532,6 @@
                         </div>
                     </div>
                 </div>
-
 
                 <div class="form-panel" id="tableFormDetail" style="display:none;">
                     <div class="row mt" id="idData1">
@@ -447,6 +550,8 @@
                                             <th style="width:15%; padding: 10px; border: 1px solid #ddd;">Required Date
                                             </th>
                                             <th style="width:30%; padding: 10px; border: 1px solid #ddd;">Note</th>
+                                            <th style="width:30%; padding: 10px; border: 1px solid #ddd;">Action</th>
+
                                         </tr>
                                     </thead>
                                     <tbody>

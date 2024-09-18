@@ -47,7 +47,10 @@ ob_start();
     }
 
     .approval td {
-        height: 50px;
+        height: 150px;
+        /* Increase the height of the signature boxes */
+        width: 300px;
+        /* Increase the width of the signature boxes */
     }
 
     .footer {
@@ -59,6 +62,7 @@ ob_start();
 
     .footer .note {
         margin-bottom: 10px;
+        height: 100px;
     }
 
     .footer .approval {
@@ -78,6 +82,17 @@ ob_start();
         justify-content: space-between;
         align-items: center;
     }
+
+    /* New CSS for signature box */
+    .signature-box {
+        border: 1px solid black;
+        height: 150px;
+        /* Adjust height */
+        width: 300px;
+        /* Adjust width */
+        display: inline-block;
+        vertical-align: top;
+    }
     </style>
 </head>
 
@@ -85,8 +100,7 @@ ob_start();
     <div class="header">
         <!-- Display the company logo on the left -->
         <div>
-            <img src="<?php echo base_url('application/assets/img/' . $company_logo); ?>" alt="Company Logo"
-                height="100">
+            <?php echo $imageLogo; ?>
         </div>
 
         <!-- Titles on the right -->
@@ -154,9 +168,15 @@ ob_start();
         <div class="approval">
             <table>
                 <tr>
-                    <td>Proposed by<br>........................</td>
-                    <td>Acknowledge by<br>........................</td>
-                    <td>Approved by<br>........................</td>
+                    <td>Proposed by<br>
+                        <div class="signature-box"></div>
+                    </td>
+                    <td>Acknowledge by<br>
+                        <div class="signature-box"></div>
+                    </td>
+                    <td>Approved by<br>
+                        <div class="signature-box"></div>
+                    </td>
                 </tr>
                 <tr>
                     <td>Date<br>........................</td>
