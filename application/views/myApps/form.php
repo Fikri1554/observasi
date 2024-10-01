@@ -20,7 +20,9 @@
             });
 
             formData.append('slcCompany', $('#slcCompany').val());
+            formData.append('slcCompanyText', $("#slcCompany option:selected").text());
             formData.append('slcDivisi', $('#slcDivisi').val());
+            formData.append('slcDepartment', $('#slcDepartment').val()); // Append selected department
             formData.append('txtIdForm', $('#txtIdForm').val());
 
             $.ajax({
@@ -30,18 +32,15 @@
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    if (response.includes("Update Success")) {
+                    if (response.includes("Insert Success")) {
                         alert(response);
-                        updateTableRow();
-                    } else if (response.includes("Insert Success")) {
-                        alert(response);
-                        addTableRow(response);
                     } else if (response.startsWith("Failed =>")) {
                         alert("Gagal: " + response);
                     } else {
-                        alert("Data berhasil disimpan!" + response);
+                        alert("Data berhasil disimpan! " + response);
                     }
                     $('#idFormModal').modal('hide');
+                    reloadPage(); // Function to refresh page or table
                 },
                 error: function(xhr, status, error) {
                     console.log(error);
@@ -49,209 +48,206 @@
                 }
             });
         });
-
-        function addTableRow(id) {
-            var rowCount = $('#idTbody tr').length + 1;
-
-            var newRow = `
-            <tr data-id="${id}">
-                <td align="center" style="font-size:12px;vertical-align:top;">${rowCount}</td>
-                <td align="center">
-                    <button onclick="addDetail('${id}');" title="Add Detail" class="btn btn-primary btn-xs" type="button">
-                        <i class="glyphicon glyphicon-plus"></i>
-                    </button>
-                </td>
-                <td align="center" style="font-size:12px;vertical-align:top;">${$('#txtprojectReference').val()}</td>
-                <td align="center" style="font-size:12px;vertical-align:top;">${$('#txtpurpose').val()}</td>
-                <td align="left" style="font-size:12px;vertical-align:top;">${$('#slcCompany').val()}</td>
-                <td align="center" style="font-size:12px;vertical-align:top;">${$('#txtlocation').val()}</td>
-                <td align="left" style="font-size:12px;vertical-align:top;">${$('#slcDivisi').val()}</td>
-                <td align="center" style="font-size:12px;vertical-align:top;">
-                    <button onclick="ViewPrint('${id}');" class="btn btn-succes btn-xs" type="button">
-                        <i class="fa fa-eye"></i> View
-                    </button>
-                    <button onclick="deleteData('${id}');" class="btn btn-danger btn-xs" type="button">
-                        <i class="fa fa-trash-o"></i> View
-                    </button>
-                </td>
-            </tr>`;
-
-            $('#idTbody').append(newRow);
-        }
-
-        function updateTableRow() {
-            var id = $('#txtIdForm').val();
-            var row = $('tr[data-id="' + id + '"]');
-
-            row.find('td:eq(2)').text($('#txtprojectReference').val());
-            row.find('td:eq(3)').text($('#txtpurpose').val());
-            row.find('td:eq(4)').text($('#slcCompany').val());
-            row.find('td:eq(5)').text($('#txtlocation').val());
-            row.find('td:eq(6)').text($('#slcDivisi').val());
-        }
     });
 
     $(document).ready(function() {
-        $('#btnSaveFormDetail').click(function(e) {
-            e.preventDefault();
-
+        $("#btnSaveFormDetail").click(function() {
             var formData = new FormData();
+            var formId = $("#txtIdForm").val();
 
-            formData.append('description', $('#txtdescription').val());
-            formData.append('type', $('#txttype').val());
-            formData.append('reason', $('#txtreason').val());
-            formData.append('quantity', $('#txtquantity').val());
-            formData.append('required_date', $('#txtRequiredDate').val());
-            formData.append('note', $('#txtnote').val());
+            formData.append('id_form', formId);
 
-            if ($('#txtIdForm').val() === "") {
-                alert('Form ID is missing!');
-                return;
+            function appendData(fieldName, selector) {
+                var values = $(selector).map(function() {
+                    return $(this).val();
+                }).get();
+                formData.append(fieldName, values.join('*'));
             }
 
-            formData.append('id_form', $('#txtIdForm').val());
+            appendData('descriptions', "input[name^='txtdescription']");
+            appendData('types', "input[name^='txttype']");
+            appendData('reasons', "input[name^='txtreason']");
+            appendData('quantities', "input[name^='txtquantity']");
+            appendData('required_dates', "input[name^='txtrequired_date']");
+            appendData('notes', "input[name^='txtnote']");
+
+            // Simple validation before sending
+            if ($("input[name^='txtdescription']").val() === "" ||
+                $("input[name^='txttype']").val() === "" ||
+                $("input[name^='txtreason']").val() === "") {
+                alert("Description, Type, and Reason fields are required.");
+                return false;
+            }
+
+            $("#idLoading").show(); // Show loading while processing
 
             $.ajax({
-                url: '<?php echo base_url("form/saveFormRequestDetail"); ?>',
+                url: '<?php echo base_url('form/saveFormRequestDetail'); ?>',
                 type: 'POST',
                 data: formData,
-                contentType: false,
                 processData: false,
-                dataType: 'json',
+                contentType: false,
                 success: function(response) {
-                    if (response.status.includes('Success')) {
-                        alert(response.status);
-                        updateTableFormDetail(response.data);
-                        $("#idFormDetail").hide();
-                    } else {
-                        alert('Error: ' + response.status);
-                    }
+                    alert(response);
+                    $("#idFormDetail").hide(); // Hide form after success
+                    $("#idLoading").hide(); // Hide loading
+                    reloadPage();
                 },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    alert('Error saving data: ' + textStatus);
-                }
+                error: function(xhr, status, error) {
+                    console.error("Error: " + error);
+                    $("#idLoading").hide();
+                },
+                dataType: 'json'
             });
         });
     });
 
-    function updateTableFormDetail(data) {
-        var table = $('.table-responsive table');
-
-        table.find('tbody').remove();
-
-        var tbody = $('<tbody></tbody>');
-
-        var filteredData = data.filter(function(item) {
-            return item.sts_delete == 0;
-        });
-        if (filteredData.length === 0) {
-            var emptyRow = $(
-                '<tr><td colspan="7" style="text-align:center; padding:10px;">No data available</td></tr>');
-            tbody.append(emptyRow);
-        } else {
-            $.each(filteredData, function(index, item) {
-                var row = $('<tr></tr>');
-
-                row.append('<td style="text-align:center; padding:10px;">' + (index + 1) + '</td>');
-                row.append('<td style="text-align:center; padding:10px;">' + (item.description || '-') +
-                    '</td>');
-                row.append('<td style="text-align:center; padding:10px;">' + (item.type || '-') + '</td>');
-                row.append('<td style="text-align:center; padding:10px;">' + (item.reason || '-') + '</td>');
-                row.append('<td style="text-align:center; padding:10px;">' + (item.quantity || '-') + '</td>');
-                row.append('<td style="text-align:center; padding:10px;">' + (item.required_date && item
-                    .required_date !== '0000-00-00' ? item.required_date : '-') + '</td>');
-                row.append('<td style="text-align:center; padding:10px;">' + (item.note || '-') + '</td>');
-
-                tbody.append(row);
-            });
-        }
-        table.append(tbody);
-        $('#tableFormDetail').show();
-    }
 
     function editData(id = "") {
         $("#idLoading").show();
 
         $.post('<?php echo base_url("form/editData"); ?>', {
-                idForm: id
-            },
-            function(data) {
-                console.log("Data received:", data);
-                $("#idLoading").hide();
+            idForm: id
+        }, function(data) {
+            console.log("Data received:", data);
+            $("#idLoading").hide();
 
-                if (Array.isArray(data) && data.length > 0) {
-                    $("#DataTableRequest").hide();
-                    $("#idFormDetail").show(200);
+            if (Array.isArray(data) && data.length > 0) {
+                $("#DataTableRequest").hide();
+                $("#idFormEditDetail").show(200);
+                $("#idFieldEditDetail").empty();
 
-
-                    $("#idFieldDetail").empty();
-
-                    data.forEach(function(record, index) {
-
-                        let formDetail = `
+                data.forEach(function(record, index) {
+                    let formDetail = `
                     <div class="row" style="margin-bottom: 15px;">
                         <div class="col-md-12">
-                            <legend><label id="lblForm"> Edit Request Detail #${index + 1}</label></legend>
+                            <legend><label id="lblFormEdit"> Edit Request Detail #${index + 1}</label></legend>
                             <div class="form-row">
-                                <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                <div class="col-md-3 col-xs-12">
                                     <div class="form-group">
-                                        <label for="txtdescription_${index}"><u>Description:</u></label>
-                                        <input type="text" name="description[]" class="form-control input-sm"
-                                            id="txtdescription_${index}" placeholder="Description" autocomplete="off" value="${record.description || ''}">
+                                        <label for="txtdescriptionEdit">Description:</label>
+                                        <input type="text" name="txtdescription" class="form-control input-sm"
+                                     value="${record.description || ''}">
                                     </div>
                                 </div>
-                                <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                <div class="col-md-1 col-xs-12">
                                     <div class="form-group">
-                                        <label for="txttype_${index}"><u>Type:</u></label>
-                                        <input type="text" name="type[]" class="form-control input-sm"
-                                            id="txttype_${index}" placeholder="Type" autocomplete="off" value="${record.type || ''}">
+                                        <label for="txttypeEdit">Type:</label>
+                                        <input type="text" name="txttype" class="form-control input-sm"
+                                             value="${record.type || ''}">
                                     </div>
                                 </div>
-                                <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                <div class="col-md-1 col-xs-12">
                                     <div class="form-group">
-                                        <label for="txtreason_${index}"><u>Reason:</u></label>
-                                        <input type="text" name="reason[]" class="form-control input-sm"
-                                            id="txtreason_${index}" placeholder="Reason" autocomplete="off" value="${record.reason || ''}">
+                                        <label for="txtreasonEdit">Reason:</label>
+                                        <input type="text" name="txtreason" class="form-control input-sm"
+                                             value="${record.reason || ''}">
                                     </div>
                                 </div>
-                                <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                <div class="col-md-1 col-xs-12">
                                     <div class="form-group">
-                                        <label for="txtquantity_${index}"><u>Quantity:</u></label>
-                                        <input type="text" name="quantity[]" class="form-control input-sm"
-                                            id="txtquantity_${index}" value="${record.quantity || 0}" onkeypress="return isNumber(event)"
-                                            autocomplete="off">
+                                        <label for="txtquantityEdit">Quantity:</label>
+                                        <input type="text" name="txtquantity" class="form-control input-sm"
+                                             value="${record.quantity || 0}" onkeypress="return isNumber(event)">
                                     </div>
                                 </div>
-                                <div class="col-md-2 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                <div class="col-md-2 col-xs-12">
                                     <div class="form-group">
-                                        <label for="txtRequiredDate_${index}"><u>Required Date:</u></label>
-                                        <input type="date" name="required_date[]" class="form-control input-sm"
-                                            id="txtRequiredDate_${index}" autocomplete="off" value="${record.required_date || ''}">
+                                        <label for="txtRequiredDateEdit">Required Date:</label>
+                                        <input type="date" name="txtrequired_date" class="form-control input-sm"
+                                             value="${record.required_date || ''}">
                                     </div>
                                 </div>
-                                <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                <div class="col-md-3 col-xs-12">
                                     <div class="form-group">
-                                        <label for="txtnote_${index}"><u>Note:</u></label>
-                                        <input type="text" name="note[]" class="form-control input-sm" id="txtnote_${index}"
-                                            autocomplete="off" value="${record.note || ''}">
+                                        <label for="txtnoteEdit">Note:</label>
+                                        <input type="text" name="txtnote" class="form-control input-sm"
+                                             value="${record.note || ''}">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>`;
+                    $("#idFieldEditDetail").append(formDetail);
+                });
 
-                        $("#idFieldDetail").append(formDetail);
-                    });
-                } else {
-                    alert("No data found.");
-                }
-            },
-            "json"
-        ).fail(function() {
+                $("#idFieldEditDetail").append(
+                    `<input type="hidden" id="txtIdEditForm" value="${data[0].id_form || ''}">`);
+            } else {
+                alert("No data found.");
+            }
+        }, "json").fail(function() {
             alert("Failed to retrieve data. Please try again.");
             $("#idLoading").hide();
         });
     }
+
+
+
+    $(document).on('click', '#cancelEditDetail', function() {
+        $("#idFormEditDetail").hide(200);
+        $("#DataTableRequest").show(200);
+    });
+
+    $(document).on('click', '#btnCancelFormDetail', function() {
+        $("#idFormDetail").hide(200);
+        $("#DataTableRequest").show(200);
+    });
+
+    $(document).on('click', '#saveEditDetail', function() {
+        let formData = [];
+        let idForm = $("#txtIdEditForm").val();
+
+        if (!idForm) {
+            alert('Form ID is missing!');
+            return;
+        }
+
+        // Iterasi setiap baris untuk mengumpulkan data
+        $("#idFieldEditDetail .row").each(function(index, element) {
+            let row = $(element);
+            let data = {
+                txtdescription: row.find("input[name='txtdescription']").val(),
+                txttype: row.find("input[name='txttype']").val(),
+                txtreason: row.find("input[name='txtreason']").val(),
+                txtquantity: row.find("input[name='txtquantity']").val(),
+                txtrequired_date: row.find("input[name='txtrequired_date']").val(),
+                txtnote: row.find("input[name='txtnote']").val()
+            };
+
+            if (data.txtdescription && data.txttype) {
+                formData.push(data);
+            }
+        });
+
+        if (formData.length === 0) {
+            alert('No valid data to save.');
+            return;
+        }
+
+        $.ajax({
+            url: '<?php echo base_url("form/saveEditedData"); ?>',
+            type: 'POST',
+            data: {
+                formData: formData,
+                txtIdEditForm: idForm
+            },
+            success: function(response) {
+                let result = JSON.parse(response);
+                if (result.success) {
+                    alert('Data berhasil disimpan!');
+                    $("#idFormEditDetail").hide(200);
+                    location.reload();
+                } else {
+                    alert('Gagal menyimpan data: ' + result.message);
+                }
+            },
+            error: function() {
+                alert('Terjadi kesalahan saat menyimpan data.');
+            }
+        });
+    });
+
 
 
     function ViewPrint(id = '') {
@@ -264,14 +260,14 @@
         if (cfm) {
             $.post('<?php echo base_url("form/delData"); ?>', {
                     id: id,
-                    typeDel: "delForm"
                 },
                 function(response) {
                     if (response.status === "Delete Success..!!") {
                         alert("Data berhasil dihapus!");
                         $("#row_" + id).remove();
+                        reindexTable();
                     } else {
-                        alert("Gagal menghapus data: " + response);
+                        alert("Gagal menghapus data: " + response.message);
                     }
                 },
                 "json"
@@ -281,6 +277,132 @@
         }
     }
 
+    function reindexTable() {
+        $("#idTbody tr").each(function(index) {
+            $(this).find("td:first").text(index + 1);
+        });
+    }
+
+    function sendData(idForm) {
+        $.ajax({
+            url: "<?php echo base_url('form/updateSubmitStatus'); ?>",
+            type: "POST",
+            data: {
+                id: idForm
+            },
+            success: function(response) {
+                const res = JSON.parse(response);
+                if (res.status === 'success') {
+                    const statusElement = document.getElementById("status_" +
+                        idForm);
+                    if (statusElement) {
+                        statusElement.innerHTML = "Waiting Acknowledge";
+                    }
+                    alert("Status successfully updated to Waiting Acknowledge.");
+                    reloadPage();
+                    // Langsung refresh tabel acknowledge
+                    refreshAcknowledgeTable();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+
+    function refreshAcknowledgeTable() {
+        $.ajax({
+            url: '<?php echo base_url('form/getAcknowledgeData'); ?>',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                let data = response.data;
+                let tbody = $('#idTbodyAcknowledge');
+                tbody.empty();
+                let no = 1;
+
+                if (Array.isArray(data) && data.length) {
+                    data.forEach(function(item) {
+                        let row = `<tr id=row_>
+                            <td style="text-align:center;">${no++}</td>
+                            <td style="text-align:center;">${item.project_reference}</td>
+                            <td style="text-align:center;">${item.purpose}</td>
+                            <td style="text-align:center;">${item.company}</td>
+                            <td style="text-align:center;">${item.location}</td>
+                            <td style="text-align:center;">${item.divisi}</td>
+                            <td style="text-align:center;">
+                                <button onclick="acknowledgeData(${item.id});" class="btn btn-primary btn-xs" type="button" style="margin: 5px;"><i class="fa fa-print"></i> Acknowledge</button>
+                                <button onclick="ViewPrint(${item.id});" class="btn btn-success btn-xs" type="button"><i class="fa fa-eye"></i> View</button>
+                            </td>
+                       </tr>`;
+                        tbody.append(row);
+                    });
+                } else {
+                    tbody.append(
+                        '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>'
+                    );
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Error:', error);
+                alert('Error fetching data');
+            }
+        });
+    }
+
+
+    function acknowledgeData(idForm) {
+        $.ajax({
+            url: '<?php echo base_url('form/acknowledgeData'); ?>',
+            type: "POST",
+            data: {
+                id: idForm
+            },
+            success: function(response) {
+                const res = JSON.parse(response);
+                if (res.status === 'success') {
+                    const statusElement = document.getElementById("status_" +
+                        idForm);
+                    if (statusElement) {
+                        statusElement.innerHTML = "Waiting Approval";
+                        alert("Status successfully updated to waiting Approval");
+                        reloadPage();
+                    }
+
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    function approveData(idForm) {
+        $.ajax({
+            url: '<?php echo base_url('form/approveData'); ?>',
+            type: "POST",
+            data: {
+                id: idForm
+            },
+            success: function(response) {
+                const res = JSON.parse(response);
+                if (res.status === 'success') {
+                    const statusElement = document.getElementById("status_" +
+                        idForm);
+                    if (statusElement) {
+                        statusElement.innerHTML = "Approve Success";
+                        alert("Request has been approve!");
+                        reloadPage();
+                    }
+
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    }
 
     function addDetail(id) {
         $("#DataTableRequest").hide();
@@ -288,15 +410,167 @@
         $("#txtIdForm").val(id);
     }
 
-    function changeBtnNav(type) {
+    function changeBtnNavigation(type) {
         if (type == "request") {
             $("#DataTableRequest").show();
-        } else if (type == "request") {
-            $("#DataTableRequest").show();
-        } else {
-            $("#DataTableRequest").show();
+            $("#DataTableAcknowledge").hide();
+            $("#DataTableApproval").hide();
+            $("#idFormEditDetail").hide();
+        } else if (type == "acknowledge") {
+            $("#DataTableRequest").hide();
+            $("#DataTableAcknowledge").show();
+            $("#DataTableApproval").hide();
+            $("#idFormEditDetail").hide();
+            $.ajax({
+                url: '<?php echo base_url('form/getAcknowledgeData'); ?>',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Response:', response);
+                    let data = response.data;
+                    let tbody = $('#idTbodyAcknowledge');
+                    tbody.empty();
+                    let no = 1;
+
+                    if (Array.isArray(data) && data.length) {
+                        data.forEach(function(item) {
+                            let row = `<tr id=row_>
+                                    <td style="text-align:center;">${no++}</td>
+                                    <td style="text-align:center;">${item.project_reference}</td>
+                                    <td style="text-align:center;">${item.purpose}</td>
+                                    <td style="text-align:center;">${item.company}</td>
+                                    <td style="text-align:center;">${item.location}</td>
+                                    <td style="text-align:center;">${item.divisi}</td>
+                                    <td style="text-align:center;">
+                                        <button onclick="acknowledgeData(${item.id});" class="btn btn-primary btn-xs" type="button" style="margin: 5px;"><i class="fa fa-print"></i> Acknowledge</button>
+                                        <button onclick="ViewPrint(${item.id});" class="btn btn-success btn-xs" type="button"><i class="fa fa-eye"></i> View</button>
+                                    </td>
+                               </tr>`;
+                            tbody.append(row);
+                        });
+                    } else {
+
+                        tbody.append(
+                            '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>'
+                        );
+                    }
+                    // reloadPage();
+                },
+                error: function(xhr, status, error) {
+                    console.log('Error:', error);
+                    alert('Error fetching data');
+                }
+            });
+        } else if (type == 'approval') {
+            $("#DataTableRequest").hide();
+            $("#DataTableAcknowledge").hide();
+            $("#DataTableApproval").show();
+            $("#idFormEditDetail").hide();
+            $.ajax({
+                url: '<?php echo base_url('form/getApprovalData'); ?>',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Response:', response);
+                    let data = response.data;
+                    let tbody = $('#idTbodyApproval');
+                    tbody.empty();
+                    let no = 1;
+
+                    if (Array.isArray(data) && data.length) {
+                        data.forEach(function(item) {
+                            let row = `<tr>
+                                        <td style="text-align:center;">${no++}</td>
+                                        <td style="text-align:center;">${item.project_reference}</td>
+                                        <td style="text-align:center;">${item.purpose}</td>
+                                        <td style="text-align:center;">${item.company}</td>
+                                        <td style="text-align:center;">${item.location}</td>
+                                        <td style="text-align:center;">${item.divisi}</td>
+                                        <td style="text-align:center;">
+                                            <button onclick="approveData(${item.id});" class="btn btn-success btn-xs" type="button" style="margin: 5px;"><i class="fa fa-check"></i> Approve</button>
+                                            <button onclick="ViewPrint(${item.id});" class="btn btn-primary btn-xs" type="button"><i class="fa fa-eye"></i> View</button>
+                                        </td>
+                                    </tr>`;
+                            tbody.append(row);
+                        });
+                    } else {
+
+                        tbody.append(
+                            '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>'
+                        );
+                    }
+                    // reloadPage();
+                },
+                error: function(xhr, status, error) {
+                    console.log('Error:', error);
+                    alert('Error fetching data');
+                }
+            });
         }
     }
+
+    $(document).ready(function() {
+        const departmentMapping = {
+            "BOD / BOC": ["Non Department", "PA (Personal Assistant)"],
+            "CORPORATE FINANCE, STRATEGY & COMPLIANCE": ["Non Department"],
+            "DRY BULK COMMERCIAL,OPERATION & AGENCY": ["Operation", "Commercial", "Agency"],
+            "FINANCE": ["Finance", "Accounting", "Tax"],
+            "HUMAN CAPITAL & GA": ["HR", "GA"],
+            "NON DIVISION": ["Secretary"],
+            "OFFICE OPERATION": ["IT", "Legal", "Procurement"],
+            "OIL & GAS COMMERCIAL & OPERATION": ["Commercial", "Operation"],
+            "SHIP MANAGEMENT": ["Owner Superintendent (Technical)", "Crewing", "QHSE"]
+        };
+
+        $('#slcDivisi').change(function() {
+            let selectedDivision = $(this).val();
+            console.log("Selected Division: " + selectedDivision);
+            let departmentSelect = $('#slcDepartment');
+
+            departmentSelect.empty();
+            departmentSelect.append('<option value="">- Select Department -</option>');
+
+            if (departmentMapping[selectedDivision]) {
+                // Populate department options based on the selected division
+                departmentMapping[selectedDivision].forEach(function(department) {
+                    console.log("Adding department: " + department);
+                    departmentSelect.append('<option value="' + department + '">' + department +
+                        '</option>');
+                });
+            } else {
+                console.log("No departments found for this division");
+            }
+        });
+    });
+
+
+    $(document).ready(function() {
+        function updateButtonVisibility() {
+            $('.btnRemoveRow').hide();
+            if ($('.detailRow').length > 1) {
+                $('.btnRemoveRow').show();
+            }
+        }
+
+        $('#idFieldDetail').on('click', '.btnAddRow', function() {
+            var $clone = $(this).closest('.detailRow').clone();
+            $clone.find('input').val('');
+            $('#idFieldDetail').append($clone);
+
+            updateButtonVisibility();
+        });
+
+        $('#idFieldDetail').on('click', '.btnRemoveRow', function() {
+            if ($('.detailRow').length > 1) {
+                $(this).closest('.detailRow').remove();
+                updateButtonVisibility();
+            }
+        });
+
+        updateButtonVisibility();
+    });
+
+
 
     function reloadPage() {
         window.location = "<?php echo base_url('form/getDataForm');?>";
@@ -315,23 +589,24 @@
                 <div class="form-panel" id="btnNav">
                     <div class="row">
                         <div class="col-md-4">
-                            <button class="btn btn-primary btn btn-block" onclick="changeBtnNav('request');">
+                            <button class="btn btn-primary btn btn-block" onclick="changeBtnNavigation('request');">
                                 <label>Request</label>
                             </button>
                         </div>
                         <div class="col-md-4">
-                            <button class="btn btn-primary btn btn-block">
+                            <button class="btn btn-primary btn btn-block" onclick="changeBtnNavigation('acknowledge');">
                                 <label>Acknowledge</label>
                             </button>
                         </div>
                         <div class="col-md-4">
-                            <button class="btn btn-primary btn btn-block">
+                            <button class="btn btn-primary btn btn-block" onclick="changeBtnNavigation('approval');">
                                 <label>Approval</label>
                             </button>
                         </div>
                     </div>
                 </div>
                 <div class="form-panel" id="DataTableRequest" style="display: none;">
+                    <h3>Request</h3>
                     <div class="row">
                         <div class="modal fade bd-example-modal-lg" id="idFormModal" role="dialog" aria-hidden="true">
                             <div class="modal-dialog modal-lg" role="document">
@@ -384,6 +659,17 @@
                                                                 </select>
                                                             </div>
                                                         </div>
+                                                        <div class="col-md-3 col-xs-12">
+                                                            <div class="form-group">
+                                                                <label for="slcDepartment"><b><u>Department
+                                                                            :</u></b></label>
+                                                                <select id="slcDepartment"
+                                                                    class="form-control input-sm">
+                                                                    <option value="">- Select Department -</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -441,6 +727,9 @@
                                                 Divisi
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Status
+                                            </th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Action
                                             </th>
                                         </tr>
@@ -454,37 +743,119 @@
                     </div>
                 </div>
 
+                <div class="form-panel" id="DataTableAcknowledge" style="display: none;">
+                    <h3>Acknowledge</h3>
+                    <div class="row mt" id="idData1">
+                        <div class="col-md-12">
+                            <div class="table-responsive">
+                                <table
+                                    class="table table-border table-striped table-bordered table-condensed table-advance table-hover">
+                                    <thead>
+                                        <tr style="background-color: #ba5500;color: #FFF;">
+                                            <th
+                                                style="vertical-align: middle; width:3%;text-align:center;padding: 10px;">
+                                                No</th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Project Refference
+                                            </th>
+                                            <th style="vertical-align: middle; width:10%;text-align:center;">
+                                                Purpose
+                                            </th>
+                                            <th style="vertical-align: middle; width:15%;text-align:center;">
+                                                Company
+                                            </th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Location
+                                            </th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Divisi
+                                            </th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Action
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="idTbodyAcknowledge">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-panel" id="DataTableApproval" style="display: none;">
+                    <h3>Approval</h3>
+                    <div class="row mt" id="idData1">
+                        <div class="col-md-12">
+                            <div class="table-responsive">
+                                <table
+                                    class="table table-border table-striped table-bordered table-condensed table-advance table-hover">
+                                    <thead>
+                                        <tr style="background-color: #ba5500;color: #FFF;">
+                                            <th
+                                                style="vertical-align: middle; width:3%;text-align:center;padding: 10px;">
+                                                No</th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Project Refference
+                                            </th>
+                                            <th style="vertical-align: middle; width:10%;text-align:center;">
+                                                Purpose
+                                            </th>
+                                            <th style="vertical-align: middle; width:15%;text-align:center;">
+                                                Company
+                                            </th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Location
+                                            </th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Divisi
+                                            </th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Action
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="idTbodyApproval">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-panel" id="idFormDetail" style="display:none;">
                     <div id="idFieldDetail">
                         <div class="row" style="margin-bottom: 15px;">
                             <div class="col-md-12">
                                 <legend><label id="lblForm"> Add Request Detail</label></legend>
-                                <div class="form-row">
-                                    <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                <div class="detailRow">
+                                    <div class="col-md-2 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
                                         <div class="form-group">
                                             <label for="txtdescription"><u>Description:</u></label>
-                                            <input type="text" name="description" class="form-control input-sm"
+                                            <input type="text" name="txtdescription[]" class="form-control input-sm"
                                                 id="txtdescription" placeholder="Description" autocomplete="off">
                                         </div>
                                     </div>
                                     <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
                                         <div class="form-group">
                                             <label for="txttype"><u>Type:</u></label>
-                                            <input type="text" name="type" class="form-control input-sm" id="txttype"
-                                                placeholder="Type" autocomplete="off">
+                                            <input type="text" name="txttype[]" class="form-control input-sm"
+                                                id="txttype" placeholder="Type" autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                    <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
                                         <div class="form-group">
                                             <label for="txtreason"><u>Reason:</u></label>
-                                            <input type="text" name="reason" class="form-control input-sm"
+                                            <input type="text" name="txtreason[]" class="form-control input-sm"
                                                 id="txtreason" placeholder="Reason" autocomplete="off">
                                         </div>
                                     </div>
                                     <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
                                         <div class="form-group">
                                             <label for="txtquantity"><u>Quantity:</u></label>
-                                            <input type="text" name="quantity" class="form-control input-sm"
+                                            <input type="text" name="txtquantity[]" class="form-control input-sm"
                                                 id="txtquantity" value="0" onkeypress="return isNumber(event)"
                                                 autocomplete="off">
                                         </div>
@@ -492,25 +863,26 @@
                                     <div class="col-md-2 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
                                         <div class="form-group">
                                             <label for="txtRequiredDate"><u>Required Date:</u></label>
-                                            <input type="date" name="required_date" class="form-control input-sm"
+                                            <input type="date" name="txtrequired_date[]" class="form-control input-sm"
                                                 id="txtRequiredDate" autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
                                         <div class="form-group">
                                             <label for="txtnote"><u>Note:</u></label>
-                                            <input type="text" name="note" class="form-control input-sm" id="txtnote"
-                                                autocomplete="off">
+                                            <input type="text" name="txtnote[]" class="form-control input-sm"
+                                                id="txtnote" autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                        <div class="form-group" style="margin-bottom: 15px;">
-                                            <label for="txtTotalReq" style="font-weight: bold;">&nbsp;</label>
-                                            <button class="btn btn-primary btn-block btn-xs" title="Add"
-                                                id="btnAddField" onclick="addRowDetail();" type="button">
-                                                <i class="glyphicon glyphicon-plus"></i>
-                                            </button>
-                                        </div>
+                                    <div class="col-md-1 col-xs-2">
+                                        <button type="button" class="btn btn-primary btn-xs btnAddRow"
+                                            style="margin-top: 25px;">
+                                            <i class="glyphicon glyphicon-plus"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-xs btnRemoveRow"
+                                            style="margin-top: 25px; display:none;">
+                                            <i class="glyphicon glyphicon-minus"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -524,8 +896,8 @@
                                     title="Save">
                                     <i class="fa fa-check-square-o"></i> Save
                                 </button>
-                                <button id="btnCancelDetail" class="btn btn-danger btn-sm" name="btnCancel"
-                                    onclick="reloadPage();" title="Cancel">
+                                <button id="btnCancelFormDetail" class="btn btn-danger btn-sm" name="btnCancel"
+                                    title="Cancel">
                                     <i class="fa fa-ban"></i> Cancel
                                 </button>
                             </div>
@@ -533,40 +905,76 @@
                     </div>
                 </div>
 
-                <div class="form-panel" id="tableFormDetail" style="display:none;">
-                    <div class="row mt" id="idData1">
-                        <div class="col-md-12">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped table-hover"
-                                    style="border: 1px solid #ddd; width: 100%; border-collapse: collapse;">
-                                    <thead>
-                                        <tr style="background-color: #ba5500; color: #FFF; text-align:center;">
-                                            <th style="width:5%; padding: 10px; border: 1px solid #ddd;">No</th>
-                                            <th style="width:25%; padding: 10px; border: 1px solid #ddd;">Description
-                                            </th>
-                                            <th style="width:15%; padding: 10px; border: 1px solid #ddd;">Type</th>
-                                            <th style="width:15%; padding: 10px; border: 1px solid #ddd;">Reason</th>
-                                            <th style="width:10%; padding: 10px; border: 1px solid #ddd;">Quantity</th>
-                                            <th style="width:15%; padding: 10px; border: 1px solid #ddd;">Required Date
-                                            </th>
-                                            <th style="width:30%; padding: 10px; border: 1px solid #ddd;">Note</th>
-                                            <th style="width:30%; padding: 10px; border: 1px solid #ddd;">Action</th>
-
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Table rows will be dynamically added here -->
-                                    </tbody>
-                                </table>
+                <div class="form-panel" id="idFormEditDetail" style="display:none;">
+                    <div id="idFieldEditDetail">
+                        <div class="row" style="margin-bottom: 15px;">
+                            <div class="col-md-12">
+                                <legend><label id="lblForm"> Edit Request Detail</label></legend>
+                                <div class="form-row">
+                                    <input type="hidden" id="txtIdEditForm" name="txtIdEditForm" value="">
+                                    <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="form-group">
+                                            <label for="txtdescription"><u>Description:</u></label>
+                                            <input type="text" name="txtdescription" class="form-control input-sm"
+                                                id="txtdescription" placeholder="Description" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="form-group">
+                                            <label for="txttype"><u>Type:</u></label>
+                                            <input type="text" name="txttype" class="form-control input-sm" id="txttype"
+                                                placeholder="Type" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="form-group">
+                                            <label for="txtreason"><u>Reason:</u></label>
+                                            <input type="text" name="txtreason" class="form-control input-sm"
+                                                id="txtreason" placeholder="Reason" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="form-group">
+                                            <label for="txtquantity"><u>Quantity:</u></label>
+                                            <input type="text" name="txtquantity" class="form-control input-sm"
+                                                id="txtquantity" value="0" onkeypress="return isNumber(event)"
+                                                autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="form-group">
+                                            <label for="txtRequiredDate"><u>Required Date:</u></label>
+                                            <input type="date" name="txtrequired_date" class="form-control input-sm"
+                                                id="txtRequiredDate" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="form-group">
+                                            <label for="txtnote"><u>Note:</u></label>
+                                            <input type="text" name="txtnote" class="form-control input-sm" id="txtnote"
+                                                autocomplete="off">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <!-- <button class="btn btn-danger btn-sm" name="btnCancel" onclick="backDetail();" title="Cancel">
-                        <i class="fa fa-ban"></i> Cancel
-                    </button> -->
-                    <button type="button" id="btnBack" class="btn btn-danger btn-sm"
-                        onclick="reloadPage();">Kembali</button>
+                    <div class="row">
+                        <div class="col-md-12 col-xs-12">
+                            <div class="form-group" align="center">
+                                <button id="saveEditDetail" class="btn btn-primary btn-sm" name="btnSave" title="Save">
+                                    <i class="fa fa-check-square-o"></i> Save
+                                </button>
+                                <button id="cancelEditDetail" class="btn btn-danger btn-sm" name="btnCancel"
+                                    title="Cancel">
+                                    <i class="fa fa-ban"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+
 
             </section>
         </section>

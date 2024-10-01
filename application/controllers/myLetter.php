@@ -178,7 +178,7 @@ class MyLetter extends CI_Controller {
 		$config['quality']		= true;
 		$config['size']			= '1024';
 		$config['black']		= array(224,255,255);
-		$config['white']		= array(0,0,128);//untuk ubah warna di libralies/qrcode/qrimage.php white default 0,0,0
+		$config['white']		= array(0,0,128);
 		$this->ciqrcode->initialize($config);
 
 		$imgName = base64_encode($batchNo).'.png';

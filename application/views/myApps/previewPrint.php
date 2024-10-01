@@ -3,7 +3,6 @@ $nama_dokumen = "ICT_Tools_Request";
 require("pdf/mpdf60/mpdf.php");
 $mpdf = new mPDF('utf-8', 'A4');
 ob_start();
-
 ?>
 
 <!DOCTYPE html>
@@ -18,14 +17,19 @@ ob_start();
         font-size: 12px;
     }
 
-    h1,
-    h2 {
+    .title {
         text-align: right;
-        font-size: 16px;
-        margin-bottom: 5px;
+        font-size: 8px;
+        margin-top: 10px;
     }
 
     table {
+        width: 100%;
+        margin-top: 10px;
+        border-collapse: collapse;
+    }
+
+    .detail {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 15px;
@@ -48,9 +52,7 @@ ob_start();
 
     .approval td {
         height: 150px;
-        /* Increase the height of the signature boxes */
         width: 300px;
-        /* Increase the width of the signature boxes */
     }
 
     .footer {
@@ -76,41 +78,39 @@ ob_start();
         margin-bottom: 10px;
     }
 
-    /* Add layout for the logo and header */
     .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
 
-    /* New CSS for signature box */
     .signature-box {
         border: 1px solid black;
         height: 150px;
-        /* Adjust height */
         width: 300px;
-        /* Adjust width */
         display: inline-block;
         vertical-align: top;
+    }
+
+    /* New CSS for signature box */
+    #acknowledgeInfo {
+        margin-top: 10px;
+        display: block;
     }
     </style>
 </head>
 
 <body>
     <div class="header">
-        <!-- Display the company logo on the left -->
         <div>
             <?php echo $imageLogo; ?>
         </div>
-
-        <!-- Titles on the right -->
-        <div>
+        <div class="title">
             <h1>ICT TOOLS AND EQUIPMENT REQUEST</h1>
             <h2>PERMINTAAN ALAT DAN PERLENGKAPAN ICT</h2>
         </div>
     </div>
 
-    <!-- Main Table -->
     <table>
         <tr>
             <th>Project Reference / Referensi Proyek</th>
@@ -121,8 +121,12 @@ ob_start();
             <td><?php echo isset($form->purpose) ? $form->purpose : 'N/A'; ?></td>
         </tr>
         <tr>
-            <th>Required Date / Tanggal Dibutuhkan</th>
-            <td><?php echo isset($form->required_date) ? $form->required_date : 'N/A'; ?></td>
+            <th>Divisi / Divisi</th>
+            <td><?php echo isset($form->divisi) ? $form->divisi : 'N/A'; ?></td>
+        </tr>
+        <tr>
+            <th>Departement / Departement</th>
+            <td><?php echo isset($form->department) ? $form->department : 'N/A'; ?></td>
         </tr>
         <tr>
             <th>Company / Perusahaan</th>
@@ -134,34 +138,35 @@ ob_start();
         </tr>
     </table>
 
-    <!-- Details Table -->
-    <table>
+    <table class="detail">
         <thead>
             <tr>
                 <th>DESKRIPSI</th>
                 <th>TYPE / BRAND</th>
                 <th>QTY</th>
                 <th>REASON / ALASAN</th>
+                <th>REQUIRED DATE</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($form_details as $detail): ?>
             <tr>
-                <td><?php echo isset($detail->description) ? $detail->description : 'N/A'; ?></td>
-                <td><?php echo isset($detail->type) ? $detail->type : 'N/A'; ?></td>
-                <td><?php echo isset($detail->quantity) ? $detail->quantity : 'N/A'; ?></td>
-                <td><?php echo isset($detail->reason) ? $detail->reason : 'N/A'; ?></td>
+                <td><?php echo isset($detail->description) ? $detail->description : ''; ?></td>
+                <td><?php echo isset($detail->type) ? $detail->type : ''; ?></td>
+                <td><?php echo isset($detail->quantity) ? $detail->quantity : ''; ?></td>
+                <td><?php echo isset($detail->reason) ? $detail->reason : ''; ?></td>
+                <td><?php echo isset($detail->required_date) && $detail->required_date != '0000-00-00' ? $detail->required_date : ''; ?>
+                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
 
-    <!-- Footer Section -->
     <div class="footer">
         <div class="note">
             <strong>Note:</strong>
             <div class="note-box">
-                <?php echo isset($form->note) ? $form->note : 'N/A'; ?>
+                <?php echo isset($detail->note) ? $detail->note : ''; ?>
             </div>
         </div>
 
@@ -169,22 +174,27 @@ ob_start();
             <table>
                 <tr>
                     <td>Proposed by<br>
-                        <div class="signature-box"></div>
+                        <div class="signature-box">
+                            <?php echo $qrCode; ?>
+                        </div>
+                        <?php echo isset($form->request_name) ? $form->request_name : 'N/A'; ?>
                     </td>
                     <td>Acknowledge by<br>
-                        <div class="signature-box"></div>
+                        <div class="signature-box">
+                            <?php echo $kadept; ?>
+                        </div>
+                        <?php echo isset($nameKadept) ? $nameKadept : 'N/A'; ?>
                     </td>
                     <td>Approved by<br>
-                        <div class="signature-box"></div>
+                        <div class="signature-box">
+                            <?php echo $kadiv; ?>
+                        </div>
+                        <?php echo isset($nameKadiv) ? $nameKadiv : 'N/A'; ?>
                     </td>
-                </tr>
-                <tr>
-                    <td>Date<br>........................</td>
-                    <td>Date<br>........................</td>
-                    <td>Date<br>........................</td>
                 </tr>
             </table>
         </div>
+
     </div>
 </body>
 
