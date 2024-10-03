@@ -119,60 +119,57 @@
 
                 data.forEach(function(record, index) {
                     let formDetail = `
-                    <div class="row" style="margin-bottom: 15px;">
-                        <div class="col-md-12">
-                            <legend><label id="lblFormEdit"> Edit Request Detail #${index + 1}</label></legend>
-                            <div class="form-row">
-                                <div class="col-md-3 col-xs-12">
-                                    <div class="form-group">
-                                        <label for="txtdescriptionEdit">Description:</label>
-                                        <input type="text" name="txtdescription" class="form-control input-sm"
-                                     value="${record.description || ''}">
-                                    </div>
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-md-12">
+                        <legend>
+                            <label id="lblFormEdit">Edit Request Detail #${index + 1}</label>
+                        </legend>
+                        <div class="form-row">
+                            <div class="col-md-3 col-xs-12">
+                                <div class="form-group">
+                                    <label for="txtdescriptionEdit">Description:</label>
+                                    <input type="text" name="txtdescription" class="form-control input-sm" value="${record.description || ''}">
                                 </div>
-                                <div class="col-md-1 col-xs-12">
-                                    <div class="form-group">
-                                        <label for="txttypeEdit">Type:</label>
-                                        <input type="text" name="txttype" class="form-control input-sm"
-                                             value="${record.type || ''}">
-                                    </div>
+                            </div>
+                            <div class="col-md-1 col-xs-12">
+                                <div class="form-group">
+                                    <label for="txttypeEdit">Type:</label>
+                                    <input type="text" name="txttype" class="form-control input-sm" value="${record.type || ''}">
                                 </div>
-                                <div class="col-md-1 col-xs-12">
-                                    <div class="form-group">
-                                        <label for="txtreasonEdit">Reason:</label>
-                                        <input type="text" name="txtreason" class="form-control input-sm"
-                                             value="${record.reason || ''}">
-                                    </div>
+                            </div>
+                            <div class="col-md-1 col-xs-12">
+                                <div class="form-group">
+                                    <label for="txtreasonEdit">Reason:</label>
+                                    <input type="text" name="txtreason" class="form-control input-sm" value="${record.reason || ''}">
                                 </div>
-                                <div class="col-md-1 col-xs-12">
-                                    <div class="form-group">
-                                        <label for="txtquantityEdit">Quantity:</label>
-                                        <input type="text" name="txtquantity" class="form-control input-sm"
-                                             value="${record.quantity || 0}" onkeypress="return isNumber(event)">
-                                    </div>
+                            </div>
+                            <div class="col-md-1 col-xs-12">
+                                <div class="form-group">
+                                    <label for="txtquantityEdit">Quantity:</label>
+                                    <input type="text" name="txtquantity" class="form-control input-sm" value="${record.quantity || 0}" onkeypress="return isNumber(event)">
                                 </div>
-                                <div class="col-md-2 col-xs-12">
-                                    <div class="form-group">
-                                        <label for="txtRequiredDateEdit">Required Date:</label>
-                                        <input type="date" name="txtrequired_date" class="form-control input-sm"
-                                             value="${record.required_date || ''}">
-                                    </div>
+                            </div>
+                            <div class="col-md-2 col-xs-12">
+                                <div class="form-group">
+                                    <label for="txtRequiredDateEdit">Required Date:</label>
+                                    <input type="date" name="txtrequired_date" class="form-control input-sm" value="${record.required_date || ''}">
                                 </div>
-                                <div class="col-md-3 col-xs-12">
-                                    <div class="form-group">
-                                        <label for="txtnoteEdit">Note:</label>
-                                        <input type="text" name="txtnote" class="form-control input-sm"
-                                             value="${record.note || ''}">
-                                    </div>
+                            </div>
+                            <div class="col-md-3 col-xs-12">
+                                <div class="form-group">
+                                    <label for="txtnoteEdit">Note:</label>
+                                    <input type="text" name="txtnote" class="form-control input-sm" value="${record.note || ''}">
                                 </div>
                             </div>
                         </div>
-                    </div>`;
+                    </div>
+                </div>`;
                     $("#idFieldEditDetail").append(formDetail);
                 });
 
-                $("#idFieldEditDetail").append(
-                    `<input type="hidden" id="txtIdEditForm" value="${data[0].id_form || ''}">`);
+                $("#idFieldEditDetail").append(`
+                <input type="hidden" id="txtIdEditForm" value="${data[0].id_form || ''}">
+            `);
             } else {
                 alert("No data found.");
             }
@@ -181,7 +178,6 @@
             $("#idLoading").hide();
         });
     }
-
 
 
     $(document).on('click', '#cancelEditDetail', function() {
@@ -203,7 +199,7 @@
             return;
         }
 
-        // Iterasi setiap baris untuk mengumpulkan data
+        // Looping through rows to gather data
         $("#idFieldEditDetail .row").each(function(index, element) {
             let row = $(element);
             let data = {
@@ -247,7 +243,6 @@
             }
         });
     });
-
 
 
     function ViewPrint(id = '') {
@@ -313,43 +308,49 @@
 
     function refreshAcknowledgeTable() {
         $.ajax({
-            url: '<?php echo base_url('form/getAcknowledgeData'); ?>',
+            url: '<?php echo base_url("form/getAcknowledgeData"); ?>',
             type: 'GET',
             dataType: 'json',
             success: function(response) {
                 let data = response.data;
                 let tbody = $('#idTbodyAcknowledge');
-                tbody.empty();
+                tbody.empty(); // Hapus isi tbody sebelum menambahkan data baru
                 let no = 1;
 
                 if (Array.isArray(data) && data.length) {
                     data.forEach(function(item) {
-                        let row = `<tr id=row_>
+                        let row = `
+                        <tr id="row_${item.id}">
                             <td style="text-align:center;">${no++}</td>
                             <td style="text-align:center;">${item.project_reference}</td>
                             <td style="text-align:center;">${item.purpose}</td>
                             <td style="text-align:center;">${item.company}</td>
                             <td style="text-align:center;">${item.location}</td>
-                            <td style="text-align:center;">${item.divisi}</td>
+                            <td style="text-align:center;">${item.nmDiv}</td>
                             <td style="text-align:center;">
-                                <button onclick="acknowledgeData(${item.id});" class="btn btn-primary btn-xs" type="button" style="margin: 5px;"><i class="fa fa-print"></i> Acknowledge</button>
-                                <button onclick="ViewPrint(${item.id});" class="btn btn-success btn-xs" type="button"><i class="fa fa-eye"></i> View</button>
+                                <button onclick="acknowledgeData(${item.id});" class="btn btn-primary btn-xs" type="button" style="margin: 5px;">
+                                    <i class="fa fa-print"></i> Acknowledge
+                                </button>
+                                <button onclick="ViewPrint(${item.id});" class="btn btn-success btn-xs" type="button">
+                                    <i class="fa fa-eye"></i> View
+                                </button>
                             </td>
-                       </tr>`;
-                        tbody.append(row);
+                        </tr>`;
+                        tbody.append(row); // Tambahkan row ke tabel
                     });
                 } else {
+                    // Tampilkan pesan jika tidak ada data
                     tbody.append(
-                        '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>'
-                    );
+                        '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>');
                 }
             },
             error: function(xhr, status, error) {
-                console.log('Error:', error);
+                console.error('Error:', error);
                 alert('Error fetching data');
             }
         });
     }
+
 
 
     function acknowledgeData(idForm) {
@@ -434,26 +435,31 @@
 
                     if (Array.isArray(data) && data.length) {
                         data.forEach(function(item) {
-                            let row = `<tr id=row_>
-                                    <td style="text-align:center;">${no++}</td>
-                                    <td style="text-align:center;">${item.project_reference}</td>
-                                    <td style="text-align:center;">${item.purpose}</td>
-                                    <td style="text-align:center;">${item.company}</td>
-                                    <td style="text-align:center;">${item.location}</td>
-                                    <td style="text-align:center;">${item.divisi}</td>
-                                    <td style="text-align:center;">
-                                        <button onclick="acknowledgeData(${item.id});" class="btn btn-primary btn-xs" type="button" style="margin: 5px;"><i class="fa fa-print"></i> Acknowledge</button>
-                                        <button onclick="ViewPrint(${item.id});" class="btn btn-success btn-xs" type="button"><i class="fa fa-eye"></i> View</button>
-                                    </td>
-                               </tr>`;
+                            let row = `
+                            <tr id="row_${item.id}">
+                                <td style="text-align:center;">${no++}</td>
+                                <td style="text-align:center;">${item.project_reference}</td>
+                                <td style="text-align:center;">${item.purpose}</td>
+                                <td style="text-align:center;">${item.company}</td>
+                                <td style="text-align:center;">${item.location}</td>
+                                <td style="text-align:center;">${item.divisi}</td>
+                                <td style="text-align:center;">
+                                    <button onclick="acknowledgeData(${item.id});" class="btn btn-primary btn-xs" type="button" style="margin: 5px;">
+                                        <i class="fa fa-print"></i> Acknowledge
+                                    </button>
+                                    <button onclick="ViewPrint(${item.id});" class="btn btn-success btn-xs" type="button">
+                                        <i class="fa fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>`;
                             tbody.append(row);
                         });
                     } else {
-
                         tbody.append(
                             '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>'
                         );
                     }
+
                     // reloadPage();
                 },
                 error: function(xhr, status, error) {
@@ -513,7 +519,7 @@
         const departmentMapping = {
             "BOD / BOC": ["Non Department", "PA (Personal Assistant)"],
             "CORPORATE FINANCE, STRATEGY & COMPLIANCE": ["Non Department"],
-            "DRY BULK COMMERCIAL,OPERATION & AGENCY": ["Operation", "Commercial", "Agency"],
+            "DRY BULK COMMERCIAL, OPERATION & AGENCY": ["Operation", "Commercial", "Agency"],
             "FINANCE": ["Finance", "Accounting", "Tax"],
             "HUMAN CAPITAL & GA": ["HR", "GA"],
             "NON DIVISION": ["Secretary"],

@@ -11,66 +11,72 @@ class Form extends CI_Controller
  
     function getDataForm() {
 		$dataOut = array();
-		$nmDiv = $this->session->userdata('nmDiv');
 		$tr = '';  
-		$where = "WHERE sts_delete = '0' ";
 		$no = 1;
 		$userType = $this->session->userdata('userTypeMyApps');
-		$fullName = $this->session->userdata('fullNameMyApps');
-		$btnDetail = "";
-		$btnView = "";
-		$btnDelete = "";
-		$btnDelete = "";
+		$userDiv = $this->session->userdata('nmDiv'); 
+	
+		$where = "WHERE sts_delete = '0' ";
+	
+		if ($userType != 'admin') 
+		{	
+			if(str_replace(" ", "",$userDiv) == 'FINANCIALCONTROLLER')
+			{
+				$where .= " AND divisi LIKE '%FINANCE%'";
+			}
+			else{
+				$where .= " AND divisi LIKE '%$userDiv%'";
+			}
+		}
 		
-
 		$sql = "SELECT * FROM form " . $where;
+		//print_r($sql);exit;
 		$data = $this->myapp->getDataQueryDB6($sql);
 
-		foreach($data as $key => $value) {
+		foreach ($data as $key => $value) {
 			$status = '';
 			
-			if($value->st_submit === 'Y' && $value->st_acknowledge === 'N') {
+			
+			if ($value->st_submit === 'Y' && $value->st_acknowledge === 'N') {
 				$status = "Waiting Acknowledge <i class='fa fa-clock-o'></i>";
 			}
 
-			if($value->st_acknowledge === 'Y' && $value->st_approval === 'N') {
+			if ($value->st_acknowledge === 'Y' && $value->st_approval === 'N') {
 				$status = "Waiting Approval <i class='fa fa-clock-o'></i>";
 			}
 
-			if($value->st_approval === 'Y') {
+			if ($value->st_approval === 'Y') {
 				$status = "Approve Success <i class='fa fa-check'></i>";
 			}
-			
+
 			if ($value->st_detail === 'Y') {
-				$btnDetail = "<button onclick=\"editData('".$value->id."');\" title=\"Edit Detail\" class=\"btn btn-warning btn-xs\" id=\"btnEdit\" type=\"button\"><i class=\"glyphicon glyphicon-edit\"></i></button>";
+				$btnDetail = "<button onclick=\"editData('" . $value->id . "');\" title=\"Edit Detail\" class=\"btn btn-warning btn-xs\" id=\"btnEdit\" type=\"button\"><i class=\"glyphicon glyphicon-edit\"></i></button>";
 			} else {
-				$btnDetail = "<button onclick=\"addDetail('".$value->id."');\" title=\"Add Detail\" class=\"btn btn-primary btn-xs\" id=\"btnAdd\" type=\"button\"><i class=\"glyphicon glyphicon-plus\"></i></button>";
+				$btnDetail = "<button onclick=\"addDetail('" . $value->id . "');\" title=\"Add Detail\" class=\"btn btn-primary btn-xs\" id=\"btnAdd\" type=\"button\"><i class=\"glyphicon glyphicon-plus\"></i></button>";
 			}
 
-			if($value->st_submit === 'Y') {
-				$btnExport = "<button onclick=\"ViewPrint('".$value->id."');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
+			if ($value->st_submit === 'Y') {
+				$btnExport = "<button onclick=\"ViewPrint('" . $value->id . "');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
 				$btnDetail = '';
 				$btnDelete = '';
 				$btnSubmit = '';
 			} else {
-				$btnExport = "<button onclick=\"ViewPrint('".$value->id."');\" class=\"btn btn-success btn-xs\" id=\"btnView_".$value->id."\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
-				$btnDelete = "<button onclick=\"delData('".$value->id."');\" class=\"btn btn-danger btn-xs\" id=\"btnDelete_".$value->id."\" type=\"button\" title=\"Delete\"><i class=\"fa fa-trash-o\"></i> Delete</button>";
-				$btnSubmit = "<button onclick=\"sendData('".$value->id."');\" class=\"btn btn-primary btn-xs\" id=\"btnSubmit_".$value->id."\" type=\"button\" title=\"Submit\"><i class=\"fa fa-send-o\"></i> Send</button>";
+				$btnExport = "<button onclick=\"ViewPrint('" . $value->id . "');\" class=\"btn btn-success btn-xs\" id=\"btnView_" . $value->id . "\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
+				$btnDelete = "<button onclick=\"delData('" . $value->id . "');\" class=\"btn btn-danger btn-xs\" id=\"btnDelete_" . $value->id . "\" type=\"button\" title=\"Delete\"><i class=\"fa fa-trash-o\"></i> Delete</button>";
+				$btnSubmit = "<button onclick=\"sendData('" . $value->id . "');\" class=\"btn btn-primary btn-xs\" id=\"btnSubmit_" . $value->id . "\" type=\"button\" title=\"Submit\"><i class=\"fa fa-send-o\"></i> Send</button>";
 			}
 
-			
-			$tr .= "<tr id='row_".$value->id."'>";
-				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$no."</td>";
-				$tr .= "<td align='center'>".$btnDetail."</td>"; 
-				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$value->project_reference."</td>";
-				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$value->purpose."</td>";
-				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>".$value->company."</td>";
-				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$value->location."</td>";
-				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>".$value->divisi."</td>";
-				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;' id='status_".$value->id."'>".$status."</td>";
-				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$btnExport.$btnDelete.$btnSubmit."</td>";
+			$tr .= "<tr id='row_" . $value->id . "'>";
+			$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $no . "</td>";
+			$tr .= "<td align='center'>" . $btnDetail . "</td>"; 
+			$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->project_reference . "</td>";
+			$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->purpose . "</td>";
+			$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->company . "</td>";
+			$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->location . "</td>";
+			$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->divisi . "</td>";
+			$tr .= "<td align='left' style='font-size:12px;vertical-align:top;' id='status_" . $value->id . "'>" . $status . "</td>";
+			$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $btnExport . $btnDelete . $btnSubmit . "</td>";
 			$tr .= "</tr>";
-
 
 			$no++;
 		}
@@ -107,7 +113,6 @@ class Form extends CI_Controller
 		$userid_submit = $this->session->userdata('userIdMyApps');
 		$date_submit = date('Y-m-d');
 		
-	
 		$data = array(
 			'st_submit' => 'Y',
 			'userid_submit' => $userid_submit,
@@ -128,7 +133,6 @@ class Form extends CI_Controller
 		$date_submit = date('Y-m-d');
 		$userAcknowledge = $this->session->userdata('fullNameMyApps');
 		$dateAcknowledge = date('Y-m-d');
-		
 		
 		$data = array(
 			'st_acknowledge' => 'Y',
@@ -165,21 +169,18 @@ class Form extends CI_Controller
 	}
 
 	function getAcknowledgeData() {
-		$sessionDiv = $this->session->userdata('nmDiv');
-		
 		$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
 				FROM form 
 				WHERE st_submit = 'Y' 
-				AND st_acknowledge = 'N' AND divisi LIKE '%$sessionDiv%'
+				AND st_acknowledge = 'N'
 				AND sts_delete = 0";
 
 		$query = $this->myapp->getDataQueryDB6($sql);
 
 		if ($query) {
-			$resultArray = array();
-
+			$resultArrayAcknowledge = array();
 			foreach ($query as $row) {
-				$resultArray[] = array(
+				$resultArrayAcknowledge[] = array(
 					'id' => $row->id,
 					'project_reference' => $row->project_reference,
 					'purpose' => $row->purpose,
@@ -189,15 +190,13 @@ class Form extends CI_Controller
 					'sts_delete' => $row->sts_delete
 				);
 			}
-
-			echo json_encode(array('data' => $resultArray));
+			echo json_encode(array('data' => $resultArrayAcknowledge));
 		} else {
 			echo json_encode(array('data' => array()));
 		}
 	}
 
-	function getApprovalData()
-	{
+	function getApprovalData() {
 		$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete
 				FROM form
 				WHERE st_acknowledge = 'Y' 
@@ -206,11 +205,10 @@ class Form extends CI_Controller
 
 		$query = $this->myapp->getDataQueryDB6($sql);
 
-		if($query)
-		{
-			$resulArrayApproval = array();
+		if ($query) {
+			$resultArrayApproval = array();
 			foreach ($query as $value) {
-				$resulArrayApproval[] = array(
+				$resultArrayApproval[] = array(
 					'id' => $value->id,
 					'project_reference' => $value->project_reference,
 					'purpose' => $value->purpose,
@@ -220,13 +218,12 @@ class Form extends CI_Controller
 					'sts_delete' => $value->sts_delete
 				);
 			}
-			echo json_encode(array('data' => $resulArrayApproval));
-		}
-		else{
+			echo json_encode(array('data' => $resultArrayApproval));
+		} else {
 			echo json_encode(array('data' => array()));
 		}
 	}
-	
+
 	function editData() {
 		$idForm = $this->db->escape_str($this->input->post('idForm'));
 
@@ -236,14 +233,14 @@ class Form extends CI_Controller
 		print json_encode($result);
 	}
 
-	function saveEditedData() {
-		$data = $this->input->post();	
-
+	function saveEditedData() { 
+		$data = $this->input->post();    
+		
 		if (isset($data['formData']) && isset($data['txtIdEditForm'])) {
 			$formData = $data['formData'];
 			$idForm = $data['txtIdEditForm'];
 
-			if ($formData && $idForm) {
+			if (!empty($formData) && !empty($idForm)) {
 				foreach ($formData as $data) {
 					$description = isset($data['txtdescription']) ? $data['txtdescription'] : null;
 					$type = isset($data['txttype']) ? $data['txttype'] : null;
@@ -255,18 +252,17 @@ class Form extends CI_Controller
 							'reason' => isset($data['txtreason']) ? $data['txtreason'] : null,
 							'quantity' => isset($data['txtquantity']) ? $data['txtquantity'] : null,
 							'required_date' => isset($data['txtrequired_date']) ? $data['txtrequired_date'] : null,
-							'note' => isset($data['note']) ? $data['note'] : null,
+							'note' => isset($data['txtnote']) ? $data['txtnote'] : null,
 							'update_userId' => $this->session->userdata('userIdMyApps'),
 							'update_date' => date('Y-m-d H:i:s')
 						);
 
-						// Update data di database
-						$result = $this->myapp->updateDataDb6($dataToUpdate, 'form_detail', array(
-							'id_form' => $idForm,
+						$this->myapp->updateDataDb6('form_detail', $dataToUpdate, array(
+							'id_form' => $idForm, 
+							'sts_delete' => '0' 
 						));
 					}
 				}
-
 				echo json_encode(array('success' => true, 'message' => 'Data successfully updated!'));
 			} else {
 				echo json_encode(array('success' => false, 'message' => 'No data to update or missing id_form.'));
@@ -275,8 +271,6 @@ class Form extends CI_Controller
 			echo json_encode(array('success' => false, 'message' => 'Invalid request data.'));
 		}
 	}
-
-
 
 	function createQRCode($id = "")
 	{
@@ -422,12 +416,11 @@ class Form extends CI_Controller
 
 			$qrCodeImgPath = base_url("assets/imgQRCodeForm/" . base64_encode($form[0]->batchno) . ".jpg");
 
-			// Prepare base data
 			$data = array(
 				'form' => $form[0],
 				'form_details' => $form_details,
 				'imageLogo' => "<img src=\"" . base_url($logo_company) . "\" alt=\"Company Logo\" height=\"50\" style=\"align-items: left; margin-bottom: -50px;\">",
-				'qrCode' => "<img src=\"" . $qrCodeImgPath . "\" alt=\"QR Code\" height=\"100\" width=\"100\" />",  // User QR code from batchno
+				'qrCode' => "<img src=\"" . $qrCodeImgPath . "\" alt=\"QR Code\" height=\"100\" width=\"100\" />",  
 				'kadept' => null,
 				'kadiv' => null,
 				'nameKadept' => null,
@@ -445,7 +438,6 @@ class Form extends CI_Controller
 				$data['kadiv'] = "<img src=\"" . base_url($mappingInfo['namafileKadiv']) . "\" alt=\"Kadiv QR Code\" height=\"100\" width=\"100\" />";
 				$data['nameKadiv'] = $mappingInfo['nameKadiv'];
 			}
-
 			$this->load->view('myApps/previewPrint', $data);
 		} else {
 			show_error('Form not found', 404);
@@ -650,6 +642,7 @@ class Form extends CI_Controller
 		);
 
 		if (isset($Mapping[$division])) {
+			// Check if department exists for this division
 			if (is_array($Mapping[$division])) {
 				if (isset($Mapping[$division][$department])) {
 					return $Mapping[$division][$department]; // Return by division and department
