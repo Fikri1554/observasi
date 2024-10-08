@@ -22,7 +22,7 @@
             formData.append('slcCompany', $('#slcCompany').val());
             formData.append('slcCompanyText', $("#slcCompany option:selected").text());
             formData.append('slcDivisi', $('#slcDivisi').val());
-            formData.append('slcDepartment', $('#slcDepartment').val()); // Append selected department
+            formData.append('slcDepartment', $('#slcDepartment').val());
             formData.append('txtIdForm', $('#txtIdForm').val());
 
             $.ajax({
@@ -40,7 +40,7 @@
                         alert("Data berhasil disimpan! " + response);
                     }
                     $('#idFormModal').modal('hide');
-                    reloadPage(); // Function to refresh page or table
+                    reloadPage();
                 },
                 error: function(xhr, status, error) {
                     console.log(error);
@@ -71,15 +71,16 @@
             appendData('required_dates', "input[name^='txtrequired_date']");
             appendData('notes', "input[name^='txtnote']");
 
-            // Simple validation before sending
             if ($("input[name^='txtdescription']").val() === "" ||
                 $("input[name^='txttype']").val() === "" ||
-                $("input[name^='txtreason']").val() === "") {
-                alert("Description, Type, and Reason fields are required.");
+                $("input[name^='txtreason']").val() === "" ||
+                $("input[name^='txtquantity']").val() <= 0) {
+                alert("Description, Type, Reason, and Quantity fields are required.");
                 return false;
             }
 
-            $("#idLoading").show(); // Show loading while processing
+
+            $("#idLoading").show();
 
             $.ajax({
                 url: '<?php echo base_url('form/saveFormRequestDetail'); ?>',
@@ -89,8 +90,8 @@
                 contentType: false,
                 success: function(response) {
                     alert(response);
-                    $("#idFormDetail").hide(); // Hide form after success
-                    $("#idLoading").hide(); // Hide loading
+                    $("#idFormDetail").hide();
+                    $("#idLoading").hide();
                     reloadPage();
                 },
                 error: function(xhr, status, error) {
@@ -103,81 +104,145 @@
     });
 
 
-    function editData(id = "") {
+    function editData(id) {
         $("#idLoading").show();
 
-        $.post('<?php echo base_url("form/editData"); ?>', {
-            idForm: id
-        }, function(data) {
-            console.log("Data received:", data);
-            $("#idLoading").hide();
+        $.ajax({
+            url: '<?php echo base_url('form/getFormRequestDetailById'); ?>',
+            type: 'POST',
+            data: {
+                id_form: id
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    $("#txtIdEditForm").val(id);
 
-            if (Array.isArray(data) && data.length > 0) {
-                $("#DataTableRequest").hide();
-                $("#idFormEditDetail").show(200);
-                $("#idFieldEditDetail").empty();
+                    $("#idFieldEditDetail").empty();
 
-                data.forEach(function(record, index) {
-                    let formDetail = `
-                <div class="row" style="margin-bottom: 15px;">
-                    <div class="col-md-12">
-                        <legend>
-                            <label id="lblFormEdit">Edit Request Detail #${index + 1}</label>
-                        </legend>
-                        <div class="form-row">
-                            <div class="col-md-3 col-xs-12">
-                                <div class="form-group">
-                                    <label for="txtdescriptionEdit">Description:</label>
-                                    <input type="text" name="txtdescription" class="form-control input-sm" value="${record.description || ''}">
-                                </div>
-                            </div>
-                            <div class="col-md-1 col-xs-12">
-                                <div class="form-group">
-                                    <label for="txttypeEdit">Type:</label>
-                                    <input type="text" name="txttype" class="form-control input-sm" value="${record.type || ''}">
-                                </div>
-                            </div>
-                            <div class="col-md-1 col-xs-12">
-                                <div class="form-group">
-                                    <label for="txtreasonEdit">Reason:</label>
-                                    <input type="text" name="txtreason" class="form-control input-sm" value="${record.reason || ''}">
-                                </div>
-                            </div>
-                            <div class="col-md-1 col-xs-12">
-                                <div class="form-group">
-                                    <label for="txtquantityEdit">Quantity:</label>
-                                    <input type="text" name="txtquantity" class="form-control input-sm" value="${record.quantity || 0}" onkeypress="return isNumber(event)">
-                                </div>
-                            </div>
-                            <div class="col-md-2 col-xs-12">
-                                <div class="form-group">
-                                    <label for="txtRequiredDateEdit">Required Date:</label>
-                                    <input type="date" name="txtrequired_date" class="form-control input-sm" value="${record.required_date || ''}">
-                                </div>
-                            </div>
-                            <div class="col-md-3 col-xs-12">
-                                <div class="form-group">
-                                    <label for="txtnoteEdit">Note:</label>
-                                    <input type="text" name="txtnote" class="form-control input-sm" value="${record.note || ''}">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-                    $("#idFieldEditDetail").append(formDetail);
-                });
+                    if (Array.isArray(response.details) && response.details.length > 0) {
+                        $("#DataTableRequest").hide();
+                        $("#idFormEditDetail").show(200);
 
-                $("#idFieldEditDetail").append(`
-                <input type="hidden" id="txtIdEditForm" value="${data[0].id_form || ''}">
-            `);
-            } else {
-                alert("No data found.");
+                        response.details.forEach(function(detail, index) {
+                            var detailForm = `
+                            <div class="row" style="margin-bottom: 15px;">
+                                <div class="col-md-12">
+                                    <legend><label id="lblForm"> Edit Request Detail#${index}</label></legend>
+                                    <div class="form-row">
+                                        <input type="hidden" name="txtIdDetail[]" value="${detail.id}"> 
+                                        <input type="hidden" id="txtIdEditForm" name="txtIdEditForm" value="${detail.id_form}">
+                                        <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                            <div class="form-group">
+                                                <label for="txtdescription_${index}"><u>Description:</u></label>
+                                                <input type="text" name="txtdescription[]" class="form-control input-sm"
+                                                    id="txtdescription_${index}" value="${detail.description}" placeholder="Description" autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                            <div class="form-group">
+                                                <label for="txttype_${index}"><u>Type:</u></label>
+                                                <input type="text" name="txttype[]" class="form-control input-sm" id="txttype_${index}"
+                                                    value="${detail.type}" placeholder="Type" autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                            <div class="form-group">
+                                                <label for="txtreason_${index}"><u>Reason:</u></label>
+                                                <input type="text" name="txtreason[]" class="form-control input-sm" id="txtreason_${index}"
+                                                    value="${detail.reason}" placeholder="Reason" autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                            <div class="form-group">
+                                                <label for="txtquantity_${index}"><u>Quantity:</u></label>
+                                                <input type="text" name="txtquantity[]" class="form-control input-sm"
+                                                    id="txtquantity_${index}" value="${detail.quantity}" onkeypress="return isNumber(event)"
+                                                    autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                            <div class="form-group">
+                                                <label for="txtRequiredDate_${index}"><u>Required Date:</u></label>
+                                                <input type="date" name="txtrequired_date[]" class="form-control input-sm"
+                                                    id="txtRequiredDate_${index}" value="${detail.required_date}" autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                            <div class="form-group">
+                                                <label for="txtnote_${index}"><u>Note:</u></label>
+                                                <input type="text" name="txtnote[]" class="form-control input-sm"
+                                                    id="txtnote_${index}" value="${detail.note}" autocomplete="off">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                            $("#idFieldEditDetail").append(detailForm);
+                        });
+                    } else {
+                        alert("Data detail tidak ditemukan.");
+                    }
+                } else {
+                    alert(response.message);
+                }
+                $("#idLoading").hide();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error: " + error);
+                alert("Terjadi kesalahan saat mengambil data.");
+                $("#idLoading").hide();
             }
-        }, "json").fail(function() {
-            alert("Failed to retrieve data. Please try again.");
-            $("#idLoading").hide();
         });
     }
+
+    $(document).ready(function() {
+        $("#saveEditDetail").click(function(e) {
+            e.preventDefault();
+            var formData = {
+                txtIdEditForm: $("#txtIdEditForm").val(),
+                txtdescription: [],
+                txttype: [],
+                txtreason: [],
+                txtquantity: [],
+                txtrequired_date: [],
+                txtnote: [],
+                txtIdDetail: []
+            };
+            $("#idFieldEditDetail .row").each(function() {
+                formData.txtdescription.push($(this).find("input[name^='txtdescription[]']")
+                    .val());
+                formData.txttype.push($(this).find("input[name^='txttype[]']").val());
+                formData.txtreason.push($(this).find("input[name^='txtreason[]']").val());
+                formData.txtquantity.push($(this).find("input[name^='txtquantity[]']").val());
+                formData.txtrequired_date.push($(this).find("input[name^='txtrequired_date[]']")
+                    .val());
+                formData.txtnote.push($(this).find("input[name^='txtnote[]']").val());
+                formData.txtIdDetail.push($(this).find("input[name='txtIdDetail[]']").val());
+            });
+            $.ajax({
+                url: '<?php echo base_url('form/saveEditDetail'); ?>',
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === "success") {
+                        $("#txtIdEditForm").val(response.idForm);
+                        alert("Data berhasil diperbarui!");
+                        $("#idFormEditDetail").hide();
+                        $("#DataTableRequest").show();
+                    } else {
+                        alert("Terjadi kesalahan: " + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error: " + error);
+                    alert("Terjadi kesalahan saat menyimpan data.");
+                }
+            });
+        });
+    });
 
 
     $(document).on('click', '#cancelEditDetail', function() {
@@ -190,59 +255,7 @@
         $("#DataTableRequest").show(200);
     });
 
-    $(document).on('click', '#saveEditDetail', function() {
-        let formData = [];
-        let idForm = $("#txtIdEditForm").val();
 
-        if (!idForm) {
-            alert('Form ID is missing!');
-            return;
-        }
-
-        // Looping through rows to gather data
-        $("#idFieldEditDetail .row").each(function(index, element) {
-            let row = $(element);
-            let data = {
-                txtdescription: row.find("input[name='txtdescription']").val(),
-                txttype: row.find("input[name='txttype']").val(),
-                txtreason: row.find("input[name='txtreason']").val(),
-                txtquantity: row.find("input[name='txtquantity']").val(),
-                txtrequired_date: row.find("input[name='txtrequired_date']").val(),
-                txtnote: row.find("input[name='txtnote']").val()
-            };
-
-            if (data.txtdescription && data.txttype) {
-                formData.push(data);
-            }
-        });
-
-        if (formData.length === 0) {
-            alert('No valid data to save.');
-            return;
-        }
-
-        $.ajax({
-            url: '<?php echo base_url("form/saveEditedData"); ?>',
-            type: 'POST',
-            data: {
-                formData: formData,
-                txtIdEditForm: idForm
-            },
-            success: function(response) {
-                let result = JSON.parse(response);
-                if (result.success) {
-                    alert('Data berhasil disimpan!');
-                    $("#idFormEditDetail").hide(200);
-                    location.reload();
-                } else {
-                    alert('Gagal menyimpan data: ' + result.message);
-                }
-            },
-            error: function() {
-                alert('Terjadi kesalahan saat menyimpan data.');
-            }
-        });
-    });
 
 
     function ViewPrint(id = '') {
@@ -295,7 +308,6 @@
                     }
                     alert("Status successfully updated to Waiting Acknowledge.");
                     reloadPage();
-                    // Langsung refresh tabel acknowledge
                     refreshAcknowledgeTable();
                 }
             },
@@ -314,7 +326,7 @@
             success: function(response) {
                 let data = response.data;
                 let tbody = $('#idTbodyAcknowledge');
-                tbody.empty(); // Hapus isi tbody sebelum menambahkan data baru
+                tbody.empty();
                 let no = 1;
 
                 if (Array.isArray(data) && data.length) {
@@ -336,10 +348,9 @@
                                 </button>
                             </td>
                         </tr>`;
-                        tbody.append(row); // Tambahkan row ke tabel
+                        tbody.append(row);
                     });
                 } else {
-                    // Tampilkan pesan jika tidak ada data
                     tbody.append(
                         '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>');
                 }
@@ -350,8 +361,6 @@
             }
         });
     }
-
-
 
     function acknowledgeData(idForm) {
         $.ajax({
@@ -460,7 +469,6 @@
                         );
                     }
 
-                    // reloadPage();
                 },
                 error: function(xhr, status, error) {
                     console.log('Error:', error);
@@ -505,7 +513,6 @@
                             '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>'
                         );
                     }
-                    // reloadPage();
                 },
                 error: function(xhr, status, error) {
                     console.log('Error:', error);
@@ -537,7 +544,6 @@
             departmentSelect.append('<option value="">- Select Department -</option>');
 
             if (departmentMapping[selectedDivision]) {
-                // Populate department options based on the selected division
                 departmentMapping[selectedDivision].forEach(function(department) {
                     console.log("Adding department: " + department);
                     departmentSelect.append('<option value="' + department + '">' + department +

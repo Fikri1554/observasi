@@ -700,6 +700,7 @@ class Myapps extends CI_Controller {
 			$this->session->set_userdata('userTypeMyApps',$cekLogin[0]->userjenis);
 			$this->session->set_userdata('userInitial',$cekLogin[0]->userinithr);
 			$this->session->set_userdata('nmDiv',$cekLogin[0]->nmdiv);
+			$this->session->set_userdata('nmDept',$cekLogin[0]->nmdept);
 			$this->session->set_userdata('hrAdm',$cekLogin[0]->hradm);
 			$this->session->set_userdata('jnsKelamin',$jnsKelamin[0]->jnsklm);
 			$this->session->set_userdata('kdDivMyApps',$cekLogin[0]->kddiv);
@@ -720,6 +721,7 @@ class Myapps extends CI_Controller {
 		$this->session->unset_userdata('userTypeMyApps');
 		$this->session->unset_userdata('userInitial');
 		$this->session->unset_userdata('nmDiv');
+		$this->session->unset_userdata('nmDept');
 		$this->session->unset_userdata('hrAdm');
 		$this->session->unset_userdata('jnsKelamin');
 		$this->session->unset_userdata('kdDivMyApps');
