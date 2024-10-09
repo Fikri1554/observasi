@@ -88,6 +88,9 @@
                         $("#idReportSurvey").show();
                         $("#idSubSurveyCust").show();
                     }
+                    if (value.name_apps == "Form IT Request") {
+                        $("#idFormITReq").show();
+                    }
                 });
             },
             "json"
@@ -138,7 +141,7 @@
                                         class="fa fa-envelope-o"></i> Mail & Invoice</a></li>
                         </ul>
                         <ul class="sub">
-                            <li id="idFormReq" style="padding-left:25px;"><a
+                            <li id="idFormITReq" style="padding-left:25px;display:none;"><a
                                     href="<?php echo base_url('form/getDataForm'); ?>"><i class='fa fa-file'></i>
                                     Form IT Request</a></li>
                         </ul>

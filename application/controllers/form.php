@@ -24,22 +24,19 @@ class Form extends CI_Controller
 		} else {
 			$where .= " AND divisi = '" . $userDiv . "'";
 			
-			if($userDiv == 'FINANCIAL CONTROLLER' && $userDept == 'NON DEPARTMENT') {
+			if($userDiv === 'FINANCIAL CONTROLLER' && $userDept === 'NON DEPARTMENT') {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 			}
-			if($userDiv == 'NON DIVISION' && $userDept == 'QHSE') {
-				$where .= " AND divisi LIKE '%SHIP MANAGEMENT%'";			
-			}
-			if($userDiv == 'FINANCIAL CONTROLLER' && $userDept == 'FINANCE & CONTROL') {
+			if($userDiv === 'FINANCIAL CONTROLLER' && $userDept === 'FINANCE & CONTROL') {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 			}
-			if($userDiv == 'FINANCIAL CONTROLLER' && $userDept == 'ACCOUNTING & REPANDTING') {
+			if($userDiv === 'FINANCIAL CONTROLLER' && $userDept === 'ACCOUNTING & REPANDTING') {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 			}
-			if($userDiv == 'FINANCIAL CONTROLLER' && $userDept == 'FINANCE') {
+			if($userDiv === 'FINANCIAL CONTROLLER' && $userDept === 'FINANCE') {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 			}
-			if($userDiv == 'NON DIVISION' && $userDept == 'TAX') {
+			if($userDiv === 'NON DIVISION' && $userDept === 'TAX') {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 			}
 
@@ -119,8 +116,6 @@ class Form extends CI_Controller
 
 	function saveEditDetail() {
 		$data = $this->input->post();
-
-		log_message('info', 'POST Data: ' . print_r($data, true));
 
 		$txtIdForm = isset($data['txtIdEditForm']) ? $data['txtIdEditForm'] : null;
 
@@ -265,6 +260,7 @@ class Form extends CI_Controller
 	function getAcknowledgeData() {
 		$userType = $this->session->userdata('userTypeMyApps');
 		$userDiv = $this->session->userdata('nmDiv');
+		$userDept = $this->session->userdata('nmDept');
 
 		$where = "WHERE st_submit = 'Y' 
 				AND st_acknowledge = 'N' 
@@ -277,10 +273,29 @@ class Form extends CI_Controller
 			$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
 					FROM form " . $where . " AND divisi = '" . $userDiv . "'";
 
-			if (str_replace(" ", "", $userDiv) == 'FINANCIALCONTROLLER') {
+			if ($userDiv === "FINANCIALCONTROLLER" && $userDept === "NON DEPARTMENT") {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
 						FROM form " . $where;
+			}
+			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "FINANCE CONTROL")
+			{
+				$where .= " AND divisi LIKE '%FINANCE'";
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
+			}
+			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "ACCOUNTING & REPANDTING")
+			{
+				$where .= " AND divisi LIKE '%FINANCE%'";
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
+			}
+			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "FINANCE")
+			{
+				$where .= " AND divisi LIKE '%FUNANCE%'";
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
+			}
+			if($userDiv === 'NON DIVISION' && $userDept === 'TAX') {
+				$where .= " AND divisi LIKE '%FINANCE%'";
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
 			}
 		}
 
@@ -320,10 +335,34 @@ class Form extends CI_Controller
 		} else {
 			$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
 					FROM form " . $where . " AND divisi = '" . $userDiv . "'";
-			if (str_replace(" ", "", $userDiv) == 'FINANCIALCONTROLLER') {
+			if ($userDiv === "FINANCIALCONTROLLER" && $userDept === "NON DEPARTMENT") {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
 						FROM form " . $where;
+			}
+			if($userDiv === "NON DIVISION" && $userDept === "QHSE")
+			{
+				$where .= " AND divisi LIKE '%SHIP MANAGEMENT%'";
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form ". $where;
+			}
+			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "FINANCE CONTROL")
+			{
+				$where .= " AND divisi LIKE '%FINANCE'";
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
+			}
+			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "ACCOUNTING & REPANDTING")
+			{
+				$where .= " AND divisi LIKE '%FINANCE%'";
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
+			}
+			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "FINANCE")
+			{
+				$where .= " AND divisi LIKE '%FUNANCE%'";
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
+			}
+			if($userDiv === 'NON DIVISION' && $userDept === 'TAX') {
+				$where .= " AND divisi LIKE '%FINANCE%'";
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
 			}
 		}
 
@@ -469,75 +508,86 @@ class Form extends CI_Controller
 		$queryForm = "SELECT * FROM `form` WHERE `id` = $id AND `sts_delete` = 0";
 		$form = $this->myapp->getDataQueryDB6($queryForm);
 
-		if ($form[0]->batchno > 0) {
-			$this->createQRCode($form[0]->batchno);
-		}
+		if (count($form) > 0 && isset($form[0])) { // Periksa apakah $form ada dan elemen pertama tersedia
+			if ($form[0]->batchno > 0) {
+				$this->createQRCode($form[0]->batchno);
+			}
 
-		if ($form[0]->company == "PT. ADNYANA") {
-			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-		} else if ($form[0]->company == "PT. ANDHIKA LINES") {
-			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-		} else if ($form[0]->company == "PT. INDAH BIMA PRIMA") {
-			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-		} else if ($form[0]->company == "PT. ANDHINI EKA KARYA SEJAHTERA") {
-			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-		} else {
-			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".png";
-		}
+			// Handling logo based on company name
+			if ($form[0]->company == "PT. ADNYANA") {
+				$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+			} else if ($form[0]->company == "PT. ANDHIKA LINES") {
+				$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+			} else if ($form[0]->company == "PT. INDAH BIMA PRIMA") {
+				$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+			} else if ($form[0]->company == "PT. ANDHINI EKA KARYA SEJAHTERA") {
+				$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+			} else {
+				$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".png";
+			}
 
-		if (count($form) > 0) {
 			$queryFormDetail = "SELECT * FROM `form_detail` WHERE `id_form` = $id AND `sts_delete` = 0";
 			$form_details = $this->myapp->getDataQueryDB6($queryFormDetail);
 
+			// Filter form details
 			$form_details = array_filter($form_details, function($detail) {
 				return !empty($detail->description) && !empty($detail->type) && !empty($detail->reason) && $detail->quantity > 0;
 			});
 
 			$qrCodeImgPath = base_url("assets/imgQRCodeForm/" . base64_encode($form[0]->batchno) . ".jpg");
 
+			$buttonAck = "<button onclick=\"acknowledgeData(" . $form[0]->id . ");\" class=\"btn btn-primary btn-xs\" type=\"button\" style=\"margin: 5px;\"><i class='fa fa-print'></i> Acknowledge</button>";
+			$buttonApprove = "<button onclick=\"approveData(" . $form[0]->id . ");\" class=\"btn btn-success btn-xs\" type=\"button\" style=\"margin: 5px;\"><i class='fa fa-check'></i> Approve</button>";
+
 			$data = array(
 				'form' => $form[0],
 				'form_details' => $form_details,
 				'imageLogo' => "<img src=\"" . base_url($logo_company) . "\" alt=\"Company Logo\" height=\"50\" style=\"align-items: left; margin-bottom: -50px;\">",
-				'qrCode' => "<img src=\"" . $qrCodeImgPath . "\" alt=\"QR Code\" height=\"100\" width=\"100\" />",  
+				'qrCode' => "<img src=\"" . $qrCodeImgPath . "\" alt=\"QR Code\" height=\"100\" width=\"100\" />",
 				'kadept' => null,
+				'namefileKadept' => null,
 				'kadiv' => null,
+				'namafileKadiv' => null,
 				'nameKadept' => null,
 				'nameKadiv' => null
 			);
 
 			$mappingInfo = $this->getMappingInfo($form[0]->divisi, $form[0]->department);
-	
-			if ($form[0]->st_acknowledge == 'Y') {
+
+			if (isset($mappingInfo['namefileKadept']) && $form[0]->st_acknowledge == 'Y') {
 				$data['kadept'] = "<img src=\"" . base_url(trim($mappingInfo['namefileKadept'])) . "\" alt=\"Kadept QR Code\" height=\"100\" width=\"100\" />";
 				$data['nameKadept'] = $mappingInfo['nameKadept'];
 			}
 
-			if ($form[0]->st_approval == 'Y') {
+			if (isset($mappingInfo['namafileKadiv']) && $form[0]->st_approval == 'Y') {
 				$data['kadiv'] = "<img src=\"" . base_url($mappingInfo['namafileKadiv']) . "\" alt=\"Kadiv QR Code\" height=\"100\" width=\"100\" />";
 				$data['nameKadiv'] = $mappingInfo['nameKadiv'];
 			}
-			$this->load->view('myApps/previewPrint', $data);
+
+			$this->load->view('myApps/previewPrint', $data); 
 		} else {
 			show_error('Form not found', 404);
 		}
 	}
 
+
+
 	function getMappingInfo($division, $department) {
 		
 		$batchno = $this->getBatchNo();
 
-		$queryBatch = "SELECT * FROM `form` WHERE `batchno` = '" . $this->db->escape_str($batchno) . "' AND sts_delete = '0'";
+		$queryBatch = "SELECT * FROM `form` WHERE `batchno` = '".$batchno."' AND sts_delete = '0'";
 		$requestData = $this->myapp->getDataQueryDB6($queryBatch);
 
-		if ($requestData) {
-			$requestName = $requestData->request_name;
-		} else {
-			$requestName = 'Nama Request'; 
+		$requestName = 'Nama Request'; 
+		$qrcodeFile = '';  
+
+		if ($requestData && is_array($requestData) && isset($requestData[0])) {
+			$requestName = isset($requestData[0]->request_name) ? $requestData[0]->request_name : 'Nama Request';
+			$qrcodeFile = '/assets/imgQRCodeForm/' . base64_encode($requestData[0]->batchno) . '.jpg';
 		}
-		
-		$qrcodeFile = '/assets/imgQRCodeForm/' . base64_encode($requestData[0]->batchno) . '.jpg';
-		
+
+
 		$Mapping = array(
 			'BOD / BOC' => array(
 				'Non Department' => array(
@@ -732,8 +782,7 @@ class Form extends CI_Controller
 
 		return null;
 	}
-
-	
+ 
 	function getBatchNo()
 	{
 		$batchNo = "1";

@@ -317,103 +317,6 @@
         });
     }
 
-
-    function refreshAcknowledgeTable() {
-        $.ajax({
-            url: '<?php echo base_url("form/getAcknowledgeData"); ?>',
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                let data = response.data;
-                let tbody = $('#idTbodyAcknowledge');
-                tbody.empty();
-                let no = 1;
-
-                if (Array.isArray(data) && data.length) {
-                    data.forEach(function(item) {
-                        let row = `
-                        <tr id="row_${item.id}">
-                            <td style="text-align:center;">${no++}</td>
-                            <td style="text-align:center;">${item.project_reference}</td>
-                            <td style="text-align:center;">${item.purpose}</td>
-                            <td style="text-align:center;">${item.company}</td>
-                            <td style="text-align:center;">${item.location}</td>
-                            <td style="text-align:center;">${item.nmDiv}</td>
-                            <td style="text-align:center;">
-                                <button onclick="acknowledgeData(${item.id});" class="btn btn-primary btn-xs" type="button" style="margin: 5px;">
-                                    <i class="fa fa-print"></i> Acknowledge
-                                </button>
-                                <button onclick="ViewPrint(${item.id});" class="btn btn-success btn-xs" type="button">
-                                    <i class="fa fa-eye"></i> View
-                                </button>
-                            </td>
-                        </tr>`;
-                        tbody.append(row);
-                    });
-                } else {
-                    tbody.append(
-                        '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>');
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                alert('Error fetching data');
-            }
-        });
-    }
-
-    function acknowledgeData(idForm) {
-        $.ajax({
-            url: '<?php echo base_url('form/acknowledgeData'); ?>',
-            type: "POST",
-            data: {
-                id: idForm
-            },
-            success: function(response) {
-                const res = JSON.parse(response);
-                if (res.status === 'success') {
-                    const statusElement = document.getElementById("status_" +
-                        idForm);
-                    if (statusElement) {
-                        statusElement.innerHTML = "Waiting Approval";
-                        alert("Status successfully updated to waiting Approval");
-                        reloadPage();
-                    }
-
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-            }
-        });
-    }
-
-    function approveData(idForm) {
-        $.ajax({
-            url: '<?php echo base_url('form/approveData'); ?>',
-            type: "POST",
-            data: {
-                id: idForm
-            },
-            success: function(response) {
-                const res = JSON.parse(response);
-                if (res.status === 'success') {
-                    const statusElement = document.getElementById("status_" +
-                        idForm);
-                    if (statusElement) {
-                        statusElement.innerHTML = "Approve Success";
-                        alert("Request has been approve!");
-                        reloadPage();
-                    }
-
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-            }
-        });
-    }
-
     function addDetail(id) {
         $("#DataTableRequest").hide();
         $("#idFormDetail").show(200);
@@ -501,7 +404,6 @@
                                         <td style="text-align:center;">${item.location}</td>
                                         <td style="text-align:center;">${item.divisi}</td>
                                         <td style="text-align:center;">
-                                            <button onclick="approveData(${item.id});" class="btn btn-success btn-xs" type="button" style="margin: 5px;"><i class="fa fa-check"></i> Approve</button>
                                             <button onclick="ViewPrint(${item.id});" class="btn btn-primary btn-xs" type="button"><i class="fa fa-eye"></i> View</button>
                                         </td>
                                     </tr>`;
@@ -526,13 +428,13 @@
         const departmentMapping = {
             "BOD / BOC": ["Non Department", "PA (Personal Assistant)"],
             "CORPORATE FINANCE, STRATEGY & COMPLIANCE": ["Non Department"],
-            "DRY BULK COMMERCIAL, OPERATION & AGENCY": ["Operation", "Commercial", "Agency"],
+            "DRY BULK COMMERCIAL, OPERATION & AGENCY": ["Operation", "COMMERCIAL & CHARTERING", "Agency"],
             "FINANCE": ["Finance", "Accounting", "Tax"],
             "HUMAN CAPITAL & GA": ["HR", "GA"],
             "NON DIVISION": ["Secretary"],
-            "OFFICE OPERATION": ["IT", "Legal", "Procurement"],
+            "OFFICE OPERATION": ["IT", "Legal", "Procurement", "AGENCY & BRANCH"],
             "OIL & GAS COMMERCIAL & OPERATION": ["Commercial", "Operation"],
-            "SHIP MANAGEMENT": ["Owner Superintendent (Technical)", "Crewing", "QHSE"]
+            "SHIP MANAGEMENT": ["Owner Superintendent (Technical)", "Crewing", "QHSE", "AGENCY & BRANCH"]
         };
 
         $('#slcDivisi').change(function() {
