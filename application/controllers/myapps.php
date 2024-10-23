@@ -679,7 +679,7 @@ class Myapps extends CI_Controller {
 		if(count($data) > 0 ){ $stCek = "ada"; }
 		return $stCek;
 	}
-	function login()
+	function login()		
 	{
 		$data = $_POST;
 		$user = $data['user'];

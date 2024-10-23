@@ -17,6 +17,8 @@ class Form extends CI_Controller
 		$userDiv = $this->session->userdata('nmDiv'); 
 		$userDept = $this->session->userdata('nmDept'); 
 		
+		//print_r($userDiv);exit;	
+
 		$where = "WHERE sts_delete = '0' ";
 		
 		if ($userType == 'admin') {
@@ -24,19 +26,7 @@ class Form extends CI_Controller
 		} else {
 			$where .= " AND divisi = '" . $userDiv . "'";
 			
-			if($userDiv === 'FINANCIAL CONTROLLER' && $userDept === 'NON DEPARTMENT') {
-				$where .= " AND divisi LIKE '%FINANCE%'";
-			}
-			if($userDiv === 'FINANCIAL CONTROLLER' && $userDept === 'FINANCE & CONTROL') {
-				$where .= " AND divisi LIKE '%FINANCE%'";
-			}
-			if($userDiv === 'FINANCIAL CONTROLLER' && $userDept === 'ACCOUNTING & REPANDTING') {
-				$where .= " AND divisi LIKE '%FINANCE%'";
-			}
-			if($userDiv === 'FINANCIAL CONTROLLER' && $userDept === 'FINANCE') {
-				$where .= " AND divisi LIKE '%FINANCE%'";
-			}
-			if($userDiv === 'NON DIVISION' && $userDept === 'TAX') {
+			if ($userDiv === "FINANCIAL CONTROLLER" || $userDept === "FINANCE CONTROL" || $userDept === "ACCOUNTING & REPANDTING" || $userDept === "FINANCE" || $userDept === "TAX") {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 			}
 
@@ -63,14 +53,13 @@ class Form extends CI_Controller
 				$btnDetail = "<button onclick=\"addDetail('" . $value->id . "');\" title=\"Add Detail\" class=\"btn btn-primary btn-xs\" id=\"btnAdd\" type=\"button\"><i class=\"glyphicon glyphicon-plus\"></i></button>";
 			}
 			if ($value->st_submit === 'Y') {
-				$btnExport = "<button onclick=\"ViewPrint('" . $value->id . "');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
+				$btnExport = "<button onclick=\"ViewPrint('" .$value->id. "','request');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
 				$btnDetail = '';
 				$btnDelete = '';
 				$btnSubmit = '';
 			} else {
-				$btnExport = "<button onclick=\"ViewPrint('" . $value->id . "');\" class=\"btn btn-success btn-xs\" id=\"btnView_" . $value->id . "\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
+				$btnExport = "<button onclick=\"ViewPrint('" . $value->id . "', 'request');\" class=\"btn btn-success btn-xs\" id=\"btnView_" . $value->id . "\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
 				$btnDelete = "<button onclick=\"delData('" . $value->id . "');\" class=\"btn btn-danger btn-xs\" id=\"btnDelete_" . $value->id . "\" type=\"button\" title=\"Delete\"><i class=\"fa fa-trash-o\"></i> Delete</button>";
-				$btnSubmit = "<button onclick=\"sendData('" . $value->id . "');\" class=\"btn btn-primary btn-xs\" id=\"btnSubmit_" . $value->id . "\" type=\"button\" title=\"Submit\"><i class=\"fa fa-send-o\"></i> Send</button>";
 			}
 
 			$tr .= "<tr id='row_" . $value->id . "'>";
@@ -124,7 +113,7 @@ class Form extends CI_Controller
 			return;
 		}
 
-		$responseMessage = "";
+		$responseMessage = "";	
 		$details = array();
 
 		$arrDescriptions   = $data['txtdescription'];
@@ -266,39 +255,18 @@ class Form extends CI_Controller
 				AND st_acknowledge = 'N' 
 				AND sts_delete = 0";
 		if ($userType == 'admin') {
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
 		} else {
-			
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where . " AND divisi = '" . $userDiv . "'";
-
-			if ($userDiv === "FINANCIALCONTROLLER" && $userDept === "NON DEPARTMENT") {
+			if ($userDiv === "FINANCIAL CONTROLLER" || $userDept === "FINANCE CONTROL" || $userDept === "ACCOUNTING & REPANDTING" || $userDept === "FINANCE" || $userDept === "TAX") {
 				$where .= " AND divisi LIKE '%FINANCE%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 						FROM form " . $where;
 			}
-			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "FINANCE CONTROL")
-			{
-				$where .= " AND divisi LIKE '%FINANCE'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
-			}
-			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "ACCOUNTING & REPANDTING")
-			{
-				$where .= " AND divisi LIKE '%FINANCE%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
-			}
-			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "FINANCE")
-			{
-				$where .= " AND divisi LIKE '%FUNANCE%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
-			}
-			if($userDiv === 'NON DIVISION' && $userDept === 'TAX') {
-				$where .= " AND divisi LIKE '%FINANCE%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
-			}
 		}
-
+		
 		$query = $this->myapp->getDataQueryDB6($sql);
 
 		if ($query) {
@@ -316,56 +284,34 @@ class Form extends CI_Controller
 			}
 			echo json_encode(array('data' => $resultArrayAcknowledge));
 		} else {
-			
 			echo json_encode(array('data' => array()));
 		}
 	}
-
+	
+	
 	function getApprovalData() {
 		$userType = $this->session->userdata('userTypeMyApps');
 		$userDiv = $this->session->userdata('nmDiv');
+		$userDept = $this->session->userdata('nmDept');
+		$userName = $this->session->userdata('fullNameMyApps');
 
 		$where = "WHERE st_acknowledge = 'Y' 
 				AND st_approval = 'N' 
 				AND sts_delete = 0";
 
 		if ($userType == 'admin') {
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
 		} else {
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where . " AND divisi = '" . $userDiv . "'";
-			if ($userDiv === "FINANCIALCONTROLLER" && $userDept === "NON DEPARTMENT") {
+			if ($userDiv === "FINANCIAL CONTROLLER" || $userDept === "FINANCE CONTROL" || $userDept === "ACCOUNTING & REPANDTING" || $userDept === "FINANCE" || $userDept === "TAX") {
 				$where .= " AND divisi LIKE '%FINANCE%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete 
+				$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 						FROM form " . $where;
 			}
-			if($userDiv === "NON DIVISION" && $userDept === "QHSE")
-			{
-				$where .= " AND divisi LIKE '%SHIP MANAGEMENT%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form ". $where;
-			}
-			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "FINANCE CONTROL")
-			{
-				$where .= " AND divisi LIKE '%FINANCE'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
-			}
-			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "ACCOUNTING & REPANDTING")
-			{
-				$where .= " AND divisi LIKE '%FINANCE%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
-			}
-			if($userDiv === "FINANCIAL CONTROLLER" && $userDept === "FINANCE")
-			{
-				$where .= " AND divisi LIKE '%FUNANCE%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
-			}
-			if($userDiv === 'NON DIVISION' && $userDept === 'TAX') {
-				$where .= " AND divisi LIKE '%FINANCE%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, sts_delete FROM form". $where;
-			}
 		}
-
+		
 		$query = $this->myapp->getDataQueryDB6($sql);
 
 		if ($query) {
@@ -380,13 +326,13 @@ class Form extends CI_Controller
 					'divisi' => $value->divisi,
 					'sts_delete' => $value->sts_delete
 				);
+				
 			}
 			echo json_encode(array('data' => $resultArrayApproval));
 		} else {
 			echo json_encode(array('data' => array()));
 		}
 	}
-
 
 	function createQRCode($id = "")
 	{
@@ -499,45 +445,52 @@ class Form extends CI_Controller
 		return $imgName;
 	}
 
-	function previewPrint($id) {
-		$id = intval($id);
+	function previewPrint() 
+	{
+		$id = $this->input->post('id');
+		$typeView = $this->input->post('typeView');
+		$userid = $this->session->userdata('userIdMyApps'); 
+		$userType = $this->session->userdata('userTypeMyApps');
+		
+		if ($id === null) {
+			show_error('ID is missing', 400);
+			return;
+		}
+
+		$button = "";
 		$logo_company = "/assets/img";
-		$kadept = "";
-		$kadiv = "";
+		$form_details = array();
 
 		$queryForm = "SELECT * FROM `form` WHERE `id` = $id AND `sts_delete` = 0";
 		$form = $this->myapp->getDataQueryDB6($queryForm);
 
-		if (count($form) > 0 && isset($form[0])) { // Periksa apakah $form ada dan elemen pertama tersedia
-			if ($form[0]->batchno > 0) {
-				$this->createQRCode($form[0]->batchno);
-			}
+		if ($form[0]->batchno > 0) {
+			$this->createQRCode($form[0]->batchno);
+		}
 
-			// Handling logo based on company name
-			if ($form[0]->company == "PT. ADNYANA") {
-				$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-			} else if ($form[0]->company == "PT. ANDHIKA LINES") {
-				$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-			} else if ($form[0]->company == "PT. INDAH BIMA PRIMA") {
-				$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-			} else if ($form[0]->company == "PT. ANDHINI EKA KARYA SEJAHTERA") {
-				$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-			} else {
-				$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".png";
-			}
+		if ($form[0]->company == "PT. ADNYANA") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else if ($form[0]->company == "PT. ANDHIKA LINES") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else if ($form[0]->company == "PT. INDAH BIMA PRIMA") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else if ($form[0]->company == "PT. ANDHINI EKA KARYA SEJAHTERA") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".png";
+		}
 
+		if (count($form) > 0 && isset($form[0])) {
 			$queryFormDetail = "SELECT * FROM `form_detail` WHERE `id_form` = $id AND `sts_delete` = 0";
 			$form_details = $this->myapp->getDataQueryDB6($queryFormDetail);
 
-			// Filter form details
 			$form_details = array_filter($form_details, function($detail) {
 				return !empty($detail->description) && !empty($detail->type) && !empty($detail->reason) && $detail->quantity > 0;
 			});
 
 			$qrCodeImgPath = base_url("assets/imgQRCodeForm/" . base64_encode($form[0]->batchno) . ".jpg");
-
-			$buttonAck = "<button onclick=\"acknowledgeData(" . $form[0]->id . ");\" class=\"btn btn-primary btn-xs\" type=\"button\" style=\"margin: 5px;\"><i class='fa fa-print'></i> Acknowledge</button>";
-			$buttonApprove = "<button onclick=\"approveData(" . $form[0]->id . ");\" class=\"btn btn-success btn-xs\" type=\"button\" style=\"margin: 5px;\"><i class='fa fa-check'></i> Approve</button>";
+			
+			//$mappingButtons = $this->mappingButton($form[0]->divisi, $form[0]->department, $form[0]->batchno);
 
 			$data = array(
 				'form' => $form[0],
@@ -545,80 +498,208 @@ class Form extends CI_Controller
 				'imageLogo' => "<img src=\"" . base_url($logo_company) . "\" alt=\"Company Logo\" height=\"50\" style=\"align-items: left; margin-bottom: -50px;\">",
 				'qrCode' => "<img src=\"" . $qrCodeImgPath . "\" alt=\"QR Code\" height=\"100\" width=\"100\" />",
 				'kadept' => null,
-				'namefileKadept' => null,
 				'kadiv' => null,
-				'namafileKadiv' => null,
 				'nameKadept' => null,
-				'nameKadiv' => null
+				'nameKadiv' => null,
+				// 'buttonKadiv' => $mappingButtons['buttonKadiv'], 
+            	// 'buttonKadept' => $mappingButtons['buttonKadept'] 
+				
 			);
-
-			$mappingInfo = $this->getMappingInfo($form[0]->divisi, $form[0]->department);
-
-			if (isset($mappingInfo['namefileKadept']) && $form[0]->st_acknowledge == 'Y') {
+			
+			$mappingInfo = $this->getMappingInfo($form[0]->divisi, $form[0]->department, $form[0]->batchno);
+			
+			if ($form[0]->st_acknowledge == 'Y') {
 				$data['kadept'] = "<img src=\"" . base_url(trim($mappingInfo['namefileKadept'])) . "\" alt=\"Kadept QR Code\" height=\"100\" width=\"100\" />";
 				$data['nameKadept'] = $mappingInfo['nameKadept'];
 			}
 
-			if (isset($mappingInfo['namafileKadiv']) && $form[0]->st_approval == 'Y') {
+			if ($form[0]->st_approval == 'Y') {
 				$data['kadiv'] = "<img src=\"" . base_url($mappingInfo['namafileKadiv']) . "\" alt=\"Kadiv QR Code\" height=\"100\" width=\"100\" />";
 				$data['nameKadiv'] = $mappingInfo['nameKadiv'];
 			}
+			
+			if ($typeView == 'request' && $form[0]->st_submit == 'N' && $form[0]->st_acknowledge == 'N' && $form[0]->st_approval == 'N') {
+				$button .= "<button onclick=\"sendData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnSubmit_{$form[0]->id}\" type=\"button\" title=\"Submit\"><i class=\"fa fa-send-o\"></i> Send</button>";
+			}
+			else if($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'N' && $form[0]->st_approval == 'N'){
+				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\"><i class=\"fa fa-download\"></i> Download</button>";
+			}else if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
+				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" 		id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\">
+							<i class=\"fa fa-download\"></i> Download
+							</button>";
+			}
+			else if ($typeView == 'acknowledge' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'N'){
+				$button .= "<button onclick=\"acknowledgeData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" type=\"button\" style=\"margin: 5px;\">
+										<i class=\"fa fa-print\"></i> Acknowledge
+									</button>";
+			}
+			else if ($typeView == 'approval' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
+				$button .= "<button onclick=\"approveData({$form[0]->id});\" class=\"btn btn-success btn-xs\" id=\"btnApprove_{$form[0]->id}\" type=\"button\" title=\"Approve\"><i class=\"fa fa-thumbs-up\"></i> Approve</button>";
+			}else if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'Y')
+			{
+				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\"><i class=\"fa fa-download\"></i> Download</button>";
+			}
 
-			$this->load->view('myApps/previewPrint', $data); 
+			$data['button'] = $button;
+
+			echo json_encode($data);
 		} else {
 			show_error('Form not found', 404);
 		}
 	}
+	
+	function printPdf() {
+		$id = $this->input->post('id');
+		if ($id === null) {
+			show_error('ID is missing', 400);
+			return;
+		}
 
+		$button = "";
+		$logo_company = "/assets/img";
+		$form_details = array();
 
+		$queryForm = "SELECT * FROM `form` WHERE `id` = $id AND `sts_delete` = 0";
+		$form = $this->myapp->getDataQueryDB6($queryForm);
 
-	function getMappingInfo($division, $department) {
+		if ($form[0]->batchno > 0) {
+			$this->createQRCode($form[0]->batchno);
+		}
+
+		if ($form[0]->company == "PT. ADNYANA") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else if ($form[0]->company == "PT. ANDHIKA LINES") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else if ($form[0]->company == "PT. INDAH BIMA PRIMA") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else if ($form[0]->company == "PT. ANDHINI EKA KARYA SEJAHTERA") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".png";
+		}
 		
+		if (count($form) > 0 && isset($form[0])) {
+			$queryFormDetail = "SELECT * FROM `form_detail` WHERE `id_form` = $id AND `sts_delete` = 0";
+			$form_details = $this->myapp->getDataQueryDB6($queryFormDetail);
+
+			$form_details = array_filter($form_details, function($detail) {
+				return !empty($detail->description) && !empty($detail->type) && !empty($detail->reason) && $detail->quantity > 0;
+			});
+
+			$qrCodeImgPath = base_url("assets/imgQRCodeForm/" . base64_encode($form[0]->batchno) . ".jpg");
+
+			$data = array(
+				'form' => $form[0],
+				'form_details' => $form_details,
+				'imageLogo' => "<img src=\"" . base_url($logo_company) . "\" alt=\"Company Logo\" height=\"50\" style=\"align-items: left; margin-bottom: -50px;\">",
+				'qrCode' => "<img src=\"" . $qrCodeImgPath . "\" alt=\"QR Code\" height=\"100\" width=\"100\" />",  
+				'kadept' => null,
+				'kadiv' => null,
+				'nameKadept' => null,
+				'nameKadiv' => null
+			);
+
+			$mappingInfo = $this->getMappingInfo($form[0]->divisi, $form[0]->department, $form[0]->batchno);
+		
+			if ($form[0]->st_acknowledge == 'Y') {
+				$data['kadept'] = "<img src=\"" . base_url(trim($mappingInfo['namefileKadept'])) . "\" alt=\"Kadept QR Code\" height=\"100\" width=\"100\" />";
+				$data['nameKadept'] = $mappingInfo['nameKadept'];
+			}
+
+			if ($form[0]->st_approval == 'Y') {
+				$data['kadiv'] = "<img src=\"" . base_url($mappingInfo['namafileKadiv']) . "\" alt=\"Kadiv QR Code\" height=\"100\" width=\"100\" />";
+				$data['nameKadiv'] = $mappingInfo['nameKadiv'];
+			}
+			 
+			$this->load->view('myApps/previewPrint', $data);
+		} else {
+			show_error('Form not found', 404);
+		}
+	}
+	
+	function getMenuAccess($userId, $userFullName) {
+		
+		$division = $this->session->userdata('nmDiv');
+		$department = $this->session->userdata('nmDept');
+		$userType = $this->session->userdata('userTypeMyApps'); 
 		$batchno = $this->getBatchNo();
 
+		if ($userType == 'admin') {
+			return array(
+				'request' => true,
+				'acknowledge' => true,
+				'approve' => true
+			);
+		}
+
+		$mappingInfo = $this->getMappingInfo($division, $department, $batchno);
+
+		$access = array(
+			'request' => false,     
+			'acknowledge' => false, 
+			'approve' => false
+		);
+
+		if ($mappingInfo) {
+			if ($mappingInfo['acknowledgeKadept'] == $userFullName) {
+				$access['acknowledge'] = true;
+			}
+			if ($mappingInfo['approveKadiv'] == $userFullName) {
+				$access['approve'] = true;
+			}
+		} else {
+			// Jika tidak ditemukan dalam mapping, beri akses ke menu "Request"
+			$access['request'] = true;
+		}
+
+		return $access;
+	}
+
+ 
+	function getMappingInfo($division, $department, $batchno) {
+		
 		$queryBatch = "SELECT * FROM `form` WHERE `batchno` = '".$batchno."' AND sts_delete = '0'";
 		$requestData = $this->myapp->getDataQueryDB6($queryBatch);
 
-		$requestName = 'Nama Request'; 
-		$qrcodeFile = '';  
-
-		if ($requestData && is_array($requestData) && isset($requestData[0])) {
-			$requestName = isset($requestData[0]->request_name) ? $requestData[0]->request_name : 'Nama Request';
+		if (!empty($requestData) && isset($requestData[0])) {
+			$requestName = $requestData[0]->request_name;
 			$qrcodeFile = '/assets/imgQRCodeForm/' . base64_encode($requestData[0]->batchno) . '.jpg';
+		} else {
+			$requestName = 'Nama Request';
+			$qrcodeFile = '/assets/imgQRCodeForm/default.jpg'; 
 		}
-
-
+		
 		$Mapping = array(
 			'BOD / BOC' => array(
-				'Non Department' => array(
+				'NON DEPARTMENT' => array( 
 					'nameKadiv'=> 'Pribadi Arijanto',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
 					'approveKadiv' => 'Pribadi Arijanto',
 					'nameKadept' => $requestName,
-					'namafileKadept' => $qrcodeFile, 
+					'namefileKadept' => $qrcodeFile, 
 					'acknowledgeKadept' => $requestName
 				),
-				'PA (Personal Assistent' => array(
+				'PA' => array(
 					'nameKadiv' => 'Pribadi Arijanto',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
 					'approveKadiv' => 'Pribadi Arijanto',
 					'nameKadept' => $requestName,
-					'namafileKadept' => $qrcodeFile,
+					'namefileKadept' => $qrcodeFile,
 					'acknowledgeKadept' => $requestName	
 				),
 			),
 			'CORPORATE FINANCE, STRATEGY & COMPLIANCE' => array(
-				'Non Department' => array(
+				'NON DEPARTMENT' => array(
 					'nameKadiv' => 'Pribadi Arijanto',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
 					'approveKadiv' => 'Pribadi Arijanto',
 					'nameKadept' => $requestName,
-					'namafileKadept' => $qrcodeFile,
+					'namefileKadept' => $qrcodeFile,
 					'acknowledgeKadept' => $requestName	
 				)
-			),
+			), 
 			'DRY BULK COMMERCIAL,OPERATION & AGENCY' => array(
-				'Commercial' => array(
+				'COMMERCIAL' => array(
 					'nameKadiv' => 'Ferry Nugroho',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/FerryNugroho.jpg',
 					'approveKadiv' => 'Ferry Nugroho ',
@@ -626,15 +707,15 @@ class Form extends CI_Controller
 					'namefileKadept' => '/assets/ImgQRCodeForm/RahadianHerbisworo.jpg',
 					'acknowledgeKadept' => 'Rahadian Herbisworo'
 				),
-				'Operation' => array(
+				'OPERATION' => array(
 					'nameKadiv' => 'Ferry Nugroho',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/TimbulRiyadi.jpg',
 					'approveKadiv' => 'Ferry Nugroho',
 					'nameKadept' => 'Timbul Riyadi',
 					'namefileKadept' => '/assets/ImgQRCodeForm/RahadianHerbisworo.jpg',
-					'acknowledgeKadept' => 'Timbul Riyadi'
+					'acknowledgeKadept' => 'Timbul Riyadi' 
 				),
-				'Agency' => array(
+				'AGENCY' => array(
 					'nameKadiv' => 'Ferry Nugroho',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/TimbulRiyadi.jpg',
 					'approveKadiv' => 'Ferry Nugroho',
@@ -644,7 +725,7 @@ class Form extends CI_Controller
 				)
 			),
 			'FINANCE' => array(
-				'Finance' => array(
+				'FINANCE' => array(
 					'nameKadiv' => 'Sylvia Panghuriany',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/Sylvia.jpg',
 					'approveKadiv' => 'Sylvia Panghuriany',
@@ -652,7 +733,7 @@ class Form extends CI_Controller
 					'namefileKadept' => '/assets/ImgQRCodeForm/Marita.jpg',
 					'acknowledgeKadept' => 'Marita'
 				),
-				'Accounting' => array(
+				'ACCOUNTING' => array(
 					'nameKadiv' => 'Sylvia Panghuriany',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/Sylvia.jpg',
 					'approveKadiv' => 'Sylvia Panghuriany', 
@@ -660,7 +741,7 @@ class Form extends CI_Controller
 					'namefileKadept' => '/assets/ImgQRCodeForm/RikoRamdani.jpg',
 					'acknowledgeKadept' => 'Riko Ramdani'
 				),
-				'Tax' => array(
+				'TAX' => array(
 					'nameKadiv' => 'Sylvia Panghuriany',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/Sylvia.jpg',
 					'approveKadiv' => 'Sylvia Panghuriany',
@@ -688,13 +769,21 @@ class Form extends CI_Controller
 				) 
 			),
 			'NON DIVISION' => array(
-				'Secretary' => array(
+				'SECRETARY' => array(
 					'nameKadiv' => 'Pribadi Arijanto',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
 					'approveKadiv' => 'Pribadi Arijanto',
 					'nameKadept' => $requestName,
-					'namafileKadept' => $qrcodeFile,
+					'namefileKadept' => $qrcodeFile,
 					'acknowledgeKadept' => $requestName	
+				),
+				'NON DEPARTMENT' => array(
+					'nameKadiv'=> 'Pribadi Arijanto',
+					'namafileKadiv'=> '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
+					'approveKadiv'=> 'Pribadi Arijanto',
+					'nameKadept' => $requestName,
+					'namefileKadept' => $qrcodeFile,
+					'acknowledgeKadept' => $requestName   
 				)
 			),
 			'OFFICE OPERATION' => array(
@@ -704,17 +793,17 @@ class Form extends CI_Controller
 					'approveKadiv' => 'PribadiArijanto',
 					'nameKadept' => 'Hendra Roesli',
 					'namefileKadept' => '/assets/ImgQRCodeForm/HendraRoesli.jpg',
-					'aknowledgeKadept' => 'Hendra Roesli' 
+					'acknowledgeKadept' => 'Hendra Roesli' 
 				),
-				'Legal' => array(
+				'LEGAL' => array(
 					'nameKadiv'=> 'Pribadi Arijanto',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
 					'approveKadiv' => 'Pribadi Arijanto',
 					'nameKadept' => 'Pribadi Arijanto',
 					'namefileKadept' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
-					'aknowledgeKadept' => 'Pribadi Arijanto' 
+					'acknowledgeKadept' => 'Pribadi Arijanto' 
 				),
-				'Procurement' => array(
+				'PROCUREMENT' => array(
 					'nameKadiv'=> 'Pribadi Arijanto',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
 					'approveKadiv' => 'Pribadi Arijanto',
@@ -724,7 +813,7 @@ class Form extends CI_Controller
 				)
 			),
 			'OIL & GAS COMMERCIAL & OPERATION' => array(
-				'Commercial' => array(
+				'COMMERCIAL' => array(
 					'nameKadiv'=> 'Nick Djatnika',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/NickDjatnika.jpg',
 					'approveKadiv' => 'Nick Djatnika',
@@ -732,7 +821,7 @@ class Form extends CI_Controller
 					'namefileKadept' => '/assets/ImgQRCodeForm/Adityailham.jpg',
 					'acknowledgeKadept' => 'Aditya Ilham Nusantara'
 				),
-				'Operation' => array(
+				'OPERATION' => array(
 					'nameKadiv'=> 'Nick Djatnika',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/NickDjatnika.jpg',
 					'approveKadiv' => 'Nick Djatnika',
@@ -742,7 +831,7 @@ class Form extends CI_Controller
 				)
 			),
 			'SHIP MANAGEMENT' => array(
-				'Owner Superintendent (Technical)' => array(
+				'OWNER SUPERINTENDENT (TECHNICAL)' => array(
 					'nameKadiv'=> 'Eddy Sukmono',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/EddySukmono.jpg',
 					'approveKadiv' => 'Eddy Sukmono',
@@ -750,7 +839,7 @@ class Form extends CI_Controller
 					'namefileKadept' => '/assets/ImgQRCodeForm/HariJoko.jpg',
 					'acknowledgeKadept' => 'Hari Joko'
 				),
-				'Crewing' => array(
+				'CREWING' => array(
 					'nameKadiv'=> 'Eddy Sukmono',
 					'namafileKadiv' => '/assets/ImgQRCodeForm/EddySukmono.jpg',
 					'approveKadiv' => 'Eddy Sukmono',
@@ -782,7 +871,8 @@ class Form extends CI_Controller
 
 		return null;
 	}
- 
+
+	
 	function getBatchNo()
 	{
 		$batchNo = "1";

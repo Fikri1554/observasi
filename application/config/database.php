@@ -169,27 +169,27 @@ $db['myapps'] = array(
  // 'failover' => array(),
  // 'save_queries' => TRUE
 // );
-$db['hrsysV11'] = array(
- 'dsn' => '',
- 'hostname' => 'hrsysv11',
- 'username' => 'mysql',
- 'password' => '#And24',
- 'database' => '',
- 'dbdriver' => 'odbc',
- 'dbprefix' => '',
- 'pconnect' => TRUE,
- 'db_debug' => TRUE,
- 'cache_on' => FALSE,
- 'cachedir' => '',
- 'char_set' => 'utf8',
- 'dbcollat' => 'utf8_general_ci',
- 'swap_pre' => '',
- 'encrypt' => FALSE,
- 'compress' => FALSE,
- 'stricton' => FALSE,
- 'failover' => array(),
- 'save_queries' => TRUE
-);
+// $db['hrsysV11'] = array(
+//  'dsn' => '',
+//  'hostname' => 'hrsysv11',
+//  'username' => 'mysql',
+//  'password' => '#And24',
+//  'database' => '',
+//  'dbdriver' => 'odbc',
+//  'dbprefix' => '',
+//  'pconnect' => TRUE,
+//  'db_debug' => TRUE,
+//  'cache_on' => FALSE,
+//  'cachedir' => '',
+//  'char_set' => 'utf8',
+//  'dbcollat' => 'utf8_general_ci',
+//  'swap_pre' => '',
+//  'encrypt' => FALSE,
+//  'compress' => FALSE,
+//  'stricton' => FALSE,
+//  'failover' => array(),
+//  'save_queries' => TRUE
+// );
 
 /* End of file database.php */
 /* Location: ./application/config/database.php */

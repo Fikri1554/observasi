@@ -1,97 +1,21 @@
+<?php
+$nama_dokumen = "ICT_Tools_Request";
+require("pdf/mpdf60/mpdf.php");
+$mpdf = new mPDF('utf-8', 'A4');
+ob_start();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <title>ICT Tools and Equipment Request</title>
-    <script src="<?php echo base_url();?>assets/js/jquery-1.8.3.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript">
-    function acknowledgeData(idForm) {
-        $.ajax({
-            url: '<?php echo base_url('form/acknowledgeData'); ?>',
-            type: "POST",
-            data: {
-                id: idForm
-            },
-            success: function(response) {
-                const res = JSON.parse(response);
-                if (res.status === 'success') {
-                    const statusElement = document.getElementById("status_" +
-                        idForm);
-                    if (statusElement) {
-                        statusElement.innerHTML = "Waiting Approval";
-                        alert("Status successfully updated to waiting Approval");
-                        reloadPage();
-                    }
-
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-            }
-        });
-    }
-
-    function approveData(idForm) {
-        $.ajax({
-            url: '<?php echo base_url('form/approveData'); ?>',
-            type: "POST",
-            data: {
-                id: idForm
-            },
-            success: function(response) {
-                const res = JSON.parse(response);
-                if (res.status === 'success') {
-                    const statusElement = document.getElementById("status_" +
-                        idForm);
-                    if (statusElement) {
-                        statusElement.innerHTML = "Approve Success";
-                        alert("Request has been approve!");
-                        reloadPage();
-                    }
-
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-            }
-        });
-    }
-
-    function reloadPage() {
-        window.location = "<?php echo base_url('form/getDataForm');?>";
-    }
-    </script>
     <style>
-    @media print {
-        body {
-            width: 210mm;
-            height: 297mm;
-            margin: 0;
-            padding: 10mm;
-            box-sizing: border-box;
-        }
-
-        .footer {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
-
-        .approval td {
-            height: 150px;
-            width: 200px;
-        }
-
-        .signature-box {
-            border: 1px solid black;
-            height: 100px;
-            width: 100px;
-        }
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 12px;
     }
-
 
     .title {
         text-align: right;
@@ -101,14 +25,12 @@
 
     table {
         width: 100%;
-        max-width: 100%;
         margin-top: 10px;
         border-collapse: collapse;
     }
 
     .detail {
         width: 100%;
-        max-width: 100%;
         border-collapse: collapse;
         margin-bottom: 15px;
     }
@@ -116,7 +38,7 @@
     th,
     td {
         border: 1px solid black;
-        padding: 3px;
+        padding: 5px;
         text-align: left;
     }
 
@@ -130,7 +52,14 @@
 
     .approval td {
         height: 150px;
-        width: 200px;
+        width: 300px;
+    }
+
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
     }
 
     .footer .note {
@@ -144,7 +73,7 @@
 
     .note-box {
         border: 1px solid black;
-        padding: 5px;
+        padding: 10px;
         min-height: 50px;
         margin-bottom: 10px;
     }
@@ -153,6 +82,20 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+    }
+
+    .signature-box {
+        border: 1px solid black;
+        height: 150px;
+        width: 300px;
+        display: inline-block;
+        vertical-align: top;
+    }
+
+    /* New CSS for signature box */
+    #acknowledgeInfo {
+        margin-top: 10px;
+        display: block;
     }
     </style>
 </head>
@@ -251,19 +194,16 @@
                 </tr>
             </table>
         </div>
-        <!-- Buttons for Acknowledge and Approve -->
-        <div style="margin-top: 20px;">
-            <button onclick="acknowledgeData(<?php echo $form->id; ?>);" class="btn btn-primary btn-xs" type="button"
-                style="margin: 5px;">
-                <i class="fa fa-print"></i> Acknowledge
-            </button>
-            <button onclick="approveData(<?php echo $form->id; ?>);" class="btn btn-success btn-xs" type="button"
-                style="margin: 5px;">
-                <i class="fa fa-check"></i> Approve
-            </button>
-        </div>
 
     </div>
 </body>
 
 </html>
+
+<?php
+$html = ob_get_contents();
+ob_end_clean();
+$mpdf->WriteHTML(utf8_encode($html));
+$mpdf->Output($nama_dokumen . ".pdf", 'I');
+exit;
+?>

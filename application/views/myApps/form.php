@@ -255,12 +255,88 @@
         $("#DataTableRequest").show(200);
     });
 
+    function ViewPrint(id, typeView) {
+        $.ajax({
+            type: "POST",
+            url: "<?php echo base_url('form/previewPrint'); ?>",
+            data: {
+                id: id,
+                typeView: typeView
+            },
+            success: function(response) {
+                var data = JSON.parse(response);
 
+                $('#ictRequestModal .modal-bodyPreview .table-bordered td').html('');
+                $('#ictRequestModal .modal-bodyPreview .table-striped tbody').html('');
+                $('#ictRequestModal .modal-bodyPreview .note-box').empty();
+                $('#ictRequestModal .modal-bodyPreview .approval td').not(':has(div)').html('');
+                $('#ictRequestModal .modal-bodyPreview .signature-box').empty();
+                $('.name-wrapper').empty();
 
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(0) td').html(data.form
+                    .project_reference || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(1) td').html(data.form
+                    .purpose || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(2) td').html(data.form
+                    .divisi || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(3) td').html(data.form
+                    .department || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(4) td').html(data.form
+                    .company || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(5) td').html(data.form
+                    .location || 'N/A');
 
-    function ViewPrint(id = '') {
-        window.open('<?php echo base_url('form/previewPrint');?>' + '/' + id,
-            '_blank');
+                var detailHtml = '';
+                if (data.form_details && data.form_details.length > 0) {
+                    data.form_details.forEach(function(detail) {
+                        detailHtml += `
+                <tr>
+                    <td>${detail.description || ''}</td>
+                    <td>${detail.type || ''}</td>
+                    <td>${detail.quantity || ''}</td>
+                    <td>${detail.reason || ''}</td>
+                    <td>${detail.required_date && detail.required_date !== '0000-00-00' ? detail.required_date : ''}</td>
+                </tr>`;
+                    });
+                } else {
+                    detailHtml = '<tr><td colspan="5">No details available</td></tr>';
+                }
+                $('#ictRequestModal .modal-bodyPreview .table-striped tbody').html(detailHtml);
+
+                $('#ictRequestModal .modal-bodyPreview .note-box').html(data.form.note ||
+                    'No notes available');
+                $('#ictRequestModal .modal-bodyPreview .signature-box').eq(0).html(data.qrCode);
+                $('#ictRequestModal .modal-bodyPreview .signature-box').eq(1).html(data.kadept);
+                $('#ictRequestModal .modal-bodyPreview .signature-box').eq(2).html(data.kadiv);
+
+                $('.reqName').html(data.form.request_name);
+                $('.nameKadept').html(data.nameKadept);
+                $('.nameKadiv').html(data.nameKadiv);
+
+                $('.footer-buttonAcknowledge').html(data.buttonKadept || '');
+                $('.footer-buttonApprove').html(data.buttonKadiv || '');
+
+                if (data.form.st_submit == 'Y') {
+                    $('#ictRequestModal .modal-bodyPreview .footer-buttonDownload').html(`
+                <button onclick="downloadPdf(${data.form.id});"
+                    class="btn btn-primary btn-xs" type="button" style="margin: 5px;">
+                    <i class="fa fa-download"></i> Download
+                </button>
+            `);
+                } else {
+                    $('#ictRequestModal .modal-bodyPreview .footer-buttonDownload').html('');
+                }
+
+                if (data.button) {
+                    $('#ictRequestModal .modal-bodyPreview .footer-buttonSend').html(data.button);
+                }
+
+                $('#ictRequestModal').modal('show');
+            },
+            error: function() {
+                alert('Error loading data');
+            }
+        });
     }
 
     function delData(id) {
@@ -317,10 +393,100 @@
         });
     }
 
+    function acknowledgeData(idForm) {
+        $.ajax({
+            url: '<?php echo base_url('form/acknowledgeData'); ?>',
+            type: "POST",
+            data: {
+                id: idForm
+            },
+            success: function(response) {
+                const res = JSON.parse(response);
+                if (res.status === 'success') {
+                    const statusElement = document.getElementById("status_" +
+                        idForm);
+                    if (statusElement) {
+                        statusElement.innerHTML = "Waiting Approval";
+                        alert("Status successfully updated to waiting Approval");
+                        reloadPage();
+                    }
+
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    function approveData(idForm) {
+        $.ajax({
+            url: '<?php echo base_url('form/approveData'); ?>',
+            type: "POST",
+            data: {
+                id: idForm
+            },
+            success: function(response) {
+                const res = JSON.parse(response);
+                if (res.status === 'success') {
+                    const statusElement = document.getElementById("status_" +
+                        idForm);
+                    if (statusElement) {
+                        statusElement.innerHTML = "Approve Success";
+                        alert("Request has been approve!");
+                        reloadPage();
+                    }
+
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
     function addDetail(id) {
         $("#DataTableRequest").hide();
         $("#idFormDetail").show(200);
         $("#txtIdForm").val(id);
+    }
+
+    function downloadPdf(id) {
+        $.ajax({
+            url: '<?php echo base_url('form/printPdf'); ?>',
+            type: 'POST',
+            data: {
+                id: id
+            },
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function(response, status, xhr) {
+
+                let filename = "";
+                let disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    let matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+
+                let blob = new Blob([response], {
+                    type: 'application/pdf'
+                });
+                let link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = filename ||
+                    'ICT_Tools_and_Equipment_Request.pdf';
+                link.click();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // Penanganan error jika request gagal
+                alert('Failed to generate PDF. Please try again.');
+            }
+        });
     }
 
     function changeBtnNavigation(type) {
@@ -348,22 +514,19 @@
                     if (Array.isArray(data) && data.length) {
                         data.forEach(function(item) {
                             let row = `
-                            <tr id="row_${item.id}">
-                                <td style="text-align:center;">${no++}</td>
-                                <td style="text-align:center;">${item.project_reference}</td>
-                                <td style="text-align:center;">${item.purpose}</td>
-                                <td style="text-align:center;">${item.company}</td>
-                                <td style="text-align:center;">${item.location}</td>
-                                <td style="text-align:center;">${item.divisi}</td>
-                                <td style="text-align:center;">
-                                    <button onclick="acknowledgeData(${item.id});" class="btn btn-primary btn-xs" type="button" style="margin: 5px;">
-                                        <i class="fa fa-print"></i> Acknowledge
-                                    </button>
-                                    <button onclick="ViewPrint(${item.id});" class="btn btn-success btn-xs" type="button">
-                                        <i class="fa fa-eye"></i> View
-                                    </button>
-                                </td>
-                            </tr>`;
+                    <tr id="row_${item.id}">
+                        <td style="text-align:center;">${no++}</td>
+                        <td style="text-align:center;">${item.project_reference}</td>
+                        <td style="text-align:center;">${item.purpose}</td>
+                        <td style="text-align:center;">${item.company}</td>
+                        <td style="text-align:center;">${item.location}</td>
+                        <td style="text-align:center;">${item.divisi}</td>
+                        <td style="text-align:center;">
+                            <button onclick="ViewPrint(${item.id}, '${type}');" class="btn btn-success btn-xs" type="button">
+                                <i class="fa fa-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>`;
                             tbody.append(row);
                         });
                     } else {
@@ -371,7 +534,6 @@
                             '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>'
                         );
                     }
-
                 },
                 error: function(xhr, status, error) {
                     console.log('Error:', error);
@@ -397,20 +559,19 @@
                     if (Array.isArray(data) && data.length) {
                         data.forEach(function(item) {
                             let row = `<tr>
-                                        <td style="text-align:center;">${no++}</td>
-                                        <td style="text-align:center;">${item.project_reference}</td>
-                                        <td style="text-align:center;">${item.purpose}</td>
-                                        <td style="text-align:center;">${item.company}</td>
-                                        <td style="text-align:center;">${item.location}</td>
-                                        <td style="text-align:center;">${item.divisi}</td>
-                                        <td style="text-align:center;">
-                                            <button onclick="ViewPrint(${item.id});" class="btn btn-primary btn-xs" type="button"><i class="fa fa-eye"></i> View</button>
-                                        </td>
-                                    </tr>`;
+                                <td style="text-align:center;">${no++}</td>
+                                <td style="text-align:center;">${item.project_reference}</td>
+                                <td style="text-align:center;">${item.purpose}</td>
+                                <td style="text-align:center;">${item.company}</td>
+                                <td style="text-align:center;">${item.location}</td>
+                                <td style="text-align:center;">${item.divisi}</td>
+                                <td style="text-align:center;">
+                                    <button onclick="ViewPrint(${item.id}, '${type}');" class="btn btn-primary btn-xs" type="button"><i class="fa fa-eye"></i> View</button>
+                                </td>
+                            </tr>`;
                             tbody.append(row);
                         });
                     } else {
-
                         tbody.append(
                             '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>'
                         );
@@ -422,19 +583,20 @@
                 }
             });
         }
+
     }
 
     $(document).ready(function() {
         const departmentMapping = {
-            "BOD / BOC": ["Non Department", "PA (Personal Assistant)"],
-            "CORPORATE FINANCE, STRATEGY & COMPLIANCE": ["Non Department"],
-            "DRY BULK COMMERCIAL, OPERATION & AGENCY": ["Operation", "COMMERCIAL & CHARTERING", "Agency"],
-            "FINANCE": ["Finance", "Accounting", "Tax"],
+            "BOD / BOC": ["NON DEPARTMENT", "PA"],
+            "CORPORATE FINANCE, STRATEGY & COMPLIANCE": ["NON DEPARTMENT"],
+            "DRY BULK COMMERCIAL, OPERATION & AGENCY": ["O", "COMMERCIAL & CHARTERING", "AGENCY"],
+            "FINANCE": ["FINANCE", "ACCOUNTING", "TAX"],
             "HUMAN CAPITAL & GA": ["HR", "GA"],
-            "NON DIVISION": ["Secretary"],
-            "OFFICE OPERATION": ["IT", "Legal", "Procurement", "AGENCY & BRANCH"],
-            "OIL & GAS COMMERCIAL & OPERATION": ["Commercial", "Operation"],
-            "SHIP MANAGEMENT": ["Owner Superintendent (Technical)", "Crewing", "QHSE", "AGENCY & BRANCH"]
+            "NON DIVISION": ["SECRETARY", "NON DEPARTMENT"],
+            "OFFICE OPERATION": ["IT", "LEGAL", "PROCUREMENT", "AGENCY & BRANCH"],
+            "OIL & GAS COMMERCIAL & OPERATION": ["COMMERCIAL", "OPERATION"],
+            "SHIP MANAGEMENT": ["OWNER SUPERINTENDENT (TECHNICAL)", "CREWING", "QHSE", "AGENCY & BRANCH"]
         };
 
         $('#slcDivisi').change(function() {
@@ -484,13 +646,12 @@
         updateButtonVisibility();
     });
 
-
-
     function reloadPage() {
         window.location = "<?php echo base_url('form/getDataForm');?>";
     }
     </script>
 </head>
+
 
 <body>
     <section id="container">
@@ -502,23 +663,33 @@
                 </h3>
                 <div class="form-panel" id="btnNav">
                     <div class="row">
+                        <?php if ($menuAccess['request']) : ?>
                         <div class="col-md-4">
-                            <button class="btn btn-primary btn btn-block" onclick="changeBtnNavigation('request');">
+                            <button class="btn btn-primary btn-block" onclick="changeBtnNavigation('request');">
                                 <label>Request</label>
                             </button>
                         </div>
+                        <?php endif; ?>
+
+                        <?php if ($menuAccess['acknowledge']) : ?>
                         <div class="col-md-4">
-                            <button class="btn btn-primary btn btn-block" onclick="changeBtnNavigation('acknowledge');">
+                            <button class="btn btn-primary btn-block" onclick="changeBtnNavigation('acknowledge');">
                                 <label>Acknowledge</label>
                             </button>
                         </div>
+                        <?php endif; ?>
+
+                        <?php if ($menuAccess['approve']) : ?>
                         <div class="col-md-4">
-                            <button class="btn btn-primary btn btn-block" onclick="changeBtnNavigation('approval');">
+                            <button class="btn btn-primary btn-block" onclick="changeBtnNavigation('approval');">
                                 <label>Approval</label>
                             </button>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
+
+
                 <div class="form-panel" id="DataTableRequest" style="display: none;">
                     <h3>Request</h3>
                     <div class="row">
@@ -888,7 +1059,126 @@
                     </div>
                 </div>
 
+                <div class="modal fade" id="ictRequestModal" tabindex="-1" role="dialog"
+                    aria-labelledby="ictRequestModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="ictRequestModalLabel">ICT Tools and Equipment Request</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-bodyPreview">
+                                <div>
+                                    <?php echo isset($imageLogo) ? $imageLogo : ''; ?>
+                                </div>
+                                <div class="title text-center">
+                                    <h1>ICT TOOLS AND EQUIPMENT REQUEST</h1>
+                                    <h2>PERMINTAAN ALAT DAN PERLENGKAPAN ICT</h2>
+                                </div>
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>Project Reference / Referensi Proyek</th>
+                                        <td>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Purpose / Kebutuhan</th>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Divisi / Divisi</th>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Departement / Departement</th>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Company / Perusahaan</th>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Location / Lokasi</th>
+                                        <td></td>
+                                    </tr>
+                                </table>
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>DESKRIPSI</th>
+                                            <th>TYPE / BRAND</th>
+                                            <th>QTY</th>
+                                            <th>REASON / ALASAN</th>
+                                            <th>REQUIRED DATE</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
 
+                                    </tbody>
+                                </table>
+
+                                <div class="footer">
+                                    <div class="note">
+                                        <strong>Note:</strong>
+                                        <div class="note-box">
+
+                                        </div>
+                                    </div>
+
+                                    <div class="approval">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <td style="text-align: center;">Proposed by<br>
+                                                    <div class="signature-box"
+                                                        style="text-align: center; margin-bottom: 5px;">
+
+                                                    </div>
+                                                    <div class="name-wrapper reqName"
+                                                        style="text-align: center; margin-top: 5px; font-weight: bold; font-size: 12px;">
+
+                                                    </div>
+                                                </td>
+                                                <td style="text-align: center;">Acknowledge by<br>
+                                                    <div class="signature-box"
+                                                        style="text-align: center; margin-bottom: 5px;">
+                                                    </div>
+                                                    <div class="name-wrapper nameKadept"
+                                                        style="text-align: center; margin-top: 5px; font-weight: bold; font-size: 12px;">
+
+                                                    </div>
+                                                </td>
+                                                <td style="text-align: center;">Approved by<br>
+                                                    <div class="signature-box"
+                                                        style="text-align: center; margin-bottom: 5px;">
+                                                    </div>
+                                                    <div class="name-wrapper nameKadiv"
+                                                        style="text-align: center; margin-top: 5px; font-weight: bold; font-size: 12px;">
+
+                                                    </div>
+                                                </td>
+
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="footer-buttonSend">
+
+                                    </div>
+                                    <div class="footer-buttonAcknowledge">
+
+                                    </div>
+                                    <div class="footer-buttonApprove">
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </section>
         </section>
