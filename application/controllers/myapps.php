@@ -679,8 +679,8 @@ class Myapps extends CI_Controller {
 		if(count($data) > 0 ){ $stCek = "ada"; }
 		return $stCek;
 	}
-	function login()		
-	{
+		
+	function login() {
 		$data = $_POST;
 		$user = $data['user'];
 		$pass = md5($data['pass']);
@@ -689,29 +689,30 @@ class Myapps extends CI_Controller {
 		
 		$cekLogin = $this->myapp->getDataDb2("*","login",$whereNya);
 		
-		if(count($cekLogin) > 0)
-		{
+		if (count($cekLogin) > 0) {
+			
 			$sql = "SELECT jnsklm FROM tblmstemp WHERE empno = '".$cekLogin[0]->empno."' ";
 			$jnsKelamin = $this->myapp->querySqlServer($sql);
 			
-			$this->session->set_userdata('userIdMyApps',$cekLogin[0]->userid);
-			$this->session->set_userdata('empNo',$cekLogin[0]->empno);
-			$this->session->set_userdata('fullNameMyApps',$cekLogin[0]->userfullnm);
-			$this->session->set_userdata('userTypeMyApps',$cekLogin[0]->userjenis);
-			$this->session->set_userdata('userInitial',$cekLogin[0]->userinithr);
-			$this->session->set_userdata('nmDiv',$cekLogin[0]->nmdiv);
-			$this->session->set_userdata('nmDept',$cekLogin[0]->nmdept);
-			$this->session->set_userdata('hrAdm',$cekLogin[0]->hradm);
-			$this->session->set_userdata('jnsKelamin',$jnsKelamin[0]->jnsklm);
-			$this->session->set_userdata('kdDivMyApps',$cekLogin[0]->kddiv);
+			$this->session->set_userdata('userIdMyApps', $cekLogin[0]->userid);
+			$this->session->set_userdata('empNo', $cekLogin[0]->empno);
+			$this->session->set_userdata('fullNameMyApps', $cekLogin[0]->userfullnm);
+			$this->session->set_userdata('userTypeMyApps', $cekLogin[0]->userjenis);
+			$this->session->set_userdata('userInitial', $cekLogin[0]->userinithr);
+			$this->session->set_userdata('nmDiv', $cekLogin[0]->nmdiv);
+			$this->session->set_userdata('nmDept', $cekLogin[0]->nmdept);
+			$this->session->set_userdata('hrAdm', $cekLogin[0]->hradm);
+			$this->session->set_userdata('jnsKelamin', $jnsKelamin[0]->jnsklm);
+			$this->session->set_userdata('kdDivMyApps', $cekLogin[0]->kddiv);
+					
 			$status = true;
-		}
-		else
-		{
+		} else {
 			$status = false;
 		}
+		
 		print json_encode($status);
-	}	
+	}
+		
 	function logout()
 	{
 		// $this->session->sess_destroy();

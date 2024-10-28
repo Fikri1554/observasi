@@ -4,8 +4,8 @@ class Form extends CI_Controller
 {
     function __construct()
 	{
-		parent::__construct();		
-		$this->load->model('myapp');
+		parent::__construct();
+    	$this->load->model('myapp'); 
 		$this->load->helper(array('form', 'url'));
 	}
  
@@ -16,8 +16,8 @@ class Form extends CI_Controller
 		$userType = $this->session->userdata('userTypeMyApps');
 		$userDiv = $this->session->userdata('nmDiv'); 
 		$userDept = $this->session->userdata('nmDept'); 
-		
-		//print_r($userDiv);exit;	
+		$userId = $this->session->userdata('userIdMyApps');
+		$userFullName = $this->session->userdata('fullNameMyApps');
 
 		$where = "WHERE sts_delete = '0' ";
 		
@@ -29,7 +29,6 @@ class Form extends CI_Controller
 			if ($userDiv === "FINANCIAL CONTROLLER" || $userDept === "FINANCE CONTROL" || $userDept === "ACCOUNTING & REPANDTING" || $userDept === "FINANCE" || $userDept === "TAX") {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 			}
-
 			$sql = "SELECT * FROM form " . $where;
 		}
 		
@@ -43,7 +42,7 @@ class Form extends CI_Controller
 			}
 			if ($value->st_acknowledge === 'Y' && $value->st_approval === 'N') {
 				$status = "Waiting Approval <i class='fa fa-clock-o'></i>";
-			}
+			} 
 			if ($value->st_approval === 'Y') {
 				$status = "Approve Success <i class='fa fa-check'></i>";
 			}
@@ -56,7 +55,6 @@ class Form extends CI_Controller
 				$btnExport = "<button onclick=\"ViewPrint('" .$value->id. "','request');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
 				$btnDetail = '';
 				$btnDelete = '';
-				$btnSubmit = '';
 			} else {
 				$btnExport = "<button onclick=\"ViewPrint('" . $value->id . "', 'request');\" class=\"btn btn-success btn-xs\" id=\"btnView_" . $value->id . "\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
 				$btnDelete = "<button onclick=\"delData('" . $value->id . "');\" class=\"btn btn-danger btn-xs\" id=\"btnDelete_" . $value->id . "\" type=\"button\" title=\"Delete\"><i class=\"fa fa-trash-o\"></i> Delete</button>";
@@ -71,11 +69,15 @@ class Form extends CI_Controller
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->location . "</td>";
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->divisi . "</td>";
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;' id='status_" . $value->id . "'>" . $status . "</td>";
-				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $btnExport . $btnDelete . $btnSubmit . "</td>";
+				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" .$btnExport.$btnDelete. "</td>";
 			$tr .= "</tr>";
 
 			$no++;
 		}
+
+		$buttonSettings = $this->userSetting();
+		$dataOut['buttonApp'] = $buttonSettings['buttonApp'];
+		$dataOut['buttonAck'] = $buttonSettings['buttonAck'];
 
 		$dataOut['tr'] = $tr;
 		$dataOut['getOptCompany'] = $this->getOptCompany(); 
@@ -163,7 +165,6 @@ class Form extends CI_Controller
 
 		echo json_encode($response);
 	}
-
 
 	function delData()
 	{
@@ -287,19 +288,28 @@ class Form extends CI_Controller
 			echo json_encode(array('data' => array()));
 		}
 	}
-	
-	
+
 	function getApprovalData() {
 		$userType = $this->session->userdata('userTypeMyApps');
 		$userDiv = $this->session->userdata('nmDiv');
 		$userDept = $this->session->userdata('nmDept');
-		$userName = $this->session->userdata('fullNameMyApps');
-
+		$userId = $this->session->userdata('userIdMyApps');
+		
+		
 		$where = "WHERE st_acknowledge = 'Y' 
 				AND st_approval = 'N' 
 				AND sts_delete = 0";
 
-		if ($userType == 'admin') {
+		if ($userId === '00054') {
+			$where .= " AND (
+				(divisi = 'BOD / BOC' AND department IN ('NON DEPARTMENT', 'PA')) OR
+				(divisi = 'NON DIVISION' AND department IN ('SECRETARY', 'NON DEPARTMENT')) OR
+				(divisi = 'OFFICE OPERATION' AND department IN ('IT', 'LEGAL', 'PROCUREMENT'))
+			)";
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
+                FROM form " . $where;
+		} elseif ($userType == 'admin') {
+			
 			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
 		} else {
@@ -311,7 +321,6 @@ class Form extends CI_Controller
 						FROM form " . $where;
 			}
 		}
-		
 		$query = $this->myapp->getDataQueryDB6($sql);
 
 		if ($query) {
@@ -326,7 +335,6 @@ class Form extends CI_Controller
 					'divisi' => $value->divisi,
 					'sts_delete' => $value->sts_delete
 				);
-				
 			}
 			echo json_encode(array('data' => $resultArrayApproval));
 		} else {
@@ -490,7 +498,6 @@ class Form extends CI_Controller
 
 			$qrCodeImgPath = base_url("assets/imgQRCodeForm/" . base64_encode($form[0]->batchno) . ".jpg");
 			
-			//$mappingButtons = $this->mappingButton($form[0]->divisi, $form[0]->department, $form[0]->batchno);
 
 			$data = array(
 				'form' => $form[0],
@@ -501,9 +508,6 @@ class Form extends CI_Controller
 				'kadiv' => null,
 				'nameKadept' => null,
 				'nameKadiv' => null,
-				// 'buttonKadiv' => $mappingButtons['buttonKadiv'], 
-            	// 'buttonKadept' => $mappingButtons['buttonKadept'] 
-				
 			);
 			
 			$mappingInfo = $this->getMappingInfo($form[0]->divisi, $form[0]->department, $form[0]->batchno);
@@ -534,7 +538,9 @@ class Form extends CI_Controller
 									</button>";
 			}
 			else if ($typeView == 'approval' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
-				$button .= "<button onclick=\"approveData({$form[0]->id});\" class=\"btn btn-success btn-xs\" id=\"btnApprove_{$form[0]->id}\" type=\"button\" title=\"Approve\"><i class=\"fa fa-thumbs-up\"></i> Approve</button>";
+				$button .= "<button onclick=\"approveData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" type=\"button\" style=\"margin: 5px;\">
+										<i class=\"fa fa-thumbs-up\"></i> Approve
+									</button>";
 			}else if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'Y')
 			{
 				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\"><i class=\"fa fa-download\"></i> Download</button>";
@@ -616,46 +622,7 @@ class Form extends CI_Controller
 			show_error('Form not found', 404);
 		}
 	}
-	
-	function getMenuAccess($userId, $userFullName) {
 		
-		$division = $this->session->userdata('nmDiv');
-		$department = $this->session->userdata('nmDept');
-		$userType = $this->session->userdata('userTypeMyApps'); 
-		$batchno = $this->getBatchNo();
-
-		if ($userType == 'admin') {
-			return array(
-				'request' => true,
-				'acknowledge' => true,
-				'approve' => true
-			);
-		}
-
-		$mappingInfo = $this->getMappingInfo($division, $department, $batchno);
-
-		$access = array(
-			'request' => false,     
-			'acknowledge' => false, 
-			'approve' => false
-		);
-
-		if ($mappingInfo) {
-			if ($mappingInfo['acknowledgeKadept'] == $userFullName) {
-				$access['acknowledge'] = true;
-			}
-			if ($mappingInfo['approveKadiv'] == $userFullName) {
-				$access['approve'] = true;
-			}
-		} else {
-			// Jika tidak ditemukan dalam mapping, beri akses ke menu "Request"
-			$access['request'] = true;
-		}
-
-		return $access;
-	}
-
- 
 	function getMappingInfo($division, $department, $batchno) {
 		
 		$queryBatch = "SELECT * FROM `form` WHERE `batchno` = '".$batchno."' AND sts_delete = '0'";
@@ -690,9 +657,9 @@ class Form extends CI_Controller
 			),
 			'CORPORATE FINANCE, STRATEGY & COMPLIANCE' => array(
 				'NON DEPARTMENT' => array(
-					'nameKadiv' => 'Pribadi Arijanto',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
-					'approveKadiv' => 'Pribadi Arijanto',
+					'nameKadiv' => $requestName,
+					'namafileKadiv' => $qrcodeFile,
+					'approveKadiv' => $requestName,
 					'nameKadept' => $requestName,
 					'namefileKadept' => $qrcodeFile,
 					'acknowledgeKadept' => $requestName	
@@ -863,13 +830,46 @@ class Form extends CI_Controller
 			if (is_array($Mapping[$division])) {
 				if (isset($Mapping[$division][$department])) {
 					return $Mapping[$division][$department]; 
-				} elseif (isset($Mapping[$division]['department']) && $Mapping[$division]['department'] == $department) {
+				} else if (isset($Mapping[$division]['department']) && $Mapping[$division]['department'] == $department) {
 					return $Mapping[$division]; 
 				}
 			}
 		}
 
 		return null;
+	}
+
+	function userSetting() {
+		$userid = $this->session->userdata('userIdMyApps');
+		$query = "SELECT * FROM form_usersetting WHERE userid ='".$userid."' AND st_delete = '0'";
+		$result = $this->myapp->getDataQueryDB6($query); 
+		
+		$buttonAck = "";
+		$buttonApp = "";
+		$buttonReq = "";
+		$dataOut = array();
+
+		if(count($result) > 0) {
+			if($result[0]->nmDiv != ""){
+				$buttonApp = '<div class="col-md-4">
+								<button class="btn btn-primary btn-block" onclick="changeBtnNavigation(\'approval\');">
+									<label>Approval</label>
+								</button>
+							</div>';
+			} 
+			if($result[0]->nmDept != ""){
+				$buttonAck = '<div class="col-md-4">
+								<button class="btn btn-primary btn-block" onclick="changeBtnNavigation(\'acknowledge\');">
+									<label>Acknowledge</label>
+								</button>
+							</div>';
+			}
+		}
+
+		$dataOut['buttonApp'] = $buttonApp;
+		$dataOut['buttonAck'] = $buttonAck;
+
+		return $dataOut;
 	}
 
 	
@@ -886,7 +886,7 @@ class Form extends CI_Controller
 
 		return $batchNo;
 	}
-
+	
 	function saveFormRequest()
 	{
 		$data = $this->input->post();
@@ -946,13 +946,12 @@ class Form extends CI_Controller
 		print json_encode($status);
 	}
 
-	
 	function saveFormRequestDetail() {
 		$data = $this->input->post(); 
 		$txtIdForm = $data['id_form'];  
 		$currentDate = date("Y-m-d");
 		$responseMessage = "";
-		
+			
 		$arrDescriptions = explode('*', $data['descriptions']);
 		$arrTypes = explode('*', $data['types']);
 		$arrReasons = explode('*', $data['reasons']);
@@ -960,47 +959,47 @@ class Form extends CI_Controller
 		$arrRequiredDates = explode('*', $data['required_dates']);
 		$arrNotes = explode('*', $data['notes']);
 
-			
-			$numEntries = count($arrDescriptions);
-
-			for ($i = 0; $i < $numEntries; $i++) {
-				if (empty($arrDescriptions[$i]) || empty($arrTypes[$i]) || empty($arrReasons[$i]) || $arrQuantities[$i] <= 0) {
-					continue; 
-				}
 				
-				$dataToInsert = array(
-					'id_form'       => $txtIdForm,  
-					'description'   => $arrDescriptions[$i],
-					'type'          => $arrTypes[$i],
-					'reason'        => $arrReasons[$i],
-					'quantity'      => $arrQuantities[$i],
-					'required_date' => $arrRequiredDates[$i],
-					'note'          => $arrNotes[$i],
-					'add_userid'    => $this->session->userdata('userIdMyApps'),
-					'add_date'      => $currentDate,
-					'request_name'  => $this->session->userdata('fullNameMyApps')
-				);
+		$numEntries = count($arrDescriptions);
 
-				try {
-					$this->myapp->insDataDb6($dataToInsert, 'form_detail');
-					$responseMessage = "Insert Success..!!";
-				} catch (Exception $e) {
-					$responseMessage = "Failed to Insert: " . $e->getMessage();
-					break;
-				}
+		for ($i = 0; $i < $numEntries; $i++) {
+			if (empty($arrDescriptions[$i]) || empty($arrTypes[$i]) || empty($arrReasons[$i]) || $arrQuantities[$i]<=0) 
+			{
+				continue; 
 			}
+				
+			$dataToInsert = array(
+				'id_form'       => $txtIdForm,  
+				'description'   => $arrDescriptions[$i],
+				'type'          => $arrTypes[$i],
+				'reason'        => $arrReasons[$i],
+				'quantity'      => $arrQuantities[$i],
+				'required_date' => $arrRequiredDates[$i],
+				'note'          => $arrNotes[$i],
+				'add_userid'    => $this->session->userdata('userIdMyApps'),
+				'add_date'      => $currentDate,
+				'request_name'  => $this->session->userdata('fullNameMyApps')
+			);
+
 			try {
-				$this->db->set('st_detail', 'Y');
-				$this->db->where('id', $txtIdForm);
-				$this->db->update('form');
-			} catch (Exception $e) {
-				$responseMessage = "Failed to update form detail: " . $e->getMessage();
+				$this->myapp->insDataDb6($dataToInsert, 'form_detail');
+				$responseMessage = "Insert Success..!!";
+			}catch (Exception $e) {
+				$responseMessage = "Failed to Insert: " . $e->getMessage();
+				break;
 			}
-
-			echo json_encode($responseMessage);
+		}
+		try {
+			$this->db->set('st_detail', 'Y');
+			$this->db->where('id', $txtIdForm);
+			$this->db->update('form');
+		} catch (Exception $e) {
+			$responseMessage = "Failed to update form detail: " . $e->getMessage();
 		}
 
-	
+		echo json_encode($responseMessage);
+	}
+
 	function getOptMstDivisi($userDiv = "")
 	{
 		$opt = "<option value=\"\">- Select -</option>";

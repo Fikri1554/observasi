@@ -402,15 +402,13 @@
             },
             success: function(response) {
                 const res = JSON.parse(response);
-                if (res.status === 'success') {
-                    const statusElement = document.getElementById("status_" +
-                        idForm);
+                if (res.status == 'success') {
+                    const statusElement = document.getElementById("status_" + idForm);
                     if (statusElement) {
-                        statusElement.innerHTML = "Waiting Approval";
-                        alert("Status successfully updated to waiting Approval");
+                        statusElement.innerHTML = "Waiting Approval <i class='fa fa-clock-o'></i>";
+                        alert("Status successfully updated to Waiting Approval 🕒");
                         reloadPage();
                     }
-
                 }
             },
             error: function(xhr, status, error) {
@@ -427,16 +425,19 @@
                 id: idForm
             },
             success: function(response) {
+                console.log("Response:", response);
                 const res = JSON.parse(response);
-                if (res.status === 'success') {
-                    const statusElement = document.getElementById("status_" +
-                        idForm);
+                if (res.status == 'success') {
+                    const statusElement = document.getElementById("status_" + idForm);
                     if (statusElement) {
                         statusElement.innerHTML = "Approve Success";
-                        alert("Request has been approve!");
-                        reloadPage();
+                        alert("Request has been approved!👍");
+                        setTimeout(function() {
+                            reloadPage();
+                        }, 500);
                     }
-
+                } else {
+                    console.error("Unexpected response status:", res.status);
                 }
             },
             error: function(xhr, status, error) {
@@ -447,6 +448,7 @@
 
     function addDetail(id) {
         $("#DataTableRequest").hide();
+        $("#btnNav").hide();
         $("#idFormDetail").show(200);
         $("#txtIdForm").val(id);
     }
@@ -483,7 +485,6 @@
                 link.click();
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                // Penanganan error jika request gagal
                 alert('Failed to generate PDF. Please try again.');
             }
         });
@@ -590,7 +591,7 @@
         const departmentMapping = {
             "BOD / BOC": ["NON DEPARTMENT", "PA"],
             "CORPORATE FINANCE, STRATEGY & COMPLIANCE": ["NON DEPARTMENT"],
-            "DRY BULK COMMERCIAL, OPERATION & AGENCY": ["O", "COMMERCIAL & CHARTERING", "AGENCY"],
+            "DRY BULK COMMERCIAL , OPERATION & AGENCY": ["OPERATION", "COMMERCIAL & CHARTERING", "AGENCY"],
             "FINANCE": ["FINANCE", "ACCOUNTING", "TAX"],
             "HUMAN CAPITAL & GA": ["HR", "GA"],
             "NON DIVISION": ["SECRETARY", "NON DEPARTMENT"],
@@ -663,32 +664,15 @@
                 </h3>
                 <div class="form-panel" id="btnNav">
                     <div class="row">
-                        <?php if ($menuAccess['request']) : ?>
                         <div class="col-md-4">
-                            <button class="btn btn-primary btn-block" onclick="changeBtnNavigation('request');">
+                            <button class="btn btn-primary btn-block" onclick="changeBtnNavigation('request')">
                                 <label>Request</label>
                             </button>
                         </div>
-                        <?php endif; ?>
-
-                        <?php if ($menuAccess['acknowledge']) : ?>
-                        <div class="col-md-4">
-                            <button class="btn btn-primary btn-block" onclick="changeBtnNavigation('acknowledge');">
-                                <label>Acknowledge</label>
-                            </button>
-                        </div>
-                        <?php endif; ?>
-
-                        <?php if ($menuAccess['approve']) : ?>
-                        <div class="col-md-4">
-                            <button class="btn btn-primary btn-block" onclick="changeBtnNavigation('approval');">
-                                <label>Approval</label>
-                            </button>
-                        </div>
-                        <?php endif; ?>
+                        <?php if(isset($buttonAck)) echo $buttonAck; ?>
+                        <?php if(isset($buttonApp)) echo $buttonApp; ?>
                     </div>
                 </div>
-
 
                 <div class="form-panel" id="DataTableRequest" style="display: none;">
                     <h3>Request</h3>
