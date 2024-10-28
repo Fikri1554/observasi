@@ -14,24 +14,42 @@ class Form extends CI_Controller
 		$tr = '';  
 		$no = 1;
 		$userType = $this->session->userdata('userTypeMyApps');
-		$userDiv = $this->session->userdata('nmDiv'); 
-		$userDept = $this->session->userdata('nmDept'); 
+		$userDiv = trim($this->session->userdata('nmDiv')); 
+		$userDept = trim($this->session->userdata('nmDept')); 
 		$userId = $this->session->userdata('userIdMyApps');
 		$userFullName = $this->session->userdata('fullNameMyApps');
 
 		$where = "WHERE sts_delete = '0' ";
-		
+
 		if ($userType == 'admin') {
 			$sql = "SELECT * FROM form " . $where;
 		} else {
-			$where .= " AND divisi = '" . $userDiv . "'";
 			
-			if ($userDiv === "FINANCIAL CONTROLLER" || $userDept === "FINANCE CONTROL" || $userDept === "ACCOUNTING & REPANDTING" || $userDept === "FINANCE" || $userDept === "TAX") {
-				$where .= " AND divisi LIKE '%FINANCE%'";
+			$financeAccess = array(
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'NON DEPARTMENT'),
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE & CONTROL'),
+				array('div' => 'FINANCE', 'dept' => 'TAX'),
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'ACCOUNTING & REPORTING'),
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE'),
+			);
+			
+			$isFinanceUser = false;
+			foreach ($financeAccess as $access) {
+				if (strcasecmp($userDiv, $access['div']) === 0 && strcasecmp($userDept, $access['dept']) === 0) {
+					$isFinanceUser = true;
+					break;
+				}
 			}
+
+			if ($isFinanceUser) {
+				$where .= " AND divisi LIKE '%FINANCE%'";
+			} else {
+				$where .= " AND divisi = '" . $userDiv . "'";
+			}
+
 			$sql = "SELECT * FROM form " . $where;
 		}
-		
+
 		$data = $this->myapp->getDataQueryDB6($sql);
 
 		foreach ($data as $key => $value) {
@@ -249,25 +267,45 @@ class Form extends CI_Controller
 
 	function getAcknowledgeData() {
 		$userType = $this->session->userdata('userTypeMyApps');
-		$userDiv = $this->session->userdata('nmDiv');
-		$userDept = $this->session->userdata('nmDept');
+		$userDiv = trim($this->session->userdata('nmDiv'));
+		$userDept = trim($this->session->userdata('nmDept'));
 
 		$where = "WHERE st_submit = 'Y' 
 				AND st_acknowledge = 'N' 
 				AND sts_delete = 0";
+
 		if ($userType == 'admin') {
 			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
 		} else {
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
-					FROM form " . $where . " AND divisi = '" . $userDiv . "'";
-			if ($userDiv === "FINANCIAL CONTROLLER" || $userDept === "FINANCE CONTROL" || $userDept === "ACCOUNTING & REPANDTING" || $userDept === "FINANCE" || $userDept === "TAX") {
-				$where .= " AND divisi LIKE '%FINANCE%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
-						FROM form " . $where;
+
+			$financeAccess = array(
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'NON DEPARTMENT'),
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE & CONTROL'),
+				array('div' => 'FINANCE', 'dept' => 'TAX'),
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'ACCOUNTING & REPORTING'),
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE'),
+			);
+
+			$isFinanceUser = false;
+			foreach ($financeAccess as $access) {
+				if (strcasecmp($userDiv, $access['div']) === 0 && strcasecmp($userDept, $access['dept']) === 0) {
+					$isFinanceUser = true;
+					break;
+				}
 			}
+
+			// Jika user finance, berikan akses ke divisi finance lainnya
+			if ($isFinanceUser) {
+				$where .= " AND divisi LIKE '%FINANCE%'";
+			} else {
+				$where .= " AND divisi = '" . $userDiv . "'";
+			}
+
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
+					FROM form " . $where;
 		}
-		
+
 		$query = $this->myapp->getDataQueryDB6($sql);
 
 		if ($query) {
@@ -291,11 +329,10 @@ class Form extends CI_Controller
 
 	function getApprovalData() {
 		$userType = $this->session->userdata('userTypeMyApps');
-		$userDiv = $this->session->userdata('nmDiv');
-		$userDept = $this->session->userdata('nmDept');
+		$userDiv = trim($this->session->userdata('nmDiv'));
+		$userDept = trim($this->session->userdata('nmDept'));
 		$userId = $this->session->userdata('userIdMyApps');
-		
-		
+
 		$where = "WHERE st_acknowledge = 'Y' 
 				AND st_approval = 'N' 
 				AND sts_delete = 0";
@@ -307,20 +344,38 @@ class Form extends CI_Controller
 				(divisi = 'OFFICE OPERATION' AND department IN ('IT', 'LEGAL', 'PROCUREMENT'))
 			)";
 			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
-                FROM form " . $where;
+					FROM form " . $where;
 		} elseif ($userType == 'admin') {
-			
 			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
 		} else {
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
-					FROM form " . $where . " AND divisi = '" . $userDiv . "'";
-			if ($userDiv === "FINANCIAL CONTROLLER" || $userDept === "FINANCE CONTROL" || $userDept === "ACCOUNTING & REPANDTING" || $userDept === "FINANCE" || $userDept === "TAX") {
-				$where .= " AND divisi LIKE '%FINANCE%'";
-				$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
-						FROM form " . $where;
+			
+			$financeAccess = array(
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'NON DEPARTMENT'),
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE & CONTROL'),
+				array('div' => 'FINANCE', 'dept' => 'TAX'),
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'ACCOUNTING & REPORTING'),
+				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE'),
+			);
+
+			$isFinanceUser = false;
+			foreach ($financeAccess as $access) {
+				if (strcasecmp($userDiv, $access['div']) === 0 && strcasecmp($userDept, $access['dept']) === 0) {
+					$isFinanceUser = true;
+					break;
+				}
 			}
+
+			if ($isFinanceUser) {
+				$where .= " AND divisi LIKE '%FINANCE%'";
+			} else {
+				$where .= " AND divisi = '" . $userDiv . "'";
+			}
+
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
+					FROM form " . $where;
 		}
+
 		$query = $this->myapp->getDataQueryDB6($sql);
 
 		if ($query) {
@@ -341,6 +396,7 @@ class Form extends CI_Controller
 			echo json_encode(array('data' => array()));
 		}
 	}
+
 
 	function createQRCode($id = "")
 	{
