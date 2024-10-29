@@ -295,7 +295,6 @@ class Form extends CI_Controller
 				}
 			}
 
-			// Jika user finance, berikan akses ke divisi finance lainnya
 			if ($isFinanceUser) {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 			} else {
@@ -396,7 +395,6 @@ class Form extends CI_Controller
 			echo json_encode(array('data' => array()));
 		}
 	}
-
 
 	function createQRCode($id = "")
 	{
