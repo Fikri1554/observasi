@@ -49,7 +49,7 @@ class Form extends CI_Controller
 
 			$sql = "SELECT * FROM form " . $where;
 		}
-
+		
 		$data = $this->myapp->getDataQueryDB6($sql);
 
 		foreach ($data as $key => $value) {
@@ -60,12 +60,12 @@ class Form extends CI_Controller
 			}
 			if ($value->st_acknowledge === 'Y' && $value->st_approval === 'N') {
 				$status = "Waiting Approval <i class='fa fa-clock-o'></i>";
-			} 
+			}
 			if ($value->st_approval === 'Y') {
 				$status = "Approve Success <i class='fa fa-check'></i>";
 			}
 			if ($value->st_detail === 'Y') {
-				$btnDetail = "<button onclick=\"editData('" . $value->id . "');\" title=\"Edit Detail\" class=\"btn btn-warning btn-xs\" id=\"btnEdit\" type=\"button\"><i class=\"glyphicon glyphicon-edit\"></i></button>";
+				$btnDetail = "<button onclick=\"editData('".$value->id."');\" title=\"Edit Detail\" class=\"btn btn-warning btn-xs\" id=\"btnEdit\" type=\"button\"><i class=\"glyphicon glyphicon-edit\"></i></button>";
 			} else {
 				$btnDetail = "<button onclick=\"addDetail('" . $value->id . "');\" title=\"Add Detail\" class=\"btn btn-primary btn-xs\" id=\"btnAdd\" type=\"button\"><i class=\"glyphicon glyphicon-plus\"></i></button>";
 			}
@@ -77,7 +77,6 @@ class Form extends CI_Controller
 				$btnExport = "<button onclick=\"ViewPrint('" . $value->id . "', 'request');\" class=\"btn btn-success btn-xs\" id=\"btnView_" . $value->id . "\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
 				$btnDelete = "<button onclick=\"delData('" . $value->id . "');\" class=\"btn btn-danger btn-xs\" id=\"btnDelete_" . $value->id . "\" type=\"button\" title=\"Delete\"><i class=\"fa fa-trash-o\"></i> Delete</button>";
 			}
-
 			$tr .= "<tr id='row_" . $value->id . "'>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $no . "</td>";
 				$tr .= "<td align='center'>" . $btnDetail . "</td>"; 
@@ -87,7 +86,7 @@ class Form extends CI_Controller
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->location . "</td>";
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->divisi . "</td>";
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;' id='status_" . $value->id . "'>" . $status . "</td>";
-				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" .$btnExport.$btnDelete. "</td>";
+				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$btnExport.$btnDelete."</td>";
 			$tr .= "</tr>";
 
 			$no++;
@@ -140,7 +139,6 @@ class Form extends CI_Controller
 		$arrTypes          = $data['txttype'];
 		$arrReasons        = $data['txtreason'];
 		$arrQuantities     = $data['txtquantity'];
-		$arrRequiredDates  = $data['txtrequired_date'];
 		$arrNotes          = $data['txtnote'];
 		$arrIdDetails      = $data['txtIdDetail'];
 
@@ -150,13 +148,11 @@ class Form extends CI_Controller
 			if (empty($arrDescriptions[$i]) || empty($arrTypes[$i]) || empty($arrReasons[$i]) || $arrQuantities[$i] <= 0) {
 				continue; 
 			}
-
 			$dataToUpdate = array(
 				'description'   => $arrDescriptions[$i],
 				'type'          => $arrTypes[$i],
 				'reason'        => $arrReasons[$i],
 				'quantity'      => $arrQuantities[$i],
-				'required_date' => $arrRequiredDates[$i],
 				'note'          => $arrNotes[$i],
 				'update_userid' => $this->session->userdata('userIdMyApps'),  
 				'update_date'   => date('Y-m-d')
@@ -508,7 +504,7 @@ class Form extends CI_Controller
 	}
 
 	function previewPrint() 
-	{
+	{	
 		$id = $this->input->post('id');
 		$typeView = $this->input->post('typeView');
 		$userid = $this->session->userdata('userIdMyApps'); 
@@ -525,6 +521,8 @@ class Form extends CI_Controller
 
 		$queryForm = "SELECT * FROM `form` WHERE `id` = $id AND `sts_delete` = 0";
 		$form = $this->myapp->getDataQueryDB6($queryForm);
+
+		
 
 		if ($form[0]->batchno > 0) {
 			$this->createQRCode($form[0]->batchno);
@@ -545,23 +543,25 @@ class Form extends CI_Controller
 		if (count($form) > 0 && isset($form[0])) {
 			$queryFormDetail = "SELECT * FROM `form_detail` WHERE `id_form` = $id AND `sts_delete` = 0";
 			$form_details = $this->myapp->getDataQueryDB6($queryFormDetail);
-
+			// var_dump($form_details);
+			// die;
 			$form_details = array_filter($form_details, function($detail) {
 				return !empty($detail->description) && !empty($detail->type) && !empty($detail->reason) && $detail->quantity > 0;
 			});
 
 			$qrCodeImgPath = base_url("assets/imgQRCodeForm/" . base64_encode($form[0]->batchno) . ".jpg");
 			
-
 			$data = array(
 				'form' => $form[0],
 				'form_details' => $form_details,
+				'note' => isset($form[0]->note) ? $form[0]->note : 'No notes available',  // pastikan note tersedia
 				'imageLogo' => "<img src=\"" . base_url($logo_company) . "\" alt=\"Company Logo\" height=\"50\" style=\"align-items: left; margin-bottom: -50px;\">",
 				'qrCode' => "<img src=\"" . $qrCodeImgPath . "\" alt=\"QR Code\" height=\"100\" width=\"100\" />",
 				'kadept' => null,
 				'kadiv' => null,
 				'nameKadept' => null,
 				'nameKadiv' => null,
+				'button' => $button
 			);
 			
 			$mappingInfo = $this->getMappingInfo($form[0]->divisi, $form[0]->department, $form[0]->batchno);
@@ -579,30 +579,35 @@ class Form extends CI_Controller
 			if ($typeView == 'request' && $form[0]->st_submit == 'N' && $form[0]->st_acknowledge == 'N' && $form[0]->st_approval == 'N') {
 				$button .= "<button onclick=\"sendData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnSubmit_{$form[0]->id}\" type=\"button\" title=\"Submit\"><i class=\"fa fa-send-o\"></i> Send</button>";
 			}
-			else if($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'N' && $form[0]->st_approval == 'N'){
+			if($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'N' && $form[0]->st_approval == 'N'){
 				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\"><i class=\"fa fa-download\"></i> Download</button>";
-			}else if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
+			}
+			if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
 				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" 		id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\">
 							<i class=\"fa fa-download\"></i> Download
 							</button>";
 			}
-			else if ($typeView == 'acknowledge' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'N'){
+			if ($typeView == 'acknowledge' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'N'){
 				$button .= "<button onclick=\"acknowledgeData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" type=\"button\" style=\"margin: 5px;\">
 										<i class=\"fa fa-print\"></i> Acknowledge
 									</button>";
 			}
-			else if ($typeView == 'approval' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
+			if ($typeView == 'approval' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
 				$button .= "<button onclick=\"approveData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" type=\"button\" style=\"margin: 5px;\">
 										<i class=\"fa fa-thumbs-up\"></i> Approve
 									</button>";
-			}else if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'Y')
+			}
+			if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'Y')
 			{
 				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\"><i class=\"fa fa-download\"></i> Download</button>";
 			}
 
 			$data['button'] = $button;
 
-			echo json_encode($data);
+			print json_encode($data);
+
+			// var_dump($data);
+			// die;
 		} else {
 			show_error('Form not found', 404);
 		}
@@ -950,55 +955,76 @@ class Form extends CI_Controller
 		$userId = $this->session->userdata('userIdMyApps');
 		$reqName = $this->session->userdata('fullNameMyApps');
 		$IdForm = $data['txtIdForm'];
-
+		$response = array();
+ 
 		if (empty($IdForm)) {
 			$dataIns = array(
 				'batchno' => $this->getBatchNo(),
 				'project_reference' => $data['txtprojectReference'],
-				'purpose'           => $data['txtpurpose'],
-				'company'           => $data['slcCompanyText'],
-				'init_cmp'          => $data['slcCompany'], 
-				'department'		=> $data['slcDepartment'],
-				'location'          => $data['txtlocation'],
-				'divisi'            => $data['slcDivisi'],
-				'userid_submit'     => $userId,
-				'add_date'          => $dateNow,
-				'request_name'      => $reqName
+				'purpose' => $data['txtpurpose'],
+				'company' => $data['slcCompanyText'],
+				'init_cmp' => $data['slcCompany'],
+				'department' => $data['slcDepartment'],
+				'location' => $data['txtlocation'],
+				'divisi' => $data['slcDivisi'],
+				'required_date' => isset($data['txtRequiredDate']) ? $data['txtRequiredDate'] : $dateNow,
+				'userid_submit' => $userId,
+				'add_date' => $dateNow,
+				'request_name' => $reqName
 			);
 			try {
 				$this->myapp->insDataDb6($dataIns, 'form');
-				$IdForm = $this->db->insert_id(); 
-				$this->addDataMyAppLetter($IdForm); 
-				$status = "Insert Success..!!";
+				$IdForm = $this->db->insert_id();
+				$this->addDataMyAppLetter($IdForm);
+				$response = array(
+					"status" => "Insert Success..!!",
+					"id" => $IdForm,
+					"project_reference" => $data['txtprojectReference'],
+					"purpose" => $data['txtpurpose'],
+					"company" => $data['slcCompanyText'],
+					"location" => $data['txtlocation'],
+					"divisi" => $data['slcDivisi']
+				);
 			} catch (Exception $ex) {
-				$status = "Failed => " . $ex->getMessage();
+				$response = array(
+					"status" => "Failed",
+					"message" => $ex->getMessage()
+				);
 			}
 		} else {
 			$dataUpd = array(
 				'project_reference' => $data['txtprojectReference'],
-				'purpose'           => $data['txtpurpose'],
-				'company'           => $data['slcCompanyText'], 
-				'init_cmp'          => $data['slcCompany'],
-				'department'		=> $data['slcDepartement'],
-				'location'          => $data['txtlocation'],
-				'divisi'            => $data['slcDivisi'],
-				'update_userid'     => $userId,
-				'update_date'       => $dateNow,
-				'request_name'      => $reqName
+				'purpose' => $data['txtpurpose'],
+				'company' => $data['slcCompanyText'],
+				'init_cmp' => $data['slcCompany'],
+				'department' => $data['slcDepartment'],
+				'location' => $data['txtlocation'],
+				'divisi' => $data['slcDivisi'],
+				'required_date' => isset($data['txtRequiredDate']) ? $data['txtRequiredDate'] : $dateNow,
+				'update_userid' => $userId,
+				'update_date' => $dateNow,
+				'request_name' => $reqName
 			);
 
 			try {
 				$where = "id = '" . $IdForm . "'";
 				$this->myapp->updateDataDb6("form", $dataUpd, $where);
-				$this->addDataMyAppLetter($IdForm); 
-				$status = "Update Success..!!";
+				$this->addDataMyAppLetter($IdForm);
+				$response = array(
+					"status" => "Update Success",
+					"id" => $IdForm
+				);
 			} catch (Exception $ex) {
-				$status = "Failed => " . $ex->getMessage();
+				$response = array(
+					"status" => "Failed",
+					"message" => $ex->getMessage()
+				);
 			}
 		}
 
-		print json_encode($status);
+		echo json_encode($response);
 	}
+
 
 	function saveFormRequestDetail() {
 		$data = $this->input->post(); 
@@ -1010,9 +1036,7 @@ class Form extends CI_Controller
 		$arrTypes = explode('*', $data['types']);
 		$arrReasons = explode('*', $data['reasons']);
 		$arrQuantities = explode('*', $data['quantities']);
-		$arrRequiredDates = explode('*', $data['required_dates']);
 		$arrNotes = explode('*', $data['notes']);
-
 				
 		$numEntries = count($arrDescriptions);
 
@@ -1028,7 +1052,6 @@ class Form extends CI_Controller
 				'type'          => $arrTypes[$i],
 				'reason'        => $arrReasons[$i],
 				'quantity'      => $arrQuantities[$i],
-				'required_date' => $arrRequiredDates[$i],
 				'note'          => $arrNotes[$i],
 				'add_userid'    => $this->session->userdata('userIdMyApps'),
 				'add_date'      => $currentDate,

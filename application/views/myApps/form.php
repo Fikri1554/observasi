@@ -32,15 +32,55 @@
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    if (response.includes("Insert Success")) {
-                        alert(response);
-                    } else if (response.startsWith("Failed =>")) {
-                        alert("Gagal: " + response);
+                    response = JSON.parse(response);
+                    if (response.status === "Insert Success..!!") {
+                        alert("Data berhasil disimpan!");
+
+                        var statusText = "";
+                        if (response.st_submit === 'Y' && response.st_acknowledge === 'N') {
+                            statusText =
+                                "Waiting Acknowledge <i class='fa fa-clock-o'></i>";
+                        } else if (response.st_acknowledge === 'Y' && response
+                            .st_approval === 'N') {
+                            statusText = "Waiting Approval <i class='fa fa-clock-o'></i>";
+                        } else if (response.st_approval === 'Y') {
+                            statusText = "Approve Success <i class='fa fa-check'></i>";
+                        }
+
+                        var newRow = "<tr id='row_" + response.id + "'>";
+                        newRow += "<td align='center'>" + ($("#idTbody tr").length + 1) +
+                            "</td>";
+                        newRow += "<td align='center'><button onclick=\"addDetail('" +
+                            response.id +
+                            "');\" title=\"addDetail\" class=\"btn btn-primary btn-xs\" type=\"button\"><i class=\"fa fa-plus\"></i></button></td>";
+                        newRow += "<td align='center'>" + response.project_reference +
+                            "</td>";
+                        newRow += "<td align='center'>" + response.purpose + "</td>";
+                        newRow += "<td align='left'>" + response.company + "</td>";
+                        newRow += "<td align='center'>" + response.location + "</td>";
+                        newRow += "<td align='left'>" + response.divisi + "</td>";
+                        newRow += "<td align='left'>" + statusText + "</td>";
+                        newRow += "<td align='center'><button onclick=\"ViewPrint('" +
+                            response.id +
+                            "', 'request');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button><button onclick=\"delData('" +
+                            response.id +
+                            "');\" class=\"btn btn-danger btn-xs\" type=\"button\" title=\"Delete\"><i class=\"fa fa-trash-o\"></i> Delete</button></td>";
+                        newRow += "</tr>";
+
+                        $('#idTbody').append(newRow);
+
+                        $('#idFormModal').modal('hide');
+
+                        $('input[name^="txt"]').val('');
+                        $('#slcCompany').prop('selectedIndex', 0);
+                        $('#slcDivisi').prop('selectedIndex', 0);
+                        $('#slcDepartment').prop('selectedIndex', 0);
+                        $('#txtIdForm').val('');
+                    } else if (response.status.startsWith("Failed")) {
+                        alert("Gagal: " + response.message);
                     } else {
                         alert("Data berhasil disimpan! " + response);
                     }
-                    $('#idFormModal').modal('hide');
-                    reloadPage();
                 },
                 error: function(xhr, status, error) {
                     console.log(error);
@@ -49,6 +89,8 @@
             });
         });
     });
+
+
 
     $(document).ready(function() {
         $("#btnSaveFormDetail").click(function() {
@@ -68,7 +110,6 @@
             appendData('types', "input[name^='txttype']");
             appendData('reasons', "input[name^='txtreason']");
             appendData('quantities', "input[name^='txtquantity']");
-            appendData('required_dates', "input[name^='txtrequired_date']");
             appendData('notes', "input[name^='txtnote']");
 
             if ($("input[name^='txtdescription']").val() === "" ||
@@ -106,6 +147,7 @@
 
     function editData(id) {
         $("#idLoading").show();
+        $("#btnNav").hide();
 
         $.ajax({
             url: '<?php echo base_url('form/getFormRequestDetailById'); ?>',
@@ -161,13 +203,6 @@
                                                     autocomplete="off">
                                             </div>
                                         </div>
-                                        <div class="col-md-2 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                            <div class="form-group">
-                                                <label for="txtRequiredDate_${index}"><u>Required Date:</u></label>
-                                                <input type="date" name="txtrequired_date[]" class="form-control input-sm"
-                                                    id="txtRequiredDate_${index}" value="${detail.required_date}" autocomplete="off">
-                                            </div>
-                                        </div>
                                         <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
                                             <div class="form-group">
                                                 <label for="txtnote_${index}"><u>Note:</u></label>
@@ -206,7 +241,6 @@
                 txttype: [],
                 txtreason: [],
                 txtquantity: [],
-                txtrequired_date: [],
                 txtnote: [],
                 txtIdDetail: []
             };
@@ -216,8 +250,6 @@
                 formData.txttype.push($(this).find("input[name^='txttype[]']").val());
                 formData.txtreason.push($(this).find("input[name^='txtreason[]']").val());
                 formData.txtquantity.push($(this).find("input[name^='txtquantity[]']").val());
-                formData.txtrequired_date.push($(this).find("input[name^='txtrequired_date[]']")
-                    .val());
                 formData.txtnote.push($(this).find("input[name^='txtnote[]']").val());
                 formData.txtIdDetail.push($(this).find("input[name='txtIdDetail[]']").val());
             });
@@ -243,7 +275,6 @@
             });
         });
     });
-
 
     $(document).on('click', '#cancelEditDetail', function() {
         $("#idFormEditDetail").hide(200);
@@ -285,26 +316,26 @@
                     .company || 'N/A');
                 $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(5) td').html(data.form
                     .location || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(6) td').html(data.form
+                    .required_date || 'N/A');
 
                 var detailHtml = '';
                 if (data.form_details && data.form_details.length > 0) {
                     data.form_details.forEach(function(detail) {
                         detailHtml += `
-                <tr>
-                    <td>${detail.description || ''}</td>
-                    <td>${detail.type || ''}</td>
-                    <td>${detail.quantity || ''}</td>
-                    <td>${detail.reason || ''}</td>
-                    <td>${detail.required_date && detail.required_date !== '0000-00-00' ? detail.required_date : ''}</td>
-                </tr>`;
+                        <tr>
+                            <td>${detail.description || ''}</td>
+                            <td>${detail.type || ''}</td>
+                            <td>${detail.quantity || ''}</td>
+                            <td>${detail.reason || ''}</td>
+                            <td>${detail.note || ''}</td>
+                        </tr>`;
                     });
                 } else {
                     detailHtml = '<tr><td colspan="5">No details available</td></tr>';
                 }
                 $('#ictRequestModal .modal-bodyPreview .table-striped tbody').html(detailHtml);
 
-                $('#ictRequestModal .modal-bodyPreview .note-box').html(data.form.note ||
-                    'No notes available');
                 $('#ictRequestModal .modal-bodyPreview .signature-box').eq(0).html(data.qrCode);
                 $('#ictRequestModal .modal-bodyPreview .signature-box').eq(1).html(data.kadept);
                 $('#ictRequestModal .modal-bodyPreview .signature-box').eq(2).html(data.kadiv);
@@ -315,17 +346,6 @@
 
                 $('.footer-buttonAcknowledge').html(data.buttonKadept || '');
                 $('.footer-buttonApprove').html(data.buttonKadiv || '');
-
-                if (data.form.st_submit == 'Y') {
-                    $('#ictRequestModal .modal-bodyPreview .footer-buttonDownload').html(`
-                <button onclick="downloadPdf(${data.form.id});"
-                    class="btn btn-primary btn-xs" type="button" style="margin: 5px;">
-                    <i class="fa fa-download"></i> Download
-                </button>
-            `);
-                } else {
-                    $('#ictRequestModal .modal-bodyPreview .footer-buttonDownload').html('');
-                }
 
                 if (data.button) {
                     $('#ictRequestModal .modal-bodyPreview .footer-buttonSend').html(data.button);
@@ -382,7 +402,7 @@
                     if (statusElement) {
                         statusElement.innerHTML = "Waiting Acknowledge";
                     }
-                    alert("Status successfully updated to Waiting Acknowledge.");
+                    alert("Status successfully updated to Waiting Acknowledge🕒");
                     reloadPage();
                     refreshAcknowledgeTable();
                 }
@@ -592,7 +612,9 @@
             "BOD / BOC": ["NON DEPARTMENT", "PA"],
             "CORPORATE FINANCE, STRATEGY & COMPLIANCE": ["NON DEPARTMENT"],
             "DRY BULK COMMERCIAL , OPERATION & AGENCY": ["OPERATION", "COMMERCIAL & CHARTERING", "AGENCY"],
-            "FINANCE": ["FINANCE", "ACCOUNTING", "TAX"],
+            "FINANCE": ["FINANCE", "ACCOUNTING", "TAX", "NON DEPARTMENT", "FINANCE & CONTROL",
+                "ACCOUNTING & REPORTING"
+            ],
             "HUMAN CAPITAL & GA": ["HR", "GA"],
             "NON DIVISION": ["SECRETARY", "NON DEPARTMENT"],
             "OFFICE OPERATION": ["IT", "LEGAL", "PROCUREMENT", "AGENCY & BRANCH"],
@@ -632,8 +654,10 @@
         $('#idFieldDetail').on('click', '.btnAddRow', function() {
             var $clone = $(this).closest('.detailRow').clone();
             $clone.find('input').val('');
+            $clone.find('input').each(function() {
+                $(this).removeAttr('id');
+            });
             $('#idFieldDetail').append($clone);
-
             updateButtonVisibility();
         });
 
@@ -646,6 +670,7 @@
 
         updateButtonVisibility();
     });
+
 
     function reloadPage() {
         window.location = "<?php echo base_url('form/getDataForm');?>";
@@ -680,7 +705,8 @@
                         <div class="modal fade bd-example-modal-lg" id="idFormModal" role="dialog" aria-hidden="true">
                             <div class="modal-dialog modal-lg" role="document">
                                 <div class="modal-content">
-                                    <div class="modal-header">
+                                    <div class="modal-header"
+                                        style="background-color:#D46D16;border-bottom:1px solid #e7e7e7">
                                         <h4 class="modal-title">Add Request</h4>
                                     </div>
                                     <div class="modal-body">
@@ -738,7 +764,16 @@
                                                                 </select>
                                                             </div>
                                                         </div>
-
+                                                        <div class="col-md-2 col-xs-12"
+                                                            style="padding-right: 10px; padding-left: 10px;">
+                                                            <div class="form-group">
+                                                                <label for="txtRequiredDate"><u>Required
+                                                                        Date:</u></label>
+                                                                <input type="date" name="txtrequired_date[]"
+                                                                    class="form-control input-sm" id="txtRequiredDate"
+                                                                    autocomplete="off">
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -898,52 +933,52 @@
                     <div id="idFieldDetail">
                         <div class="row" style="margin-bottom: 15px;">
                             <div class="col-md-12">
-                                <legend><label id="lblForm"> Add Request Detail</label></legend>
-                                <div class="detailRow">
-                                    <div class="col-md-2 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                <legend><label id="lblForm">Add Request Detail</label></legend>
+                                <div class="detailRow" style="display: flex; flex-wrap: wrap;">
+                                    <div class="col-md-2 col-xs-12"
+                                        style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
                                         <div class="form-group">
                                             <label for="txtdescription"><u>Description:</u></label>
-                                            <input type="text" name="txtdescription[]" class="form-control input-sm"
-                                                id="txtdescription" placeholder="Description" autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                        <div class="form-group">
-                                            <label for="txttype"><u>Type:</u></label>
-                                            <input type="text" name="txttype[]" class="form-control input-sm"
-                                                id="txttype" placeholder="Type" autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                        <div class="form-group">
-                                            <label for="txtreason"><u>Reason:</u></label>
-                                            <input type="text" name="txtreason[]" class="form-control input-sm"
-                                                id="txtreason" placeholder="Reason" autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                        <div class="form-group">
-                                            <label for="txtquantity"><u>Quantity:</u></label>
-                                            <input type="text" name="txtquantity[]" class="form-control input-sm"
-                                                id="txtquantity" value="0" onkeypress="return isNumber(event)"
+                                            <input type="text" name="txtdescription[]"
+                                                class="form-control input-sm txtdescription" placeholder="Description"
                                                 autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-2 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                    <div class="col-md-2 col-xs-12"
+                                        style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
                                         <div class="form-group">
-                                            <label for="txtRequiredDate"><u>Required Date:</u></label>
-                                            <input type="date" name="txtrequired_date[]" class="form-control input-sm"
-                                                id="txtRequiredDate" autocomplete="off">
+                                            <label for="txttype"><u>Type:</u></label>
+                                            <input type="text" name="txttype[]" class="form-control input-sm txttype"
+                                                placeholder="Type" autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                    <div class="col-md-2 col-xs-12"
+                                        style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
+                                        <div class="form-group">
+                                            <label for="txtreason"><u>Reason:</u></label>
+                                            <input type="text" name="txtreason[]"
+                                                class="form-control input-sm txtreason" placeholder="Reason"
+                                                autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 col-xs-12"
+                                        style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
+                                        <div class="form-group">
+                                            <label for="txtquantity"><u>Quantity:</u></label>
+                                            <input type="text" name="txtquantity[]"
+                                                class="form-control input-sm txtquantity" value="0"
+                                                onkeypress="return isNumber(event)" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-xs-12"
+                                        style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
                                         <div class="form-group">
                                             <label for="txtnote"><u>Note:</u></label>
-                                            <input type="text" name="txtnote[]" class="form-control input-sm"
-                                                id="txtnote" autocomplete="off">
+                                            <input type="text" name="txtnote[]" class="form-control input-sm txtnote"
+                                                autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-1 col-xs-2">
+                                    <div class="col-md-1 col-xs-2" style="flex: 1 1 auto;">
                                         <button type="button" class="btn btn-primary btn-xs btnAddRow"
                                             style="margin-top: 25px;">
                                             <i class="glyphicon glyphicon-plus"></i>
@@ -957,6 +992,9 @@
                             </div>
                         </div>
                     </div>
+
+
+
                     <div class="row">
                         <div class="col-md-12 col-xs-12">
                             <div class="form-group" align="center">
@@ -1010,13 +1048,6 @@
                                                 autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-2 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                        <div class="form-group">
-                                            <label for="txtRequiredDate"><u>Required Date:</u></label>
-                                            <input type="date" name="txtrequired_date" class="form-control input-sm"
-                                                id="txtRequiredDate" autocomplete="off">
-                                        </div>
-                                    </div>
                                     <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
                                         <div class="form-group">
                                             <label for="txtnote"><u>Note:</u></label>
@@ -1047,7 +1078,7 @@
                     aria-labelledby="ictRequestModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-lg" role="document">
                         <div class="modal-content">
-                            <div class="modal-header">
+                            <div class="modal-header" style="background-color:#D46D16;border-bottom:1px solid #e7e7e7">
                                 <h5 class="modal-title" id="ictRequestModalLabel">ICT Tools and Equipment Request</h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
@@ -1087,6 +1118,10 @@
                                         <th>Location / Lokasi</th>
                                         <td></td>
                                     </tr>
+                                    <tr>
+                                        <th>Required Date</th>
+                                        <td></td>
+                                    </tr>
                                 </table>
                                 <table class="table table-striped">
                                     <thead>
@@ -1095,7 +1130,7 @@
                                             <th>TYPE / BRAND</th>
                                             <th>QTY</th>
                                             <th>REASON / ALASAN</th>
-                                            <th>REQUIRED DATE</th>
+                                            <th>NOTE</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1104,13 +1139,6 @@
                                 </table>
 
                                 <div class="footer">
-                                    <div class="note">
-                                        <strong>Note:</strong>
-                                        <div class="note-box">
-
-                                        </div>
-                                    </div>
-
                                     <div class="approval">
                                         <table class="table table-borderless">
                                             <tr>

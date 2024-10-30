@@ -136,6 +136,10 @@ ob_start();
             <th>Location / Lokasi</th>
             <td><?php echo isset($form->location) ? $form->location : 'N/A'; ?></td>
         </tr>
+        <tr>
+            <th>Required Date</th>
+            <td><?php echo isset($form->required_date) ? $form->required_date : 'N/A'; ?></td>
+        </tr>
     </table>
 
     <table class="detail">
@@ -143,9 +147,8 @@ ob_start();
             <tr>
                 <th>DESKRIPSI</th>
                 <th>TYPE / BRAND</th>
-                <th>QTY</th>
+                <th>QUANTITY</th>
                 <th>REASON / ALASAN</th>
-                <th>REQUIRED DATE</th>
             </tr>
         </thead>
         <tbody>
@@ -155,8 +158,6 @@ ob_start();
                 <td><?php echo isset($detail->type) ? $detail->type : ''; ?></td>
                 <td><?php echo isset($detail->quantity) ? $detail->quantity : ''; ?></td>
                 <td><?php echo isset($detail->reason) ? $detail->reason : ''; ?></td>
-                <td><?php echo isset($detail->required_date) && $detail->required_date != '0000-00-00' ? $detail->required_date : ''; ?>
-                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
