@@ -22,7 +22,7 @@ class Form extends CI_Controller
 		$where = "WHERE sts_delete = '0' ";
 
 		if ($userType == 'admin') {
-			$sql = "SELECT * FROM form " . $where;
+			$sql = "SELECT * FROM form " . $where. " ORDER BY ID DESC";
 		} else {
 			
 			$financeAccess = array(
@@ -47,7 +47,7 @@ class Form extends CI_Controller
 				$where .= " AND divisi = '" . $userDiv . "'";
 			}
 
-			$sql = "SELECT * FROM form " . $where;
+			$sql = "SELECT * FROM form ".$where." ORDER BY ID DESC";
 		}
 		
 		$data = $this->myapp->getDataQueryDB6($sql);
@@ -65,9 +65,7 @@ class Form extends CI_Controller
 				$status = "Approve Success <i class='fa fa-check'></i>";
 			}
 			if ($value->st_detail === 'Y') {
-				$btnDetail = "<button onclick=\"editData('".$value->id."');\" title=\"Edit Detail\" class=\"btn btn-warning btn-xs\" id=\"btnEdit\" type=\"button\"><i class=\"glyphicon glyphicon-edit\"></i></button>";
-			} else {
-				$btnDetail = "<button onclick=\"addDetail('" . $value->id . "');\" title=\"Add Detail\" class=\"btn btn-primary btn-xs\" id=\"btnAdd\" type=\"button\"><i class=\"glyphicon glyphicon-plus\"></i></button>";
+				$btnDetail = "<button onclick=\"editData('".$value->id."');\" title=\"Edit Detail\" class=\"btn btn-warning btn-xs\" id=\"btnEdit_".$value->id."\" type=\"button\"><i class=\"glyphicon glyphicon-edit\"></i></button>";
 			}
 			if ($value->st_submit === 'Y') {
 				$btnExport = "<button onclick=\"ViewPrint('" .$value->id. "','request');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
@@ -102,29 +100,43 @@ class Form extends CI_Controller
 		$this->load->view('myApps/form', $dataOut);
 	}
 
-	function getFormRequestDetailById() {
+	function getEditForm() {
 		$id_form = $this->input->post('id_form');
+		$id = $this->input->post('id');
 
 		if (empty($id_form)) {
 			echo json_encode(array('status' => 'error', 'message' => 'ID Form tidak valid.'));
 			return;
 		}
 
+		if (empty($id)) {
+			echo json_encode(array('status' => 'error', 'message' => 'ID table form Tidak ada.'));
+			return;
+		}
+
+		$sqlForm = "SELECT * FROM form WHERE id = '".$id."' AND sts_delete = '0'";
+		$formQuery = $this->myapp->getDataQueryDB6($sqlForm);
+
 		$sqlDetail = "SELECT * FROM form_detail WHERE id_form = '".$id_form."' AND sts_delete = '0'";
 		$formDetails = $this->myapp->getDataQueryDB6($sqlDetail);
 
 		$detailCount = count($formDetails);
 
-		if ($detailCount > 0) {
-			echo json_encode(array('status' => 'success', 'details' => $formDetails, 'detailCount' => $detailCount));
+		
+		if ($formQuery && $detailCount > 0) {
+			echo json_encode(array(
+				'status' => 'success',
+				'formData' => $formQuery, 
+				'details' => $formDetails,    
+				'detailCount' => $detailCount
+			));
 		} else {
-			echo json_encode(array('status' => 'error', 'message' => 'Data detail tidak ditemukan.'));
+			echo json_encode(array('status' => 'error', 'message' => 'Data form atau detail tidak ditemukan.'));
 		}
 	}
 
-	function saveEditDetail() {
+	function saveEditFormRequest() {
 		$data = $this->input->post();
-
 		$txtIdForm = isset($data['txtIdEditForm']) ? $data['txtIdEditForm'] : null;
 
 		if (empty($txtIdForm)) {
@@ -132,53 +144,73 @@ class Form extends CI_Controller
 			return;
 		}
 
-		$responseMessage = "";	
+		// Data untuk update tabel form
+		$formData = array(
+			'project_reference' => $this->input->post('txtprojectReferenceEdit'),
+			'purpose' => $this->input->post('txtpurposeEdit'),
+			'location' => $this->input->post('txtlocationEdit'),
+			'company' => $this->input->post('slcCompanyText'),
+			'init_cmp' => $this->input->post('slcCompanyEdit'),
+			'divisi' => $this->input->post('slcDivisiEdit'),
+			'required_date' => $this->input->post('txtRequiredDateEdit'),
+			'update_date' => date('Y-m-d H:i:s'),
+			'update_userid' => $this->session->userdata('userIdMyApps')
+		);
+
+		// Update data pada tabel form
+		$formUpdateSuccess = $this->myapp->updateDataDb6('form', $formData, array('id' => $txtIdForm));
+
+		$responseMessage = $formUpdateSuccess ? "Update Success..!!" : "Update form failed.";
 		$details = array();
 
-		$arrDescriptions   = $data['txtdescription'];
-		$arrTypes          = $data['txttype'];
-		$arrReasons        = $data['txtreason'];
-		$arrQuantities     = $data['txtquantity'];
-		$arrNotes          = $data['txtnote'];
-		$arrIdDetails      = $data['txtIdDetail'];
+		// Memproses detail form
+		$arrDescriptions = is_array($data['txtdescriptionEdit']) ? $data['txtdescriptionEdit'] : array();
+		$arrTypes = is_array($data['txttypeEdit']) ? $data['txttypeEdit'] : array();
+		$arrReasons = is_array($data['txtreasonEdit']) ? $data['txtreasonEdit'] : array();
+		$arrQuantities = is_array($data['txtquantityEdit']) ? $data['txtquantityEdit'] : array();
+		$arrNotes = is_array($data['txtnoteEdit']) ? $data['txtnoteEdit'] : array();
+		$arrIdDetails = is_array($data['txtIdDetail']) ? $data['txtIdDetail'] : array();
 
 		$numEntries = count($arrDescriptions);
 
 		for ($i = 0; $i < $numEntries; $i++) {
 			if (empty($arrDescriptions[$i]) || empty($arrTypes[$i]) || empty($arrReasons[$i]) || $arrQuantities[$i] <= 0) {
-				continue; 
+				continue;
 			}
 			$dataToUpdate = array(
-				'description'   => $arrDescriptions[$i],
-				'type'          => $arrTypes[$i],
-				'reason'        => $arrReasons[$i],
-				'quantity'      => $arrQuantities[$i],
-				'note'          => $arrNotes[$i],
-				'update_userid' => $this->session->userdata('userIdMyApps'),  
-				'update_date'   => date('Y-m-d')
+				'description' => $arrDescriptions[$i],
+				'type' => $arrTypes[$i],
+				'reason' => $arrReasons[$i],
+				'quantity' => $arrQuantities[$i],
+				'note' => $arrNotes[$i],
+				'update_userid' => $this->session->userdata('userIdMyApps'),
+				'update_date' => date('Y-m-d')
 			);
 			$idDetail = isset($arrIdDetails[$i]) ? $arrIdDetails[$i] : null;
-			
+
 			if ($idDetail) {
-				$updateSuccess = $this->myapp->updateDataDb6('form_detail', $dataToUpdate, array('id' => $idDetail)); 
+				$updateSuccess = $this->myapp->updateDataDb6('form_detail', $dataToUpdate, array('id' => $idDetail));
 
 				if ($updateSuccess) {
 					$responseMessage = "Update Success..!!";
-					$details[] = $dataToUpdate;  
+					$details[] = $dataToUpdate;
 				} else {
 					log_message('info', 'No rows updated for id_detail: ' . $idDetail);
 				}
 			}
 		}
+
 		$response = array(
 			'status' => 'success',
-			'idForm' => $txtIdForm,  
+			'idForm' => $txtIdForm,
 			'details' => $details,
 			'message' => $responseMessage
 		);
 
 		echo json_encode($response);
 	}
+
+
 
 	function delData()
 	{
@@ -522,8 +554,6 @@ class Form extends CI_Controller
 		$queryForm = "SELECT * FROM `form` WHERE `id` = $id AND `sts_delete` = 0";
 		$form = $this->myapp->getDataQueryDB6($queryForm);
 
-		
-
 		if ($form[0]->batchno > 0) {
 			$this->createQRCode($form[0]->batchno);
 		}
@@ -543,8 +573,7 @@ class Form extends CI_Controller
 		if (count($form) > 0 && isset($form[0])) {
 			$queryFormDetail = "SELECT * FROM `form_detail` WHERE `id_form` = $id AND `sts_delete` = 0";
 			$form_details = $this->myapp->getDataQueryDB6($queryFormDetail);
-			// var_dump($form_details);
-			// die;
+			
 			$form_details = array_filter($form_details, function($detail) {
 				return !empty($detail->description) && !empty($detail->type) && !empty($detail->reason) && $detail->quantity > 0;
 			});
@@ -606,15 +635,13 @@ class Form extends CI_Controller
 
 			print json_encode($data);
 
-			// var_dump($data);
-			// die;
 		} else {
 			show_error('Form not found', 404);
 		}
 	}
 	
-	function printPdf() {
-		$id = $this->input->post('id');
+	function printPdf($id) {
+		
 		if ($id === null) {
 			show_error('ID is missing', 400);
 			return;
@@ -675,11 +702,11 @@ class Form extends CI_Controller
 				$data['kadiv'] = "<img src=\"" . base_url($mappingInfo['namafileKadiv']) . "\" alt=\"Kadiv QR Code\" height=\"100\" width=\"100\" />";
 				$data['nameKadiv'] = $mappingInfo['nameKadiv'];
 			}
-			 
 			$this->load->view('myApps/previewPrint', $data);
 		} else {
 			show_error('Form not found', 404);
 		}
+		
 	}
 		
 	function getMappingInfo($division, $department, $batchno) {
@@ -748,7 +775,7 @@ class Form extends CI_Controller
 					'nameKadept' => 'Timbul Riyadi',
 					'namefileKadept' => '/assets/ImgQRCodeForm/RahadianHerbisworo.jpg',
 					'acknowledgeKadept' => 'Timbul Riyadi'
-				)
+				) 
 			),
 			'FINANCE' => array(
 				'FINANCE' => array(
@@ -905,7 +932,7 @@ class Form extends CI_Controller
 		
 		$buttonAck = "";
 		$buttonApp = "";
-		$buttonReq = "";
+			
 		$dataOut = array();
 
 		if(count($result) > 0) {
@@ -946,17 +973,16 @@ class Form extends CI_Controller
 		return $batchNo;
 	}
 	
-	function saveFormRequest()
-	{
+	function saveFormRequestWithDetail() {
 		$data = $this->input->post();
 		$status = "";
-		$dataIns = array();
 		$dateNow = date("Y-m-d");
 		$userId = $this->session->userdata('userIdMyApps');
 		$reqName = $this->session->userdata('fullNameMyApps');
 		$IdForm = $data['txtIdForm'];
 		$response = array();
- 
+
+		// Proses utama untuk saveFormRequest
 		if (empty($IdForm)) {
 			$dataIns = array(
 				'batchno' => $this->getBatchNo(),
@@ -1022,30 +1048,20 @@ class Form extends CI_Controller
 			}
 		}
 
-		echo json_encode($response);
-	}
-
-
-	function saveFormRequestDetail() {
-		$data = $this->input->post(); 
-		$txtIdForm = $data['id_form'];  
-		$currentDate = date("Y-m-d");
-		$responseMessage = "";
-			
+		$txtIdForm = $IdForm;  
 		$arrDescriptions = explode('*', $data['descriptions']);
 		$arrTypes = explode('*', $data['types']);
 		$arrReasons = explode('*', $data['reasons']);
 		$arrQuantities = explode('*', $data['quantities']);
 		$arrNotes = explode('*', $data['notes']);
-				
 		$numEntries = count($arrDescriptions);
+		$responseMessage = "";
 
 		for ($i = 0; $i < $numEntries; $i++) {
-			if (empty($arrDescriptions[$i]) || empty($arrTypes[$i]) || empty($arrReasons[$i]) || $arrQuantities[$i]<=0) 
-			{
-				continue; 
+			if (empty($arrDescriptions[$i]) || empty($arrTypes[$i]) || empty($arrReasons[$i]) || $arrQuantities[$i] <= 0) {
+				continue;
 			}
-				
+			
 			$dataToInsert = array(
 				'id_form'       => $txtIdForm,  
 				'description'   => $arrDescriptions[$i],
@@ -1053,19 +1069,20 @@ class Form extends CI_Controller
 				'reason'        => $arrReasons[$i],
 				'quantity'      => $arrQuantities[$i],
 				'note'          => $arrNotes[$i],
-				'add_userid'    => $this->session->userdata('userIdMyApps'),
-				'add_date'      => $currentDate,
-				'request_name'  => $this->session->userdata('fullNameMyApps')
+				'add_userid'    => $userId,
+				'add_date'      => $dateNow,
+				'request_name'  => $reqName
 			);
 
 			try {
 				$this->myapp->insDataDb6($dataToInsert, 'form_detail');
 				$responseMessage = "Insert Success..!!";
-			}catch (Exception $e) {
+			} catch (Exception $e) {
 				$responseMessage = "Failed to Insert: " . $e->getMessage();
 				break;
 			}
 		}
+
 		try {
 			$this->db->set('st_detail', 'Y');
 			$this->db->where('id', $txtIdForm);
@@ -1074,7 +1091,9 @@ class Form extends CI_Controller
 			$responseMessage = "Failed to update form detail: " . $e->getMessage();
 		}
 
-		echo json_encode($responseMessage);
+		$response['detail_status'] = $responseMessage;
+
+		echo json_encode($response);
 	}
 
 	function getOptMstDivisi($userDiv = "")
@@ -1114,7 +1133,7 @@ class Form extends CI_Controller
 
 		foreach ($rsl as $key => $value)
 		{
-			$optNya .= "<option value=\"".$value->cmpcode."\">".$value->nmcmp."</option>";
+			$optNya .= "<option value=\"".$value->nmcmp."\">".$value->nmcmp."</option>";
 		}
 		return $optNya;
 	}

@@ -13,91 +13,30 @@
     <script type="text/javascript">
     $(document).ready(function() {
         $('#saveFormRequest').click(function() {
+            var projectReference = $('#txtprojectReference').val();
+            var purpose = $('#txtpurpose').val();
+            var company = $("#slcCompany").val();
+            var location = $("#txtlocation").val();
+            var divisi = $("#slcDivisi").val();
+            var department = $("#slcDepartment").val();
+            var requiredDate = $("#txtRequiredDate").val();
+            var txtIdForm = $("#txtIdForm").val();
+
+            if (!projectReference || !purpose) {
+                alert("Field Project Reference and Purpose are required.");
+                return;
+            }
+
             var formData = new FormData();
-
-            $('input[name^="txt"]').each(function() {
-                formData.append($(this).attr('name'), $(this).val());
-            });
-
-            formData.append('slcCompany', $('#slcCompany').val());
+            formData.append('txtprojectReference', projectReference);
+            formData.append('txtpurpose', purpose);
+            formData.append('slcCompany', company);
             formData.append('slcCompanyText', $("#slcCompany option:selected").text());
-            formData.append('slcDivisi', $('#slcDivisi').val());
-            formData.append('slcDepartment', $('#slcDepartment').val());
-            formData.append('txtIdForm', $('#txtIdForm').val());
-
-            $.ajax({
-                url: '<?php echo base_url("form/saveFormRequest"); ?>',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    response = JSON.parse(response);
-                    if (response.status === "Insert Success..!!") {
-                        alert("Data berhasil disimpan!");
-
-                        var statusText = "";
-                        if (response.st_submit === 'Y' && response.st_acknowledge === 'N') {
-                            statusText =
-                                "Waiting Acknowledge <i class='fa fa-clock-o'></i>";
-                        } else if (response.st_acknowledge === 'Y' && response
-                            .st_approval === 'N') {
-                            statusText = "Waiting Approval <i class='fa fa-clock-o'></i>";
-                        } else if (response.st_approval === 'Y') {
-                            statusText = "Approve Success <i class='fa fa-check'></i>";
-                        }
-
-                        var newRow = "<tr id='row_" + response.id + "'>";
-                        newRow += "<td align='center'>" + ($("#idTbody tr").length + 1) +
-                            "</td>";
-                        newRow += "<td align='center'><button onclick=\"addDetail('" +
-                            response.id +
-                            "');\" title=\"addDetail\" class=\"btn btn-primary btn-xs\" type=\"button\"><i class=\"fa fa-plus\"></i></button></td>";
-                        newRow += "<td align='center'>" + response.project_reference +
-                            "</td>";
-                        newRow += "<td align='center'>" + response.purpose + "</td>";
-                        newRow += "<td align='left'>" + response.company + "</td>";
-                        newRow += "<td align='center'>" + response.location + "</td>";
-                        newRow += "<td align='left'>" + response.divisi + "</td>";
-                        newRow += "<td align='left'>" + statusText + "</td>";
-                        newRow += "<td align='center'><button onclick=\"ViewPrint('" +
-                            response.id +
-                            "', 'request');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button><button onclick=\"delData('" +
-                            response.id +
-                            "');\" class=\"btn btn-danger btn-xs\" type=\"button\" title=\"Delete\"><i class=\"fa fa-trash-o\"></i> Delete</button></td>";
-                        newRow += "</tr>";
-
-                        $('#idTbody').append(newRow);
-
-                        $('#idFormModal').modal('hide');
-
-                        $('input[name^="txt"]').val('');
-                        $('#slcCompany').prop('selectedIndex', 0);
-                        $('#slcDivisi').prop('selectedIndex', 0);
-                        $('#slcDepartment').prop('selectedIndex', 0);
-                        $('#txtIdForm').val('');
-                    } else if (response.status.startsWith("Failed")) {
-                        alert("Gagal: " + response.message);
-                    } else {
-                        alert("Data berhasil disimpan! " + response);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.log(error);
-                    alert("Terjadi kesalahan saat mengirim data.");
-                }
-            });
-        });
-    });
-
-
-
-    $(document).ready(function() {
-        $("#btnSaveFormDetail").click(function() {
-            var formData = new FormData();
-            var formId = $("#txtIdForm").val();
-
-            formData.append('id_form', formId);
+            formData.append('txtlocation', location);
+            formData.append('slcDivisi', divisi);
+            formData.append('slcDepartment', department);
+            formData.append('txtRequiredDate', requiredDate);
+            formData.append('txtIdForm', txtIdForm);
 
             function appendData(fieldName, selector) {
                 var values = $(selector).map(function() {
@@ -112,158 +51,233 @@
             appendData('quantities', "input[name^='txtquantity']");
             appendData('notes', "input[name^='txtnote']");
 
-            if ($("input[name^='txtdescription']").val() === "" ||
-                $("input[name^='txttype']").val() === "" ||
-                $("input[name^='txtreason']").val() === "" ||
-                $("input[name^='txtquantity']").val() <= 0) {
-                alert("Description, Type, Reason, and Quantity fields are required.");
-                return false;
-            }
-
-
-            $("#idLoading").show();
-
             $.ajax({
-                url: '<?php echo base_url('form/saveFormRequestDetail'); ?>',
                 type: 'POST',
+                url: '<?php echo base_url('form/saveFormRequestWithDetail'); ?>',
                 data: formData,
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    alert(response);
-                    $("#idFormDetail").hide();
-                    $("#idLoading").hide();
-                    reloadPage();
+                    response = JSON.parse(response);
+                    if (response.status === "Insert Success..!!" || response.status ===
+                        "Update Success") {
+                        alert(response.status);
+                        var statusText = '';
+
+                        if (response.st_submit === 'Y' && response.st_acknowledge === 'N') {
+                            statusText =
+                                "Waiting Acknowledge <i class='fa fa-clock-o'></i>";
+                        } else if (response.st_acknowledge === 'Y' && response
+                            .st_approval === 'N') {
+                            statusText = "Waiting Approval <i class='fa fa-clock-o'></i>";
+                        } else if (response.st_approval === 'Y') {
+                            statusText = "Approve Success <i class='fa fa-check'></i>";
+                        }
+
+                        var newRow = "<tr>";
+                        newRow += "<td align='center'>" + ($("#idTbody tr").length + 1) +
+                            "</td>";
+                        newRow += "<td align='center'><button onclick=\"editData('" +
+                            response.id +
+                            "');\" title=\"Edit Detail\" class=\"btn btn-warning btn-xs\" id=\"btnEdit\" type=\"button\"><i class=\"glyphicon glyphicon-edit\"></i></button></td>";
+                        newRow += "<td align='center'>" + response.project_reference +
+                            "</td>";
+                        newRow += "<td align='center'>" + response.purpose + "</td>";
+                        newRow += "<td align='left'>" + response.company + "</td>";
+                        newRow += "<td align='center'>" + response.location + "</td>";
+                        newRow += "<td align='left'>" + response.divisi + "</td>";
+                        newRow += "<td align='left'>" + statusText + "</td>";
+                        newRow += "<td align='center'><button onclick=\"ViewPrint('" +
+                            response.id +
+                            "', 'request');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>" +
+                            "<button onclick=\"delData('" + response.id +
+                            "');\" class=\"btn btn-danger btn-xs\" type=\"button\" title=\"Delete\"><i class=\"fa fa-trash-o\"></i> Delete</button></td>";
+                        newRow += "</tr>";
+
+                        $('#idTbody').append(newRow);
+                        $('#idFormModal').modal('hide');
+
+                        $('input[name^="txt"]').val('');
+                        $('#slcCompany').prop('selectedIndex', 0);
+                        $('#slcDivisi').prop('selectedIndex', 0);
+                        $('#slcDepartment').prop('selectedIndex', 0);
+                        $('#txtIdForm').val('');
+                    } else if (response.status.startsWith("Failed")) {
+                        alert("Gagal: " + response.message);
+                    } else {
+                        alert("Data berhasil disimpan! " + response.detail_status);
+                    }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error: " + error);
-                    $("#idLoading").hide();
-                },
-                dataType: 'json'
+                    alert('Terjadi kesalahan: ' + error);
+                }
             });
         });
     });
 
 
+    $(document).ready(function() {
+        const departmentMapping = {
+            "BOD / BOC": ["NON DEPARTMENT", "PA"],
+            "CORPORATE FINANCE, STRATEGY & COMPLIANCE": ["NON DEPARTMENT"],
+            "DRY BULK COMMERCIAL , OPERATION & AGENCY": ["OPERATION", "COMMERCIAL & CHARTERING", "AGENCY"],
+            "FINANCE": ["FINANCE", "ACCOUNTING", "TAX", "NON DEPARTMENT", "FINANCE & CONTROL",
+                "ACCOUNTING & REPORTING"
+            ],
+            "HUMAN CAPITAL & GA": ["HR", "GA"],
+            "NON DIVISION": ["SECRETARY", "NON DEPARTMENT"],
+            "OFFICE OPERATION": ["IT", "LEGAL", "PROCUREMENT", "AGENCY & BRANCH"],
+            "OIL & GAS COMMERCIAL & OPERATION": ["COMMERCIAL", "OPERATION"],
+            "SHIP MANAGEMENT": ["OWNER SUPERINTENDENT (TECHNICAL)", "CREWING", "QHSE", "AGENCY & BRANCH"]
+        };
+        $('#slcDivisiEdit').change(function() {
+            let selectedDivision = $(this).val();
+            let departmentSelect = $('#slcDepartmentEdit');
+
+            departmentSelect.empty();
+            departmentSelect.append('<option value="">- Select Department -</option>');
+
+            if (departmentMapping[selectedDivision]) {
+                departmentMapping[selectedDivision].forEach(function(department) {
+                    departmentSelect.append('<option value="' + department + '">' + department +
+                        '</option>');
+                });
+            }
+        });
+    });
+
     function editData(id) {
         $("#idLoading").show();
-        $("#btnNav").hide();
 
         $.ajax({
-            url: '<?php echo base_url('form/getFormRequestDetailById'); ?>',
+            url: '<?php echo base_url('form/getEditForm'); ?>',
             type: 'POST',
             data: {
+                id: id,
                 id_form: id
             },
             dataType: 'json',
             success: function(response) {
+                $("#idLoading").hide();
+                $('#idFormEditModal').modal('show');
+
                 if (response.status === 'success') {
-                    $("#txtIdEditForm").val(id);
+                    const formData = response.formData[0];
+                    console.log(formData);
 
-                    $("#idFieldEditDetail").empty();
+                    $("#txtprojectReferenceEdit").val(formData.project_reference || "");
+                    $("#txtpurposeEdit").val(formData.purpose || "");
+                    $("#txtlocationEdit").val(formData.location || "");
+                    $("#slcCompanyEdit").val(formData.company || "").trigger('change');
+                    $("#slcDivisiEdit").val(formData.divisi || "");
+                    $("#txtRequiredDateEdit").val(formData.required_date || "");
 
-                    if (Array.isArray(response.details) && response.details.length > 0) {
-                        $("#DataTableRequest").hide();
-                        $("#idFormEditDetail").show(200);
+                    $('#slcDivisiEdit').trigger('change');
 
-                        response.details.forEach(function(detail, index) {
-                            var detailForm = `
+                    setTimeout(() => {
+                        $("#slcDepartmentEdit").val(formData.department || "");
+                    }, 100);
+
+                    let detailContent = '';
+                    response.details.forEach(function(detail, index) {
+                        detailContent += `
                             <div class="row" style="margin-bottom: 15px;">
                                 <div class="col-md-12">
-                                    <legend><label id="lblForm"> Edit Request Detail#${index}</label></legend>
                                     <div class="form-row">
-                                        <input type="hidden" name="txtIdDetail[]" value="${detail.id}"> 
+                                        <input type="hidden" id="txtIdDetail_${index}" name="txtIdDetail[]" value="${detail.id}">
                                         <input type="hidden" id="txtIdEditForm" name="txtIdEditForm" value="${detail.id_form}">
-                                        <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="col-md-3 col-xs-12">
                                             <div class="form-group">
                                                 <label for="txtdescription_${index}"><u>Description:</u></label>
-                                                <input type="text" name="txtdescription[]" class="form-control input-sm"
-                                                    id="txtdescription_${index}" value="${detail.description}" placeholder="Description" autocomplete="off">
+                                                <input type="text" name="txtdescriptionEdit[]" class="form-control input-sm" id="txtdescriptionEdit_${index}" value="${detail.description}" placeholder="Description">
                                             </div>
                                         </div>
-                                        <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="col-md-2 col-xs-12">
                                             <div class="form-group">
                                                 <label for="txttype_${index}"><u>Type:</u></label>
-                                                <input type="text" name="txttype[]" class="form-control input-sm" id="txttype_${index}"
-                                                    value="${detail.type}" placeholder="Type" autocomplete="off">
+                                                <input type="text" name="txttypeEdit[]" class="form-control input-sm" id="txttypeEdit_${index}" value="${detail.type}" placeholder="Type">
                                             </div>
                                         </div>
-                                        <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="col-md-2 col-xs-12">
                                             <div class="form-group">
                                                 <label for="txtreason_${index}"><u>Reason:</u></label>
-                                                <input type="text" name="txtreason[]" class="form-control input-sm" id="txtreason_${index}"
-                                                    value="${detail.reason}" placeholder="Reason" autocomplete="off">
+                                                <input type="text" name="txtreasonEdit[]" class="form-control input-sm" id="txtreasonEdit_${index}" value="${detail.reason}" placeholder="Reason">
                                             </div>
                                         </div>
-                                        <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="col-md-2 col-xs-12">
                                             <div class="form-group">
                                                 <label for="txtquantity_${index}"><u>Quantity:</u></label>
-                                                <input type="text" name="txtquantity[]" class="form-control input-sm"
-                                                    id="txtquantity_${index}" value="${detail.quantity}" onkeypress="return isNumber(event)"
-                                                    autocomplete="off">
+                                                <input type="text" name="txtquantityEdit[]" class="form-control input-sm" id="txtquantityEdit_${index}" value="${detail.quantity}" onkeypress="return isNumber(event)">
                                             </div>
                                         </div>
-                                        <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
+                                        <div class="col-md-3 col-xs-12">
                                             <div class="form-group">
                                                 <label for="txtnote_${index}"><u>Note:</u></label>
-                                                <input type="text" name="txtnote[]" class="form-control input-sm"
-                                                    id="txtnote_${index}" value="${detail.note}" autocomplete="off">
+                                                <input type="text" name="txtnoteEdit[]" class="form-control input-sm" id="txtnoteEdit_${index}" value="${detail.note}">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         `;
-                            $("#idFieldEditDetail").append(detailForm);
-                        });
-                    } else {
-                        alert("Data detail tidak ditemukan.");
-                    }
+                    });
+
+                    $("#idFieldDetailEdit .detailRowEdit").html(detailContent);
+
                 } else {
                     alert(response.message);
                 }
-                $("#idLoading").hide();
             },
             error: function(xhr, status, error) {
                 console.error("Error: " + error);
-                alert("Terjadi kesalahan saat mengambil data.");
+                alert("An error occurred while retrieving data.");
                 $("#idLoading").hide();
             }
         });
     }
 
     $(document).ready(function() {
-        $("#saveEditDetail").click(function(e) {
+        $("#saveEditFormRequest").click(function(e) {
             e.preventDefault();
-            var formData = {
-                txtIdEditForm: $("#txtIdEditForm").val(),
-                txtdescription: [],
-                txttype: [],
-                txtreason: [],
-                txtquantity: [],
-                txtnote: [],
-                txtIdDetail: []
-            };
-            $("#idFieldEditDetail .row").each(function() {
-                formData.txtdescription.push($(this).find("input[name^='txtdescription[]']")
-                    .val());
-                formData.txttype.push($(this).find("input[name^='txttype[]']").val());
-                formData.txtreason.push($(this).find("input[name^='txtreason[]']").val());
-                formData.txtquantity.push($(this).find("input[name^='txtquantity[]']").val());
-                formData.txtnote.push($(this).find("input[name^='txtnote[]']").val());
-                formData.txtIdDetail.push($(this).find("input[name='txtIdDetail[]']").val());
-            });
+
+            var formData = new FormData();
+
+            formData.append('txtIdEditForm', $('#txtIdEditForm').val());
+            formData.append('txtprojectReferenceEdit', $('#txtprojectReferenceEdit').val());
+            formData.append('txtpurposeEdit', $('#txtpurposeEdit').val());
+            formData.append('slcCompanyEdit', $("#slcCompanyEdit").val());
+            formData.append('slcCompanyText', $("#slcCompanyEdit option:selected").text());
+            formData.append('txtlocationEdit', $("#txtlocationEdit").val());
+            formData.append('slcDivisiEdit', $("#slcDivisiEdit").val());
+            formData.append('slcDepartmentEdit', $("#slcDepartmentEdit").val());
+            formData.append('txtRequiredDateEdit', $("#txtRequiredDateEdit").val());
+
+            function appendData(fieldName, selector) {
+                var values = $(selector).map(function() {
+                    return $(this).val();
+                }).get();
+                values.forEach(value => formData.append(fieldName + '[]', value));
+            }
+
+            appendData('txtdescriptionEdit', "input[name^='txtdescriptionEdit[]']");
+            appendData('txttypeEdit', "input[name^='txttypeEdit[]']");
+            appendData('txtreasonEdit', "input[name^='txtreasonEdit[]']");
+            appendData('txtquantityEdit', "input[name^='txtquantityEdit[]']");
+            appendData('txtnoteEdit', "input[name^='txtnoteEdit[]']");
+            appendData('txtIdDetail', "input[name='txtIdDetail[]']");
+
             $.ajax({
-                url: '<?php echo base_url('form/saveEditDetail'); ?>',
+                url: '<?php echo base_url('form/saveEditFormRequest'); ?>',
                 type: 'POST',
                 data: formData,
+                processData: false,
+                contentType: false,
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === "success") {
-                        $("#txtIdEditForm").val(response.idForm);
                         alert("Data berhasil diperbarui!");
-                        $("#idFormEditDetail").hide();
-                        $("#DataTableRequest").show();
+                        $("#idFormEditModal").modal('hide');
+                        $("#DataTableRequest").DataTable().ajax.reload();
                     } else {
                         alert("Terjadi kesalahan: " + response.message);
                     }
@@ -276,9 +290,11 @@
         });
     });
 
+
     $(document).on('click', '#cancelEditDetail', function() {
         $("#idFormEditDetail").hide(200);
         $("#DataTableRequest").show(200);
+        $("#btnNav").show(200);
     });
 
     $(document).on('click', '#btnCancelFormDetail', function() {
@@ -300,24 +316,32 @@
                 $('#ictRequestModal .modal-bodyPreview .table-bordered td').html('');
                 $('#ictRequestModal .modal-bodyPreview .table-striped tbody').html('');
                 $('#ictRequestModal .modal-bodyPreview .note-box').empty();
-                $('#ictRequestModal .modal-bodyPreview .approval td').not(':has(div)').html('');
+                $('#ictRequestModal .modal-bodyPreview .approval td').not(':has(div)')
+                    .html('');
                 $('#ictRequestModal .modal-bodyPreview .signature-box').empty();
                 $('.name-wrapper').empty();
 
-                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(0) td').html(data.form
-                    .project_reference || 'N/A');
-                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(1) td').html(data.form
-                    .purpose || 'N/A');
-                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(2) td').html(data.form
-                    .divisi || 'N/A');
-                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(3) td').html(data.form
-                    .department || 'N/A');
-                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(4) td').html(data.form
-                    .company || 'N/A');
-                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(5) td').html(data.form
-                    .location || 'N/A');
-                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(6) td').html(data.form
-                    .required_date || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(0) td')
+                    .html(data.form
+                        .project_reference || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(1) td')
+                    .html(data.form
+                        .purpose || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(2) td')
+                    .html(data.form
+                        .divisi || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(3) td')
+                    .html(data.form
+                        .department || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(4) td')
+                    .html(data.form
+                        .company || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(5) td')
+                    .html(data.form
+                        .location || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(6) td')
+                    .html(data.form
+                        .required_date || 'N/A');
 
                 var detailHtml = '';
                 if (data.form_details && data.form_details.length > 0) {
@@ -334,11 +358,15 @@
                 } else {
                     detailHtml = '<tr><td colspan="5">No details available</td></tr>';
                 }
-                $('#ictRequestModal .modal-bodyPreview .table-striped tbody').html(detailHtml);
+                $('#ictRequestModal .modal-bodyPreview .table-striped tbody').html(
+                    detailHtml);
 
-                $('#ictRequestModal .modal-bodyPreview .signature-box').eq(0).html(data.qrCode);
-                $('#ictRequestModal .modal-bodyPreview .signature-box').eq(1).html(data.kadept);
-                $('#ictRequestModal .modal-bodyPreview .signature-box').eq(2).html(data.kadiv);
+                $('#ictRequestModal .modal-bodyPreview .signature-box').eq(0).html(data
+                    .qrCode);
+                $('#ictRequestModal .modal-bodyPreview .signature-box').eq(1).html(data
+                    .kadept);
+                $('#ictRequestModal .modal-bodyPreview .signature-box').eq(2).html(data
+                    .kadiv);
 
                 $('.reqName').html(data.form.request_name);
                 $('.nameKadept').html(data.nameKadept);
@@ -348,7 +376,8 @@
                 $('.footer-buttonApprove').html(data.buttonKadiv || '');
 
                 if (data.button) {
-                    $('#ictRequestModal .modal-bodyPreview .footer-buttonSend').html(data.button);
+                    $('#ictRequestModal .modal-bodyPreview .footer-buttonSend').html(
+                        data.button);
                 }
 
                 $('#ictRequestModal').modal('show');
@@ -402,9 +431,8 @@
                     if (statusElement) {
                         statusElement.innerHTML = "Waiting Acknowledge";
                     }
-                    alert("Status successfully updated to Waiting Acknowledge🕒");
-                    reloadPage();
-                    refreshAcknowledgeTable();
+                    alert("The data has been sent to Acknowledge🕒");
+                    $("#ictRequestModal").modal('hide');
                 }
             },
             error: function(xhr, status, error) {
@@ -425,8 +453,9 @@
                 if (res.status == 'success') {
                     const statusElement = document.getElementById("status_" + idForm);
                     if (statusElement) {
-                        statusElement.innerHTML = "Waiting Approval <i class='fa fa-clock-o'></i>";
-                        alert("Status successfully updated to Waiting Approval 🕒");
+                        statusElement.innerHTML =
+                            "Waiting Approval <i class='fa fa-clock-o'></i>";
+                        alert("The data has been sent to Waiting Approval🕒");
                         reloadPage();
                     }
                 }
@@ -466,48 +495,9 @@
         });
     }
 
-    function addDetail(id) {
-        $("#DataTableRequest").hide();
-        $("#btnNav").hide();
-        $("#idFormDetail").show(200);
-        $("#txtIdForm").val(id);
-    }
 
     function downloadPdf(id) {
-        $.ajax({
-            url: '<?php echo base_url('form/printPdf'); ?>',
-            type: 'POST',
-            data: {
-                id: id
-            },
-            xhrFields: {
-                responseType: 'blob'
-            },
-            success: function(response, status, xhr) {
-
-                let filename = "";
-                let disposition = xhr.getResponseHeader('Content-Disposition');
-                if (disposition && disposition.indexOf('attachment') !== -1) {
-                    let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-                    let matches = filenameRegex.exec(disposition);
-                    if (matches != null && matches[1]) {
-                        filename = matches[1].replace(/['"]/g, '');
-                    }
-                }
-
-                let blob = new Blob([response], {
-                    type: 'application/pdf'
-                });
-                let link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = filename ||
-                    'ICT_Tools_and_Equipment_Request.pdf';
-                link.click();
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                alert('Failed to generate PDF. Please try again.');
-            }
-        });
+        window.open("<?php echo base_url('form/printPdf/'); ?>" + '/' + id, '_blank');
     }
 
     function changeBtnNavigation(type) {
@@ -611,15 +601,21 @@
         const departmentMapping = {
             "BOD / BOC": ["NON DEPARTMENT", "PA"],
             "CORPORATE FINANCE, STRATEGY & COMPLIANCE": ["NON DEPARTMENT"],
-            "DRY BULK COMMERCIAL , OPERATION & AGENCY": ["OPERATION", "COMMERCIAL & CHARTERING", "AGENCY"],
-            "FINANCE": ["FINANCE", "ACCOUNTING", "TAX", "NON DEPARTMENT", "FINANCE & CONTROL",
+            "DRY BULK COMMERCIAL , OPERATION & AGENCY": ["OPERATION",
+                "COMMERCIAL & CHARTERING",
+                "AGENCY"
+            ],
+            "FINANCE": ["FINANCE", "ACCOUNTING", "TAX", "NON DEPARTMENT",
+                "FINANCE & CONTROL",
                 "ACCOUNTING & REPORTING"
             ],
             "HUMAN CAPITAL & GA": ["HR", "GA"],
             "NON DIVISION": ["SECRETARY", "NON DEPARTMENT"],
             "OFFICE OPERATION": ["IT", "LEGAL", "PROCUREMENT", "AGENCY & BRANCH"],
             "OIL & GAS COMMERCIAL & OPERATION": ["COMMERCIAL", "OPERATION"],
-            "SHIP MANAGEMENT": ["OWNER SUPERINTENDENT (TECHNICAL)", "CREWING", "QHSE", "AGENCY & BRANCH"]
+            "SHIP MANAGEMENT": ["OWNER SUPERINTENDENT (TECHNICAL)", "CREWING", "QHSE",
+                "AGENCY & BRANCH"
+            ]
         };
 
         $('#slcDivisi').change(function() {
@@ -633,7 +629,9 @@
             if (departmentMapping[selectedDivision]) {
                 departmentMapping[selectedDivision].forEach(function(department) {
                     console.log("Adding department: " + department);
-                    departmentSelect.append('<option value="' + department + '">' + department +
+                    departmentSelect.append('<option value="' + department +
+                        '">' +
+                        department +
                         '</option>');
                 });
             } else {
@@ -710,6 +708,7 @@
                                         <h4 class="modal-title">Add Request</h4>
                                     </div>
                                     <div class="modal-body">
+                                        <!-- Form Utama -->
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div id="requestContainer">
@@ -778,6 +777,68 @@
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <!-- Form Detail -->
+                                        <div id="idFieldDetail">
+                                            <legend><label id="lblForm">Add Request Detail</label></legend>
+                                            <div class="detailRow" style="display: flex; flex-wrap: wrap;">
+                                                <!-- Detail fields -->
+                                                <div class="col-md-2 col-xs-12"
+                                                    style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
+                                                    <div class="form-group">
+                                                        <label for="txtdescription"><u>Description:</u></label>
+                                                        <input type="text" name="txtdescription[]"
+                                                            class="form-control input-sm txtdescription"
+                                                            placeholder="Description" autocomplete="off">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2 col-xs-12"
+                                                    style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
+                                                    <div class="form-group">
+                                                        <label for="txttype"><u>Type:</u></label>
+                                                        <input type="text" name="txttype[]"
+                                                            class="form-control input-sm txttype" placeholder="Type"
+                                                            autocomplete="off">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2 col-xs-12"
+                                                    style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
+                                                    <div class="form-group">
+                                                        <label for="txtreason"><u>Reason:</u></label>
+                                                        <input type="text" name="txtreason[]"
+                                                            class="form-control input-sm txtreason" placeholder="Reason"
+                                                            autocomplete="off">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-1 col-xs-12"
+                                                    style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
+                                                    <div class="form-group">
+                                                        <label for="txtquantity"><u>Quantity:</u></label>
+                                                        <input type="text" name="txtquantity[]"
+                                                            class="form-control input-sm txtquantity" value="0"
+                                                            onkeypress="return isNumber(event)" autocomplete="off">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2 col-xs-12"
+                                                    style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
+                                                    <div class="form-group">
+                                                        <label for="txtnote"><u>Note:</u></label>
+                                                        <input type="text" name="txtnote[]"
+                                                            class="form-control input-sm txtnote" autocomplete="off">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-1 col-xs-2" style="flex: 1 1 auto;">
+                                                    <button type="button" class="btn btn-primary btn-xs btnAddRow"
+                                                        style="margin-top: 25px;">
+                                                        <i class="glyphicon glyphicon-plus"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger btn-xs btnRemoveRow"
+                                                        style="margin-top: 25px; display:none;">
+                                                        <i class="glyphicon glyphicon-minus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="modal-footer">
                                         <input type="hidden" id="txtIdForm" value="">
@@ -789,6 +850,7 @@
                                 </div>
                             </div>
                         </div>
+
                         <div class="col-md-2" style="margin-top: 5px;">
                             <button type="button" class="btn btn-primary btn-sm btn-block" data-toggle="modal"
                                 data-target="#idFormModal">
@@ -929,152 +991,95 @@
                     </div>
                 </div>
 
-                <div class="form-panel" id="idFormDetail" style="display:none;">
-                    <div id="idFieldDetail">
-                        <div class="row" style="margin-bottom: 15px;">
-                            <div class="col-md-12">
-                                <legend><label id="lblForm">Add Request Detail</label></legend>
-                                <div class="detailRow" style="display: flex; flex-wrap: wrap;">
-                                    <div class="col-md-2 col-xs-12"
-                                        style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
-                                        <div class="form-group">
-                                            <label for="txtdescription"><u>Description:</u></label>
-                                            <input type="text" name="txtdescription[]"
-                                                class="form-control input-sm txtdescription" placeholder="Description"
-                                                autocomplete="off">
+                <div class="modal fade" id="idFormEditModal" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header" style="background-color:#D46D16;border-bottom:1px solid #e7e7e7">
+                                <h4 class="modal-title">Edit Request</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="requestContainer">
+                                            <div class="row requestRow">
+                                                <div class="col-md-3 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label for="txtprojectReference"><b><u>Project Reff
+                                                                    :</u></b></label>
+                                                        <input type="text" class="form-control input-sm"
+                                                            id="txtprojectReferenceEdit" name="txtprojectReference"
+                                                            value="">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label for="txtpurpose"><b><u>Purpose :</u></b></label>
+                                                        <input type="text" class="form-control input-sm"
+                                                            id="txtpurposeEdit" name="txtpurpose">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label for="slcCompany"><b><u>Company:</u></b></label>
+                                                        <select id="slcCompanyEdit" class="form-control input-sm">
+                                                            <?php echo $getOptCompany; ?> -->
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label for="txtlocation"><b><u>Location :</u></b></label>
+                                                        <input type="text" class="form-control input-sm"
+                                                            id="txtlocationEdit" name="txtlocation">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label for="slcDivisi"><b><u>Divisi:</u></b></label>
+                                                        <select id="slcDivisiEdit" class="form-control input-sm">
+                                                            <?php echo $getOptMstDivisi; ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label for="slcDepartment"><b><u>Department :</u></b></label>
+                                                        <select id="slcDepartmentEdit" class="form-control input-sm">
+                                                            <option value="">- Select Department -</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2 col-xs-12"
+                                                    style="padding-right: 10px; padding-left: 10px;">
+                                                    <div class="form-group">
+                                                        <label for="txtRequiredDate"><u>Required Date:</u></label>
+                                                        <input type="date" name="txtrequired_date[]"
+                                                            class="form-control input-sm" id="txtRequiredDateEdit"
+                                                            autocomplete="off">
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-2 col-xs-12"
-                                        style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
-                                        <div class="form-group">
-                                            <label for="txttype"><u>Type:</u></label>
-                                            <input type="text" name="txttype[]" class="form-control input-sm txttype"
-                                                placeholder="Type" autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 col-xs-12"
-                                        style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
-                                        <div class="form-group">
-                                            <label for="txtreason"><u>Reason:</u></label>
-                                            <input type="text" name="txtreason[]"
-                                                class="form-control input-sm txtreason" placeholder="Reason"
-                                                autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-1 col-xs-12"
-                                        style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
-                                        <div class="form-group">
-                                            <label for="txtquantity"><u>Quantity:</u></label>
-                                            <input type="text" name="txtquantity[]"
-                                                class="form-control input-sm txtquantity" value="0"
-                                                onkeypress="return isNumber(event)" autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 col-xs-12"
-                                        style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
-                                        <div class="form-group">
-                                            <label for="txtnote"><u>Note:</u></label>
-                                            <input type="text" name="txtnote[]" class="form-control input-sm txtnote"
-                                                autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-1 col-xs-2" style="flex: 1 1 auto;">
-                                        <button type="button" class="btn btn-primary btn-xs btnAddRow"
-                                            style="margin-top: 25px;">
-                                            <i class="glyphicon glyphicon-plus"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-xs btnRemoveRow"
-                                            style="margin-top: 25px; display:none;">
-                                            <i class="glyphicon glyphicon-minus"></i>
-                                        </button>
                                     </div>
                                 </div>
+                                <div id="idFieldDetailEdit">
+                                    <legend><label id="lblForm">Edit Request Detail</label></legend>
+                                    <div class="detailRowEdit" style="display: flex; flex-wrap: wrap;"></div>
+
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
-
-
-                    <div class="row">
-                        <div class="col-md-12 col-xs-12">
-                            <div class="form-group" align="center">
-                                <input type="hidden" name="txtIdForm" id="txtIdForm" value="">
-                                <button id="btnSaveFormDetail" class="btn btn-primary btn-sm" name="btnSave"
-                                    title="Save">
-                                    <i class="fa fa-check-square-o"></i> Save
-                                </button>
-                                <button id="btnCancelFormDetail" class="btn btn-danger btn-sm" name="btnCancel"
-                                    title="Cancel">
-                                    <i class="fa fa-ban"></i> Cancel
-                                </button>
+                            <div class="modal-footer">
+                                <input type="hidden" id="txtIdForm" value="">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" id="saveEditFormRequest">Save
+                                    changes</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-panel" id="idFormEditDetail" style="display:none;">
-                    <div id="idFieldEditDetail">
-                        <div class="row" style="margin-bottom: 15px;">
-                            <div class="col-md-12">
-                                <legend><label id="lblForm"> Edit Request Detail</label></legend>
-                                <div class="form-row">
-                                    <input type="hidden" id="txtIdEditForm" name="txtIdEditForm" value="">
-                                    <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                        <div class="form-group">
-                                            <label for="txtdescription"><u>Description:</u></label>
-                                            <input type="text" name="txtdescription" class="form-control input-sm"
-                                                id="txtdescription" placeholder="Description" autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                        <div class="form-group">
-                                            <label for="txttype"><u>Type:</u></label>
-                                            <input type="text" name="txttype" class="form-control input-sm" id="txttype"
-                                                placeholder="Type" autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                        <div class="form-group">
-                                            <label for="txtreason"><u>Reason:</u></label>
-                                            <input type="text" name="txtreason" class="form-control input-sm"
-                                                id="txtreason" placeholder="Reason" autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-1 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                        <div class="form-group">
-                                            <label for="txtquantity"><u>Quantity:</u></label>
-                                            <input type="text" name="txtquantity" class="form-control input-sm"
-                                                id="txtquantity" value="0" onkeypress="return isNumber(event)"
-                                                autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3 col-xs-12" style="padding-right: 10px; padding-left: 10px;">
-                                        <div class="form-group">
-                                            <label for="txtnote"><u>Note:</u></label>
-                                            <input type="text" name="txtnote" class="form-control input-sm" id="txtnote"
-                                                autocomplete="off">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 col-xs-12">
-                            <div class="form-group" align="center">
-                                <button id="saveEditDetail" class="btn btn-primary btn-sm" name="btnSave" title="Save">
-                                    <i class="fa fa-check-square-o"></i> Save
-                                </button>
-                                <button id="cancelEditDetail" class="btn btn-danger btn-sm" name="btnCancel"
-                                    title="Cancel">
-                                    <i class="fa fa-ban"></i> Cancel
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="modal fade" id="ictRequestModal" tabindex="-1" role="dialog"
+                <div class="modal fade bd-example-modal-lg" id="ictRequestModal" tabindex="-1" role="dialog"
                     aria-labelledby="ictRequestModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-lg" role="document">
                         <div class="modal-content">
