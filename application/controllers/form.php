@@ -143,8 +143,7 @@ class Form extends CI_Controller
 			echo json_encode(array("status" => "error", "message" => "ID Form is missing."));
 			return;
 		}
-
-		// Data untuk update tabel form
+		
 		$formData = array(
 			'project_reference' => $this->input->post('txtprojectReferenceEdit'),
 			'purpose' => $this->input->post('txtpurposeEdit'),
@@ -157,26 +156,22 @@ class Form extends CI_Controller
 			'update_userid' => $this->session->userdata('userIdMyApps')
 		);
 
-		// Update data pada tabel form
 		$formUpdateSuccess = $this->myapp->updateDataDb6('form', $formData, array('id' => $txtIdForm));
-
 		$responseMessage = $formUpdateSuccess ? "Update Success..!!" : "Update form failed.";
-		$details = array();
 
-		// Memproses detail form
+		$details = array();
 		$arrDescriptions = is_array($data['txtdescriptionEdit']) ? $data['txtdescriptionEdit'] : array();
 		$arrTypes = is_array($data['txttypeEdit']) ? $data['txttypeEdit'] : array();
 		$arrReasons = is_array($data['txtreasonEdit']) ? $data['txtreasonEdit'] : array();
 		$arrQuantities = is_array($data['txtquantityEdit']) ? $data['txtquantityEdit'] : array();
 		$arrNotes = is_array($data['txtnoteEdit']) ? $data['txtnoteEdit'] : array();
 		$arrIdDetails = is_array($data['txtIdDetail']) ? $data['txtIdDetail'] : array();
+		$arrIsDeleted = is_array($data['txtIdDetail_isDeleted']) ? $data['txtIdDetail_isDeleted'] : array();
 
 		$numEntries = count($arrDescriptions);
 
 		for ($i = 0; $i < $numEntries; $i++) {
-			if (empty($arrDescriptions[$i]) || empty($arrTypes[$i]) || empty($arrReasons[$i]) || $arrQuantities[$i] <= 0) {
-				continue;
-			}
+
 			$dataToUpdate = array(
 				'description' => $arrDescriptions[$i],
 				'type' => $arrTypes[$i],
@@ -186,16 +181,22 @@ class Form extends CI_Controller
 				'update_userid' => $this->session->userdata('userIdMyApps'),
 				'update_date' => date('Y-m-d')
 			);
+
 			$idDetail = isset($arrIdDetails[$i]) ? $arrIdDetails[$i] : null;
 
 			if ($idDetail) {
 				$updateSuccess = $this->myapp->updateDataDb6('form_detail', $dataToUpdate, array('id' => $idDetail));
-
 				if ($updateSuccess) {
-					$responseMessage = "Update Success..!!";
 					$details[] = $dataToUpdate;
 				} else {
 					log_message('info', 'No rows updated for id_detail: ' . $idDetail);
+				}
+			} else {
+				$dataToUpdate['id_form'] = $txtIdForm;
+				$insertId = $this->myapp->insDataDb6($dataToUpdate, 'form_detail');
+				if ($insertId) {
+					$dataToUpdate['id'] = $insertId; 
+					$details[] = $dataToUpdate;
 				}
 			}
 		}
@@ -209,6 +210,7 @@ class Form extends CI_Controller
 
 		echo json_encode($response);
 	}
+
 
 
 
