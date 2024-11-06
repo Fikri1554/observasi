@@ -187,29 +187,27 @@
 
                     $("#idFieldDetailEdit .detailRowEdit").html(detailContent);
 
-                    // Event handler untuk tombol + untuk menambahkan baris baru
                     $(".detailRowEdit").off("click", ".btnAddRowEdit").on("click", ".btnAddRowEdit",
                         function() {
                             const newIndex = $(".detailRowEdit .row").length;
                             const newRow = createDetailRow(newIndex, {},
-                                ''); // membuat row baru dengan data kosong
-                            $(".detailRowEdit").append(newRow);
+                                '');
+                            $(".detailRowEdit").html(newRow);
                             updateRemoveButtons();
                         });
 
-                    // Event handler untuk tombol - untuk menandai baris sebagai dihapus
                     $(".detailRowEdit").off("click", ".btnRemoveRowEdit").on("click", ".btnRemoveRowEdit",
                         function() {
                             const row = $(this).closest(".row");
                             row.find("input, select").each(function() {
                                 $(this).prop("disabled",
-                                    true); // Nonaktifkan input agar tidak terkirim
+                                    true);
                             });
-                            row.hide(); // Sembunyikan baris dari tampilan
-                            row.data("isDeleted", true); // Tandai sebagai dihapus
+                            row.hide();
+                            row.data("isDeleted", true);
                         });
 
-                    // Update tombol - visibility berdasarkan jumlah baris
+
                     updateRemoveButtons();
                 } else {
                     alert(response.message);
@@ -225,53 +223,53 @@
 
     function createDetailRow(index, detail = {}, showRemoveButton = '') {
         return `
-    <div class="row" style="margin-bottom: 15px;">
-        <div class="col-md-12">
-            <div class="form-row">
-                <input type="hidden" id="txtIdDetail_${index}" name="txtIdDetail[]" value="${detail.id || ''}">
-                <input type="hidden" id="txtIdEditForm" name="txtIdEditForm" value="${detail.id_form || ''}">
-                <div class="col-md-2 col-xs-12">
-                    <div class="form-group">
-                        <label for="txtdescription_${index}"><u>Description:</u></label>
-                        <input type="text" name="txtdescriptionEdit[]" class="form-control input-sm" id="txtdescriptionEdit_${index}" value="${detail.description || ''}" placeholder="Description">
+            <div class="row" style="margin-bottom: 15px;">
+                <div class="col-md-12">
+                    <div class="form-row">
+                        <input type="hidden" id="txtIdDetail_${index}" name="txtIdDetail[]" value="${detail.id || ''}">
+                        <input type="hidden" id="txtIdEditForm" name="txtIdEditForm" value="${detail.id_form || ''}">
+                        <div class="col-md-2 col-xs-12">
+                            <div class="form-group">
+                                <label for="txtdescription_${index}"><u>Description:</u></label>
+                                <input type="text" name="txtdescriptionEdit[]" class="form-control input-sm" id="txtdescriptionEdit_${index}" value="${detail.description || ''}" placeholder="Description">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-xs-12">
+                            <div class="form-group">
+                                <label for="txttype_${index}"><u>Type:</u></label>
+                                <input type="text" name="txttypeEdit[]" class="form-control input-sm" id="txttypeEdit_${index}" value="${detail.type || ''}" placeholder="Type">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-xs-12">
+                            <div class="form-group">
+                                <label for="txtreason_${index}"><u>Reason:</u></label>
+                                <input type="text" name="txtreasonEdit[]" class="form-control input-sm" id="txtreasonEdit_${index}" value="${detail.reason || ''}" placeholder="Reason">
+                            </div>
+                        </div>
+                        <div class="col-md-1 col-xs-12">
+                            <div class="form-group">
+                                <label for="txtquantity_${index}"><u>Quantity:</u></label>
+                                <input type="text" name="txtquantityEdit[]" class="form-control input-sm" id="txtquantityEdit_${index}" value="${detail.quantity || ''}" onkeypress="return isNumber(event)">
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-xs-12">
+                            <div class="form-group">
+                                <label for="txtnote_${index}"><u>Note:</u></label>
+                                <input type="text" name="txtnoteEdit[]" class="form-control input-sm" id="txtnoteEdit_${index}" value="${detail.note || ''}">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-xs-2" style="flex: 1 1 auto;">
+                            <button type="button" class="btn btn-primary btn-xs btnAddRowEdit" style="margin-top: 25px;">
+                                <i class="glyphicon glyphicon-plus"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger btn-xs btnRemoveRowEdit" ${showRemoveButton} style="margin-top: 25px;">
+                                <i class="glyphicon glyphicon-minus"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-2 col-xs-12">
-                    <div class="form-group">
-                        <label for="txttype_${index}"><u>Type:</u></label>
-                        <input type="text" name="txttypeEdit[]" class="form-control input-sm" id="txttypeEdit_${index}" value="${detail.type || ''}" placeholder="Type">
-                    </div>
-                </div>
-                <div class="col-md-2 col-xs-12">
-                    <div class="form-group">
-                        <label for="txtreason_${index}"><u>Reason:</u></label>
-                        <input type="text" name="txtreasonEdit[]" class="form-control input-sm" id="txtreasonEdit_${index}" value="${detail.reason || ''}" placeholder="Reason">
-                    </div>
-                </div>
-                <div class="col-md-1 col-xs-12">
-                    <div class="form-group">
-                        <label for="txtquantity_${index}"><u>Quantity:</u></label>
-                        <input type="text" name="txtquantityEdit[]" class="form-control input-sm" id="txtquantityEdit_${index}" value="${detail.quantity || ''}" onkeypress="return isNumber(event)">
-                    </div>
-                </div>
-                <div class="col-md-3 col-xs-12">
-                    <div class="form-group">
-                        <label for="txtnote_${index}"><u>Note:</u></label>
-                        <input type="text" name="txtnoteEdit[]" class="form-control input-sm" id="txtnoteEdit_${index}" value="${detail.note || ''}">
-                    </div>
-                </div>
-                <div class="col-md-2 col-xs-2" style="flex: 1 1 auto;">
-                    <button type="button" class="btn btn-primary btn-xs btnAddRowEdit" style="margin-top: 25px;">
-                        <i class="glyphicon glyphicon-plus"></i>
-                    </button>
-                    <button type="button" class="btn btn-danger btn-xs btnRemoveRowEdit" ${showRemoveButton} style="margin-top: 25px;">
-                        <i class="glyphicon glyphicon-minus"></i>
-                    </button>
                 </div>
             </div>
-        </div>
-    </div>
-    `;
+        `;
     }
 
     function updateRemoveButtons() {
