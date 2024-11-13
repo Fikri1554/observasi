@@ -23,9 +23,11 @@
     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/style.css">
     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/style-responsive.css">
     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/jquery-ui.css">
-    <!--<script src="<?php echo base_url();?>assets/js/jquery.js"></script>-->
+    <!-- CSS DataTables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
+
     <script src="<?php echo base_url();?>assets/js/jquery-1.8.3.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>

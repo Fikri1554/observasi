@@ -94,7 +94,8 @@
                             "');\" class=\"btn btn-danger btn-xs\" type=\"button\" title=\"Delete\"><i class=\"fa fa-trash-o\"></i> Delete</button></td>";
                         newRow += "</tr>";
 
-                        $('#idTbody').append(newRow);
+                        $('#idTbody').prepend(newRow);
+                        reindexTable();
                         $('#idFormModal').modal('hide');
 
                         $('input[name^="txt"]').val('');
@@ -192,7 +193,7 @@
                             const newIndex = $(".detailRowEdit .row").length;
                             const newRow = createDetailRow(newIndex, {},
                                 '');
-                            $(".detailRowEdit").html(newRow);
+                            $(".detailRowEdit").append(newRow);
                             updateRemoveButtons();
                         });
 
@@ -282,11 +283,37 @@
     }
 
     $(document).ready(function() {
+        $("#btnSearch").click(function() {
+            var idSlcType = $("#idSlcType").val();
+            var valSearch = $("#txtSearch").val();
+
+            if (valSearch == "") {
+                alert("Search Empty..!!");
+                return false;
+            }
+            $("#idLoading").show();
+            $.post('<?php echo base_url("form/getDataForm"); ?>/search/', {
+                    valSearch: valSearch,
+                    idSlcType: idSlcType
+                },
+                function(data) {
+                    $("#idTbody").empty();
+                    $("#idTbody").append(data.tr);
+                    $("#idPage").empty();
+                    $("#idLoading").hide();
+                },
+                "json"
+            );
+        });
+    })
+
+    $(document).ready(function() {
         $("#saveEditFormRequest").click(function(e) {
             e.preventDefault();
 
             var formData = new FormData();
 
+            // Menambahkan data ke formData
             formData.append('txtIdEditForm', $('#txtIdEditForm').val());
             formData.append('txtprojectReferenceEdit', $('#txtprojectReferenceEdit').val());
             formData.append('txtpurposeEdit', $('#txtpurposeEdit').val());
@@ -323,7 +350,10 @@
                     if (response.status === "success") {
                         alert("Data berhasil diperbarui!");
                         $("#idFormEditModal").modal('hide');
-                        $("#DataTableRequest").DataTable().ajax.reload();
+
+                        $("#idTbody").load(
+                            '<?php echo base_url('form/getDataForm'); ?> #idTbody > *');
+
                     } else {
                         alert("Terjadi kesalahan: " + response.message);
                     }
@@ -335,6 +365,7 @@
             });
         });
     });
+
 
     function ViewPrint(id, typeView) {
         $.ajax({
@@ -460,13 +491,9 @@
             success: function(response) {
                 const res = JSON.parse(response);
                 if (res.status === 'success') {
-                    const statusElement = document.getElementById("status_" +
-                        idForm);
-                    if (statusElement) {
-                        statusElement.innerHTML = "Waiting Acknowledge";
-                    }
                     alert("The data has been sent to Acknowledge🕒");
                     $("#ictRequestModal").modal('hide');
+                    $("#idTbody").load("<?php echo base_url('form/getDataForm'); ?> #idTbody > *");
                 }
             },
             error: function(xhr, status, error) {
@@ -484,14 +511,13 @@
             },
             success: function(response) {
                 const res = JSON.parse(response);
-                if (res.status == 'success') {
-                    const statusElement = document.getElementById("status_" + idForm);
-                    if (statusElement) {
-                        statusElement.innerHTML =
-                            "Waiting Approval <i class='fa fa-clock-o'></i>";
-                        alert("The data has been sent to Waiting Approval🕒");
-                        reloadPage();
-                    }
+                if (res.status === 'success') {
+                    alert("The data has been sent to Acknowledge🕒");
+                    $("#ictRequestModal").modal('hide');
+
+                    $("#idTbodyAcknowledge").load(
+                        "<?php echo base_url('form/getDataForm'); ?> #idTbodyAcknowledge > *"
+                    );
                 }
             },
             error: function(xhr, status, error) {
@@ -499,6 +525,7 @@
             }
         });
     }
+
 
     function approveData(idForm) {
         $.ajax({
@@ -703,10 +730,33 @@
         updateButtonVisibility();
     });
 
-
     function reloadPage() {
         window.location = "<?php echo base_url('form/getDataForm');?>";
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("idPage").addEventListener("click", function(event) {
+
+            if (event.target.tagName === "A" && event.target.classList.contains("page-link")) {
+                event.preventDefault();
+
+                let url = event.target.getAttribute("href");
+
+                fetch(url, {
+                        method: "GET",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("idTbody").innerHTML = data.tr;
+                        document.getElementById("idPage").innerHTML = data.listPage;
+                    })
+                    .catch(error => console.error("Error:", error));
+            }
+        });
+    });
     </script>
 </head>
 
@@ -891,11 +941,22 @@
                                 Add Request
                             </button>
                         </div>
-                        <div class="col-md-2" style="margin-top:5px;">
-                            <button type="button" id="idBtnSearch" class="btn btn-info btn-sm btn-block"
-                                title="Search"><i class="glyphicon glyphicon-ok"></i> Search</button>
+                        <div class="col-md-2">
+                            <select class="form-control input-sm" id="idSlcType">
+                                <option value="projectreference">Project Refference</option>
+                                <option value="purpose">Purpose</option>
+                                <option value="company">Company</option>
+                            </select>
                         </div>
-                        <div class="col-md-2" style="margin-top: 5px;">
+                        <div class="col-md-2">
+                            <input type="text" class="form-control input-sm" id="txtSearch" value=""
+                                placeholder="Search Text" autocomplete="off">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" id="btnSearch" class="btn btn-warning btn-sm btn-block" title="Add"><i
+                                    class="fa fa-search"></i> Search</button>
+                        </div>
+                        <div class="col-md-2">
                             <button type="button" id="idBtnRefresh" onclick="reloadPage();"
                                 class="btn btn-success btn-sm btn-block" title="Refresh"><i
                                     class="glyphicon glyphicon-refresh"></i> Refresh</button>
@@ -939,6 +1000,7 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <div id="idPage"><?php echo $listPage; ?></div>
                         </div>
                     </div>
                 </div>

@@ -9,22 +9,29 @@ class Form extends CI_Controller
 		$this->load->helper(array('form', 'url'));
 	}
  
-	function getDataForm() {
+	function getDataForm($searchNya = "", $pageNya = "") { 
 		$dataOut = array(); 
 		$tr = '';  
 		$no = 1;
+		$limitNya = "10"; 
+		$dataOut["listPage"] = "";
+		$display = "10";
 		$userType = $this->session->userdata('userTypeMyApps');
 		$userDiv = trim($this->session->userdata('nmDiv')); 
 		$userDept = trim($this->session->userdata('nmDept')); 
 		$userId = $this->session->userdata('userIdMyApps');
 		$userFullName = $this->session->userdata('fullNameMyApps');
+		
 
 		$where = "WHERE sts_delete = '0' ";
 
 		if ($userType == 'admin') {
-			$sql = "SELECT * FROM form " . $where. " ORDER BY ID DESC";
-		} else {
-			
+			$sql = "SELECT * FROM form " . $where . " ORDER BY ID DESC";
+		} 
+		elseif ($userDept === 'INFORMATION TECHNOLOGY') {
+        	$sql = "SELECT * FROM form " . $where . " ORDER BY ID DESC";
+    	} else {
+				
 			$financeAccess = array(
 				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'NON DEPARTMENT'),
 				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE & CONTROL'),
@@ -32,7 +39,7 @@ class Form extends CI_Controller
 				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'ACCOUNTING & REPORTING'),
 				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE'),
 			);
-			
+				
 			$isFinanceUser = false;
 			foreach ($financeAccess as $access) {
 				if (strcasecmp($userDiv, $access['div']) === 0 && strcasecmp($userDept, $access['dept']) === 0) {
@@ -46,15 +53,50 @@ class Form extends CI_Controller
 			} else {
 				$where .= " AND divisi = '" . $userDiv . "'";
 			}
-
-			$sql = "SELECT * FROM form ".$where." ORDER BY ID DESC";
+				
+			$sql = "SELECT * FROM form " . $where . " ORDER BY ID DESC";
 		}
-		
-		$data = $this->myapp->getDataQueryDB6($sql);
 
+		if($searchNya == "search")
+		{
+			$txtSearch = $_POST['valSearch'];
+			$idSlcType = $_POST['idSlcType'];
+
+			if($idSlcType == "projectreference")
+			{
+				$where .= " AND project_reference LIKE '%".$txtSearch."%' ";
+			}
+			else if($idSlcType == "purpose")
+			{
+				$where .= " AND purpose LIKE '%".$txtSearch."%' ";
+			}
+			else if ($idSlcType == "company")
+			{
+				$where .= " AND company LIKE '%".$txtSearch."%' ";
+			}
+		}
+
+		
+		if ($searchNya == "" || $searchNya == "-") {
+			$sqlCount = "SELECT id FROM form " . $where;
+			$dataCount = $this->myapp->getDataQueryDB6($sqlCount);
+			$dataPage = $this->getPaging(count($dataCount), $pageNya, $display);
+			
+			$limitNya = isset($dataPage['limit']) ? $dataPage['limit'] : "";
+			$dataOut["listPage"] = $dataPage['listPage'];
+			
+			if ($pageNya != "") {
+				$no = ($pageNya - 1) * $display + 1;
+			}
+		}
+
+		$sql .= " " . $limitNya;
+
+		$data = $this->myapp->getDataQueryDB6($sql);
+			
 		foreach ($data as $key => $value) {
 			$status = '';
-			
+				
 			if ($value->st_submit === 'Y' && $value->st_acknowledge === 'N') {
 				$status = "Waiting Acknowledge <i class='fa fa-clock-o'></i>";
 			}
@@ -85,19 +127,104 @@ class Form extends CI_Controller
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->divisi . "</td>";
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;' id='status_" . $value->id . "'>" . $status . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$btnExport.$btnDelete."</td>";
-			$tr .= "</tr>";
+				$tr .= "</tr>";
 
 			$no++;
 		}
-
+			
 		$buttonSettings = $this->userSetting();
 		$dataOut['buttonApp'] = $buttonSettings['buttonApp'];
 		$dataOut['buttonAck'] = $buttonSettings['buttonAck'];
 
 		$dataOut['tr'] = $tr;
+		$dataOut["listPage"] = $dataOut['listPage'];
 		$dataOut['getOptCompany'] = $this->getOptCompany(); 
 		$dataOut['getOptMstDivisi'] = $this->getOptMstDivisi();
-		$this->load->view('myApps/form', $dataOut);
+
+		if ($searchNya == "search" || $pageNya != "") {
+			echo json_encode($dataOut);
+		} else {
+			$this->load->view('myApps/form', $dataOut);
+		}
+		
+	}
+
+	function getPaging($countData = "", $pageNya = "", $display = "")
+	{
+		$limitNya = array();
+		$listPage = "";
+		$count = $countData;
+		$page = $pageNya;
+		$sLimit = "0";
+		$eLimit = $display;
+		$ttlList = ceil($count / $display);
+		$linkLast = base_url('form/getDataForm/-/' . $ttlList);
+
+		$listPage = "Total : " . number_format($count, 0) . " Data";
+		
+		if ($page != "") {
+			$sLimit = ($display * ($page - 1));
+			$eLimit = $display;
+			$bfrPage = $page - 1;
+			$aftPage = $page + 1;
+
+			$linkBfr = base_url('form/getDataForm/-/' . $bfrPage);
+			$linkAft = base_url('form/getDataForm/-/' . $aftPage);
+
+			$listPage .= "<nav>";
+			$listPage .= "<ul class=\"pagination pagination-sm\">";
+
+			if ($page == 1) {
+				$listPage .= "<li class=\"page-item disabled\"><span class=\"page-link\">First</span></li>";
+			} else {
+				$listPage .= "<li class=\"page-item\"><a class=\"page-link\" href=\"" . base_url('form/getDataForm') . "\">First</a></li>";
+			}
+
+			if ($page > 1) {
+				$listPage .= "<li class=\"page-item\"><a class=\"page-link\" href=\"" . $linkBfr . "\">" . $bfrPage . "</a></li>";
+			}
+
+			$listPage .= "<li class=\"page-item active\"><span class=\"page-link\">" . $page . "</span></li>";
+
+			if ($page < $ttlList) {
+				$listPage .= "<li class=\"page-item\"><a class=\"page-link\" href=\"" . $linkAft . "\">" . $aftPage . "</a></li>";
+			}
+
+			// Kondisi untuk tombol "Last"
+			if ($page < $ttlList) {
+				$listPage .= "<li class=\"page-item\"><a class=\"page-link\" href=\"" . $linkLast . "\">Last</a></li>";
+			}
+
+			$listPage .= "</ul>";
+			$listPage .= "</nav>";
+		} else {
+			$listPage .= "<nav>";
+			$listPage .= "<ul class=\"pagination pagination-sm\">";
+			$listPage .= "<li class=\"page-item disabled\"><span class=\"page-link\">First</span></li>";
+
+			if ($ttlList >= 3) {
+				$ttlList = 3;
+			}
+
+			for ($lan = 1; $lan <= $ttlList; $lan++) {
+				if ($lan == 1) {
+					$listPage .= "<li class=\"page-item active\"><span class=\"page-link\">" . $lan . "</span></li>";
+				} else {
+					$listPage .= "<li class=\"page-item\"><a class=\"page-link\" href=\"" . base_url('form/getDataForm/-/' . $lan) . "\">" . $lan . "</a></li>";
+				}
+			}
+
+			if ($ttlList > 2) {
+				$listPage .= "<li class=\"page-item\"><a class=\"page-link\" href=\"" . $linkLast . "\">Last</a></li>";
+			}
+			
+			$listPage .= "</ul>";
+			$listPage .= "</nav>";
+		}
+
+		$limitNya['limit'] = "LIMIT " . (int)$sLimit . ", " . (int)$eLimit;
+		$limitNya['listPage'] = $listPage;
+		return $limitNya;
 	}
 
 	function getEditForm() {
@@ -253,26 +380,33 @@ class Form extends CI_Controller
 		echo json_encode(array('status' => 'success'));
 	}
 
-	function acknowledgeData()
-	{
+	function acknowledgeData() {
 		$id_form = $this->input->post('id');
 		$userid_submit = $this->session->userdata('userIdMyApps');
 		$date_submit = date('Y-m-d');
 		$userAcknowledge = $this->session->userdata('fullNameMyApps');
 		$dateAcknowledge = date('Y-m-d');
 		
+		// Data yang akan diperbarui
 		$data = array(
 			'st_acknowledge' => 'Y',
 			'userid_submit' => $userid_submit,
 			'date_submit' => $date_submit,
-			'user_acknowledge'=> $userAcknowledge,
+			'user_acknowledge' => $userAcknowledge,
 			'date_acknowledge' => $dateAcknowledge
 		);
-			
-		$this->myapp->updateDataDb6('form', $data, array('id' => $id_form));
 
-		echo json_encode(array('status' => 'success'));
+
+		$update = $this->myapp->updateDataDb6('form', $data, array('id' => $id_form));
+
+		// Cek apakah update berhasil
+		if ($update) {
+			echo json_encode(array('status' => 'success', 'message' => 'Data acknowledged successfully.'));
+		} else {
+			echo json_encode(array('status' => 'error', 'message' => 'Failed to acknowledge data.'));
+		}
 	}
+
 
 	function approveData()
 	{
@@ -303,6 +437,7 @@ class Form extends CI_Controller
 		$where = "WHERE st_submit = 'Y' 
 				AND st_acknowledge = 'N' 
 				AND sts_delete = 0";
+		
 
 		if ($userType == 'admin') {
 			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
@@ -929,23 +1064,36 @@ class Form extends CI_Controller
 
 	function userSetting() {
 		$userid = $this->session->userdata('userIdMyApps');
-		$query = "SELECT * FROM form_usersetting WHERE userid ='".$userid."' AND st_delete = '0'";
+		$userType = $this->session->userdata('userTypeMyApps');
+		$query = "SELECT * FROM form_usersetting WHERE userid ='" . $userid . "' AND st_delete = '0'";
 		$result = $this->myapp->getDataQueryDB6($query); 
-		
+
 		$buttonAck = "";
 		$buttonApp = "";
-			
 		$dataOut = array();
 
-		if(count($result) > 0) {
-			if($result[0]->nmDiv != ""){
+		if ($userType === 'admin') {
+
+			$buttonApp = '<div class="col-md-4">
+							<button class="btn btn-primary btn-block" onclick="changeBtnNavigation(\'approval\');">
+								<label>Approval</label>
+							</button>
+						</div>';
+			$buttonAck = '<div class="col-md-4">
+							<button class="btn btn-primary btn-block" onclick="changeBtnNavigation(\'acknowledge\');">
+								<label>Acknowledge</label>
+							</button>
+						</div>';
+		} else if (count($result) > 0) {
+			// Jika user bukan admin, cek berdasarkan nmDiv dan nmDept
+			if ($result[0]->nmDiv != "") {
 				$buttonApp = '<div class="col-md-4">
 								<button class="btn btn-primary btn-block" onclick="changeBtnNavigation(\'approval\');">
 									<label>Approval</label>
 								</button>
 							</div>';
-			} 
-			if($result[0]->nmDept != ""){
+			}
+			if ($result[0]->nmDept != "") {
 				$buttonAck = '<div class="col-md-4">
 								<button class="btn btn-primary btn-block" onclick="changeBtnNavigation(\'acknowledge\');">
 									<label>Acknowledge</label>
@@ -959,6 +1107,7 @@ class Form extends CI_Controller
 
 		return $dataOut;
 	}
+
 
 	
 	function getBatchNo()
