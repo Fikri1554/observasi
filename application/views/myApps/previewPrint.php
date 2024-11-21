@@ -53,6 +53,7 @@ ob_start();
     .approval td {
         height: 150px;
         width: 300px;
+        vertical-align: top;
     }
 
     .footer {
@@ -68,7 +69,7 @@ ob_start();
     }
 
     .footer .approval {
-        margin-top: 10px;
+        margin-top: 100px;
     }
 
     .note-box {
@@ -84,18 +85,21 @@ ob_start();
         align-items: center;
     }
 
+
     .signature-box {
         border: 1px solid black;
-        height: 150px;
-        width: 300px;
-        display: inline-block;
-        vertical-align: top;
+        height: 100px;
+        width: 200px;
+        display: block;
+        margin: 0 auto;
     }
 
-    /* New CSS for signature box */
-    #acknowledgeInfo {
-        margin-top: 10px;
-        display: block;
+    .name-acknowledge,
+    .name-approved {
+        margin-bottom: 150px;
+        height: 100px;
+        font-size: 14px;
+        text-align: center;
     }
     </style>
 </head>
@@ -178,23 +182,32 @@ ob_start();
                         <div class="signature-box">
                             <?php echo $qrCode; ?>
                         </div>
-                        <?php echo isset($form->request_name) ? $form->request_name : 'N/A'; ?>
+                        <div class="name">
+                            <?php echo isset($form->request_name) ? $form->request_name : 'N/A'; ?>
+                        </div>
                     </td>
                     <td>Acknowledge by<br>
                         <div class="signature-box">
-                            <?php echo $kadept; ?>
+                            <?php echo $qrCodeAcknowledge; ?>
                         </div>
-                        <?php echo isset($nameKadept) ? $nameKadept : 'N/A'; ?>
+                        <div class="name-acknowledge">
+                            <?php echo isset($nameKadept) ? $nameKadept : 'N/A'; ?>
+                        </div>
                     </td>
                     <td>Approved by<br>
                         <div class="signature-box">
-                            <?php echo $kadiv; ?>
+                            <?php echo $qrCodeApprove; ?>
                         </div>
-                        <?php echo isset($nameKadiv) ? $nameKadiv : 'N/A'; ?>
+                        <div class="name-approved">
+                            <?php echo isset($nameKadiv) ? $nameKadiv : 'N/A'; ?>
+                        </div>
                     </td>
+
                 </tr>
             </table>
         </div>
+
+
 
     </div>
 </body>

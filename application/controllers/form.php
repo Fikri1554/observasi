@@ -1,4 +1,4 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowe	d');
 
 class Form extends CI_Controller
 {
@@ -6,7 +6,7 @@ class Form extends CI_Controller
 	{
 		parent::__construct();
     	$this->load->model('myapp'); 
-		$this->load->helper(array('form', 'url'));
+		$this->load->helper(array('form'	, 'url'));
 	}
  
 	function getDataForm($searchNya = "", $pageNya = "") { 
@@ -22,39 +22,44 @@ class Form extends CI_Controller
 		$userId = $this->session->userdata('userIdMyApps');
 		$userFullName = $this->session->userdata('fullNameMyApps');
 		
+		// print_r($userDept);exit;		
 
 		$where = "WHERE sts_delete = '0' ";
 
 		if ($userType == 'admin') {
 			$sql = "SELECT * FROM form " . $where . " ORDER BY ID DESC";
-		} 
-		elseif ($userDept === 'INFORMATION TECHNOLOGY') {
-        	$sql = "SELECT * FROM form " . $where . " ORDER BY ID DESC";
-    	} else {
-				
-			$financeAccess = array(
-				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'NON DEPARTMENT'),
-				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE & CONTROL'),
-				array('div' => 'FINANCE', 'dept' => 'TAX'),
-				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'ACCOUNTING & REPORTING'),
-				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE'),
-			);
-				
-			$isFinanceUser = false;
-			foreach ($financeAccess as $access) {
-				if (strcasecmp($userDiv, $access['div']) === 0 && strcasecmp($userDept, $access['dept']) === 0) {
-					$isFinanceUser = true;
-					break;
+		}else
+		{
+			if ($userDiv == 'OFFICE OPERATION' && $userDept == 'INFORMATION TECHNOLOGY')
+			{
+				$sql = "SELECT * FROM form " . $where . " ORDER BY ID DESC";
+			}
+			else 
+			{
+				$financeAccess = array(
+					array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'NON DEPARTMENT'),
+					array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE & CONTROL'),
+					array('div' => 'FINANCE', 'dept' => 'TAX'),
+					array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'ACCOUNTING & REPORTING'),
+					array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'FINANCE'),
+				);
+					
+				$isFinanceUser = false;
+				foreach ($financeAccess as $access) {
+					if (strcasecmp($userDiv, $access['div']) == 0 && strcasecmp($userDept, $access['dept']) == 0) {
+						$isFinanceUser = true;
+						break;
+					}
 				}
-			}
 
-			if ($isFinanceUser) {
-				$where .= " AND divisi LIKE '%FINANCE%'";
-			} else {
-				$where .= " AND divisi = '" . $userDiv . "'";
+				if ($isFinanceUser) {
+					$where .= " AND divisi LIKE '%FINANCE%'";
+				} else {
+					$where .= " AND divisi = '" . $userDiv . "'";
+				}
+					
+				$sql = "SELECT * FROM form " . $where . " ORDER BY ID DESC";
 			}
-				
-			$sql = "SELECT * FROM form " . $where . " ORDER BY ID DESC";
 		}
 
 		if($searchNya == "search")
@@ -97,19 +102,19 @@ class Form extends CI_Controller
 		foreach ($data as $key => $value) {
 			$status = '';
 				
-			if ($value->st_submit === 'Y' && $value->st_acknowledge === 'N') {
+			if ($value->st_submit == 'Y' && $value->st_acknowledge == 'N') {
 				$status = "Waiting Acknowledge <i class='fa fa-clock-o'></i>";
 			}
-			if ($value->st_acknowledge === 'Y' && $value->st_approval === 'N') {
+			if ($value->st_acknowledge == 'Y' && $value->st_approval == 'N') {
 				$status = "Waiting Approval <i class='fa fa-clock-o'></i>";
 			}
-			if ($value->st_approval === 'Y') {
+			if ($value->st_approval == 'Y') {
 				$status = "Approve Success <i class='fa fa-check'></i>";
 			}
-			if ($value->st_detail === 'Y') {
+			if ($value->st_detail == 'Y') {
 				$btnDetail = "<button onclick=\"editData('".$value->id."');\" title=\"Edit Detail\" class=\"btn btn-warning btn-xs\" id=\"btnEdit_".$value->id."\" type=\"button\"><i class=\"glyphicon glyphicon-edit\"></i></button>";
 			}
-			if ($value->st_submit === 'Y') {
+			if ($value->st_submit == 'Y') {
 				$btnExport = "<button onclick=\"ViewPrint('" .$value->id. "','request');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
 				$btnDetail = '';
 				$btnDelete = '';
@@ -138,6 +143,8 @@ class Form extends CI_Controller
 
 		$dataOut['tr'] = $tr;
 		$dataOut["listPage"] = $dataOut['listPage'];
+		$dataOut['getOptAcknowledge'] = $this->getOptAcknowledge();
+		$dataOut['getOptApprove'] = $this->getOptApprove();	
 		$dataOut['getOptCompany'] = $this->getOptCompany(); 
 		$dataOut['getOptMstDivisi'] = $this->getOptMstDivisi();
 
@@ -243,6 +250,7 @@ class Form extends CI_Controller
 
 		$sqlForm = "SELECT * FROM form WHERE id = '".$id."' AND sts_delete = '0'";
 		$formQuery = $this->myapp->getDataQueryDB6($sqlForm);
+		
 
 		$sqlDetail = "SELECT * FROM form_detail WHERE id_form = '".$id_form."' AND sts_delete = '0'";
 		$formDetails = $this->myapp->getDataQueryDB6($sqlDetail);
@@ -279,6 +287,10 @@ class Form extends CI_Controller
 			'init_cmp' => $this->input->post('slcCompanyEdit'),
 			'divisi' => $this->input->post('slcDivisiEdit'),
 			'required_date' => $this->input->post('txtRequiredDateEdit'),
+			'name_acknowledge' => $this->input->post('slcAcknowledgeText'),
+			'userid_acknowledge' => $this->input->post('slcAcknowledgeEdit'),
+			'name_approve' => $this->input->post('slcApproveText'),
+			'userid_approve' => $this->input->post('slcApproveEdit'),
 			'update_date' => date('Y-m-d H:i:s'),
 			'update_userid' => $this->session->userdata('userIdMyApps')
 		);
@@ -338,9 +350,6 @@ class Form extends CI_Controller
 		echo json_encode($response);
 	}
 
-
-
-
 	function delData()
 	{
 		$stData = array('status' => 'Failed', 'message' => '');
@@ -380,33 +389,35 @@ class Form extends CI_Controller
 		echo json_encode(array('status' => 'success'));
 	}
 
+	
 	function acknowledgeData() {
 		$id_form = $this->input->post('id');
 		$userid_submit = $this->session->userdata('userIdMyApps');
 		$date_submit = date('Y-m-d');
 		$userAcknowledge = $this->session->userdata('fullNameMyApps');
 		$dateAcknowledge = date('Y-m-d');
+		$qrcodeAck = $this->createQRCode($id_form, 'ack');
+		$status = '';
 		
-		// Data yang akan diperbarui
+		
 		$data = array(
 			'st_acknowledge' => 'Y',
 			'userid_submit' => $userid_submit,
 			'date_submit' => $date_submit,
 			'user_acknowledge' => $userAcknowledge,
-			'date_acknowledge' => $dateAcknowledge
+			'date_acknowledge' => $dateAcknowledge,
+			'qrcode_acknowledge' => $qrcodeAck
 		);
-
-
-		$update = $this->myapp->updateDataDb6('form', $data, array('id' => $id_form));
-
-		// Cek apakah update berhasil
-		if ($update) {
-			echo json_encode(array('status' => 'success', 'message' => 'Data acknowledged successfully.'));
-		} else {
-			echo json_encode(array('status' => 'error', 'message' => 'Failed to acknowledge data.'));
+		
+		try {
+			$this->myapp->updateDataDb6('form', $data, array('id' => $id_form));
+			$status = "success";
+		} catch (\Throwable $ex) {
+			$status = "Failed".$ex->getMessage();
 		}
+		
+		print json_encode($status);
 	}
-
 
 	function approveData()
 	{
@@ -415,24 +426,34 @@ class Form extends CI_Controller
 		$date_submit = date('Y-m-d');
 		$userApprove = $this->session->userdata('fullNameMyApps');
 		$dateApprove = date('Y-m-d');
+		$qrcodeApp = $this->createQRCode($id_form, 'app');
+		$status = '';
 
 		$data = array(
 			'st_approval' => 'Y',
 			'userid_submit' => $userid_submit,
 			'date_submit' => $date_submit,
 			'user_approve' => $userApprove,
-			'date_approve' => $dateApprove	
+			'date_approve' => $dateApprove,
+			'qrcode_approve' => $qrcodeApp,
 		);
 
-		$this->myapp->updateDataDb6('form', $data, array('id' => $id_form));
+		try {
+			$this->myapp->updateDataDb6('form', $data, array('id' => $id_form));
+			$status = "success";
+		} catch (\Throwable $ex) {
+			$status = "Failed".$ex->getMessage();
+		}
 		
-		echo json_encode(array('status' => 'success'));
+		print json_encode($status);
 	}
+
 
 	function getAcknowledgeData() {
 		$userType = $this->session->userdata('userTypeMyApps');
-		$userDiv = trim($this->session->userdata('nmDiv'));
-		$userDept = trim($this->session->userdata('nmDept'));
+		$userDiv = trim($this->input->get('divisi')); 
+    	$userDept = trim($this->input->get('department')); // gunakan department dari dropdown
+
 
 		$where = "WHERE st_submit = 'Y' 
 				AND st_acknowledge = 'N' 
@@ -442,7 +463,11 @@ class Form extends CI_Controller
 		if ($userType == 'admin') {
 			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
-		} else {
+		} elseif ($userDiv === 'OFFICE OPERATION' && $userDept === 'INFORMATION TECHNOLOGY'){
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
+                FROM form " . $where;
+		} 
+		else {
 
 			$financeAccess = array(
 				array('div' => 'FINANCIAL CONTROLLER', 'dept' => 'NON DEPARTMENT'),
@@ -463,7 +488,12 @@ class Form extends CI_Controller
 			if ($isFinanceUser) {
 				$where .= " AND divisi LIKE '%FINANCE%'";
 			} else {
-				$where .= " AND divisi = '" . $userDiv . "'";
+				if (!empty($userDiv)) {
+					$where .= " AND divisi = '" . $userDiv . "'";
+				}
+				if (!empty($userDept)) {
+					$where .= " AND department = '" . $userDept . "'";
+				}
 			}
 
 			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
@@ -561,7 +591,7 @@ class Form extends CI_Controller
 		}
 	}
 
-	function createQRCode($id = "")
+	function createQRCode($id = "", $type = '')
 	{
 		$config = array();
 		$this->load->library('ciqrcode');
@@ -575,9 +605,18 @@ class Form extends CI_Controller
 		$config['black']		= array(224,255,255);
 		$config['white']		= array(0,0,128);
 		$this->ciqrcode->initialize($config);
-
+		
 		$imgName = base64_encode($id).'.jpg';
-
+		
+		if($type == 'ack')
+		{
+			$imgName = 'acknowledge_'.base64_encode($id).'.jpg';
+		}
+		if($type == 'app')
+		{
+			$imgName = 'approve_'.base64_encode($id).'.jpg';
+		}
+		
 		$params['data'] = "http://apps.andhika.com/observasi/myLetter/viewLetter/".base64_encode($id); 
 		$params['level'] = 'H'; 
 		$params['size'] = 5;
@@ -585,7 +624,10 @@ class Form extends CI_Controller
 		$params['logo'] = "./assets/img/andhika.png";
 
 		$this->ciqrcode->generate($params); 
+
+    	return $imgName;
 	}
+	
 
 	function createNo($noNya = "")
 	{
@@ -671,111 +713,6 @@ class Form extends CI_Controller
 		}
 		return $imgName;
 	}
-
-	function previewPrint() 
-	{	
-		$id = $this->input->post('id');
-		$typeView = $this->input->post('typeView');
-		$userid = $this->session->userdata('userIdMyApps'); 
-		$userType = $this->session->userdata('userTypeMyApps');
-		
-		if ($id === null) {
-			show_error('ID is missing', 400);
-			return;
-		}
-
-		$button = "";
-		$logo_company = "/assets/img";
-		$form_details = array();
-
-		$queryForm = "SELECT * FROM `form` WHERE `id` = $id AND `sts_delete` = 0";
-		$form = $this->myapp->getDataQueryDB6($queryForm);
-
-		if ($form[0]->batchno > 0) {
-			$this->createQRCode($form[0]->batchno);
-		}
-
-		if ($form[0]->company == "PT. ADNYANA") {
-			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-		} else if ($form[0]->company == "PT. ANDHIKA LINES") {
-			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-		} else if ($form[0]->company == "PT. INDAH BIMA PRIMA") {
-			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-		} else if ($form[0]->company == "PT. ANDHINI EKA KARYA SEJAHTERA") {
-			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
-		} else {
-			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".png";
-		}
-
-		if (count($form) > 0 && isset($form[0])) {
-			$queryFormDetail = "SELECT * FROM `form_detail` WHERE `id_form` = $id AND `sts_delete` = 0";
-			$form_details = $this->myapp->getDataQueryDB6($queryFormDetail);
-			
-			$form_details = array_filter($form_details, function($detail) {
-				return !empty($detail->description) && !empty($detail->type) && !empty($detail->reason) && $detail->quantity > 0;
-			});
-
-			$qrCodeImgPath = base_url("assets/imgQRCodeForm/" . base64_encode($form[0]->batchno) . ".jpg");
-			
-			$data = array(
-				'form' => $form[0],
-				'form_details' => $form_details,
-				'note' => isset($form[0]->note) ? $form[0]->note : 'No notes available',  // pastikan note tersedia
-				'imageLogo' => "<img src=\"" . base_url($logo_company) . "\" alt=\"Company Logo\" height=\"50\" style=\"align-items: left; margin-bottom: -50px;\">",
-				'qrCode' => "<img src=\"" . $qrCodeImgPath . "\" alt=\"QR Code\" height=\"100\" width=\"100\" />",
-				'kadept' => null,
-				'kadiv' => null,
-				'nameKadept' => null,
-				'nameKadiv' => null,
-				'button' => $button
-			);
-			
-			$mappingInfo = $this->getMappingInfo($form[0]->divisi, $form[0]->department, $form[0]->batchno);
-			
-			if ($form[0]->st_acknowledge == 'Y') {
-				$data['kadept'] = "<img src=\"" . base_url(trim($mappingInfo['namefileKadept'])) . "\" alt=\"Kadept QR Code\" height=\"100\" width=\"100\" />";
-				$data['nameKadept'] = $mappingInfo['nameKadept'];
-			}
-
-			if ($form[0]->st_approval == 'Y') {
-				$data['kadiv'] = "<img src=\"" . base_url($mappingInfo['namafileKadiv']) . "\" alt=\"Kadiv QR Code\" height=\"100\" width=\"100\" />";
-				$data['nameKadiv'] = $mappingInfo['nameKadiv'];
-			}
-			
-			if ($typeView == 'request' && $form[0]->st_submit == 'N' && $form[0]->st_acknowledge == 'N' && $form[0]->st_approval == 'N') {
-				$button .= "<button onclick=\"sendData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnSubmit_{$form[0]->id}\" type=\"button\" title=\"Submit\"><i class=\"fa fa-send-o\"></i> Send</button>";
-			}
-			if($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'N' && $form[0]->st_approval == 'N'){
-				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\"><i class=\"fa fa-download\"></i> Download</button>";
-			}
-			if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
-				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" 		id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\">
-							<i class=\"fa fa-download\"></i> Download
-							</button>";
-			}
-			if ($typeView == 'acknowledge' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'N'){
-				$button .= "<button onclick=\"acknowledgeData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" type=\"button\" style=\"margin: 5px;\">
-										<i class=\"fa fa-print\"></i> Acknowledge
-									</button>";
-			}
-			if ($typeView == 'approval' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
-				$button .= "<button onclick=\"approveData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" type=\"button\" style=\"margin: 5px;\">
-										<i class=\"fa fa-thumbs-up\"></i> Approve
-									</button>";
-			}
-			if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'Y')
-			{
-				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\"><i class=\"fa fa-download\"></i> Download</button>";
-			}
-
-			$data['button'] = $button;
-
-			print json_encode($data);
-
-		} else {
-			show_error('Form not found', 404);
-		}
-	}
 	
 	function printPdf($id) {
 		
@@ -822,244 +759,126 @@ class Form extends CI_Controller
 				'form_details' => $form_details,
 				'imageLogo' => "<img src=\"" . base_url($logo_company) . "\" alt=\"Company Logo\" height=\"50\" style=\"align-items: left; margin-bottom: -50px;\">",
 				'qrCode' => "<img src=\"" . $qrCodeImgPath . "\" alt=\"QR Code\" height=\"100\" width=\"100\" />",  
-				'kadept' => null,
-				'kadiv' => null,
-				'nameKadept' => null,
-				'nameKadiv' => null
+				'qrCodeAcknowledge' => null,
+				'qrCodeApprove' => null,
+				'nameKadept' => isset($form[0]->name_acknowledge) ? $form[0]->name_acknowledge : 'Not acknowledged',
+    			'nameKadiv' => isset($form[0]->name_approve) ? $form[0]->name_approve : 'Not approved',
 			);
-
-			$mappingInfo = $this->getMappingInfo($form[0]->divisi, $form[0]->department, $form[0]->batchno);
 		
 			if ($form[0]->st_acknowledge == 'Y') {
-				$data['kadept'] = "<img src=\"" . base_url(trim($mappingInfo['namefileKadept'])) . "\" alt=\"Kadept QR Code\" height=\"100\" width=\"100\" />";
-				$data['nameKadept'] = $mappingInfo['nameKadept'];
+				$data['qrCodeAcknowledge'] = "<img src=\"" . base_url("assets/imgQRCodeForm/" . $this->createQRCode($form[0]->id, 'ack')) . "\" alt=\"QR Code Acknowledge\" height=\"100\" width=\"100\" />";
 			}
 
 			if ($form[0]->st_approval == 'Y') {
-				$data['kadiv'] = "<img src=\"" . base_url($mappingInfo['namafileKadiv']) . "\" alt=\"Kadiv QR Code\" height=\"100\" width=\"100\" />";
-				$data['nameKadiv'] = $mappingInfo['nameKadiv'];
+				$data['qrCodeApprove'] = "<img src=\"" . base_url("assets/imgQRCodeForm/" . $this->createQRCode($form[0]->id, 'app')) . "\" alt=\"QR Code Approval\" height=\"100\" width=\"100\" />";
 			}
+			
 			$this->load->view('myApps/previewPrint', $data);
 		} else {
 			show_error('Form not found', 404);
 		}
-		
 	}
+	
+	function previewPrint() 
+	{	
+		$id = $this->input->post('id');
+		$typeView = $this->input->post('typeView');
+		$userid = $this->session->userdata('userIdMyApps'); 
+		$userType = $this->session->userdata('userTypeMyApps');
 		
-	function getMappingInfo($division, $department, $batchno) {
-		
-		$queryBatch = "SELECT * FROM `form` WHERE `batchno` = '".$batchno."' AND sts_delete = '0'";
-		$requestData = $this->myapp->getDataQueryDB6($queryBatch);
+		if ($id === null) {
+			show_error('ID is missing', 400);
+			return;
+		}
 
-		if (!empty($requestData) && isset($requestData[0])) {
-			$requestName = $requestData[0]->request_name;
-			$qrcodeFile = '/assets/imgQRCodeForm/' . base64_encode($requestData[0]->batchno) . '.jpg';
+		$button = "";
+		$logo_company = "/assets/img";
+		$form_details = array();
+		
+
+		$queryForm = "SELECT * FROM `form` WHERE `id` = $id AND `sts_delete` = 0";
+		$form = $this->myapp->getDataQueryDB6($queryForm);
+
+		if ($form[0]->batchno > 0) {
+			$this->createQRCode($form[0]->batchno);
+		}
+
+		if ($form[0]->company == "PT. ADNYANA") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else if ($form[0]->company == "PT. ANDHIKA LINES") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else if ($form[0]->company == "PT. INDAH BIMA PRIMA") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
+		} else if ($form[0]->company == "PT. ANDHINI EKA KARYA SEJAHTERA") {
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".jpg";
 		} else {
-			$requestName = 'Nama Request';
-			$qrcodeFile = '/assets/imgQRCodeForm/default.jpg'; 
+			$logo_company .= "/" . str_replace(" ", "", $form[0]->company) . ".png";
 		}
-		
-		$Mapping = array(
-			'BOD / BOC' => array(
-				'NON DEPARTMENT' => array( 
-					'nameKadiv'=> 'Pribadi Arijanto',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
-					'approveKadiv' => 'Pribadi Arijanto',
-					'nameKadept' => $requestName,
-					'namefileKadept' => $qrcodeFile, 
-					'acknowledgeKadept' => $requestName
-				),
-				'PA' => array(
-					'nameKadiv' => 'Pribadi Arijanto',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
-					'approveKadiv' => 'Pribadi Arijanto',
-					'nameKadept' => $requestName,
-					'namefileKadept' => $qrcodeFile,
-					'acknowledgeKadept' => $requestName	
-				),
-			),
-			'CORPORATE FINANCE, STRATEGY & COMPLIANCE' => array(
-				'NON DEPARTMENT' => array(
-					'nameKadiv' => $requestName,
-					'namafileKadiv' => $qrcodeFile,
-					'approveKadiv' => $requestName,
-					'nameKadept' => $requestName,
-					'namefileKadept' => $qrcodeFile,
-					'acknowledgeKadept' => $requestName	
-				)
-			), 
-			'DRY BULK COMMERCIAL,OPERATION & AGENCY' => array(
-				'COMMERCIAL' => array(
-					'nameKadiv' => 'Ferry Nugroho',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/FerryNugroho.jpg',
-					'approveKadiv' => 'Ferry Nugroho ',
-					'nameKadept' => 'Rahadian Herbisworo',
-					'namefileKadept' => '/assets/ImgQRCodeForm/RahadianHerbisworo.jpg',
-					'acknowledgeKadept' => 'Rahadian Herbisworo'
-				),
-				'OPERATION' => array(
-					'nameKadiv' => 'Ferry Nugroho',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/TimbulRiyadi.jpg',
-					'approveKadiv' => 'Ferry Nugroho',
-					'nameKadept' => 'Timbul Riyadi',
-					'namefileKadept' => '/assets/ImgQRCodeForm/RahadianHerbisworo.jpg',
-					'acknowledgeKadept' => 'Timbul Riyadi' 
-				),
-				'AGENCY' => array(
-					'nameKadiv' => 'Ferry Nugroho',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/TimbulRiyadi.jpg',
-					'approveKadiv' => 'Ferry Nugroho',
-					'nameKadept' => 'Timbul Riyadi',
-					'namefileKadept' => '/assets/ImgQRCodeForm/RahadianHerbisworo.jpg',
-					'acknowledgeKadept' => 'Timbul Riyadi'
-				) 
-			),
-			'FINANCE' => array(
-				'FINANCE' => array(
-					'nameKadiv' => 'Sylvia Panghuriany',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/Sylvia.jpg',
-					'approveKadiv' => 'Sylvia Panghuriany',
-					'nameKadept' => 'Marita',
-					'namefileKadept' => '/assets/ImgQRCodeForm/Marita.jpg',
-					'acknowledgeKadept' => 'Marita'
-				),
-				'ACCOUNTING' => array(
-					'nameKadiv' => 'Sylvia Panghuriany',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/Sylvia.jpg',
-					'approveKadiv' => 'Sylvia Panghuriany', 
-					'nameKadept' => 'Riko Ramdani',
-					'namefileKadept' => '/assets/ImgQRCodeForm/RikoRamdani.jpg',
-					'acknowledgeKadept' => 'Riko Ramdani'
-				),
-				'TAX' => array(
-					'nameKadiv' => 'Sylvia Panghuriany',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/Sylvia.jpg',
-					'approveKadiv' => 'Sylvia Panghuriany',
-					'nameKadept' => 'Gunawan Effendi',
-					'namefileKadept' => '/assets/ImgQRCodeForm/GunawanEffendi.jpg',
-					'acknowledgeKadept' => 'Gunawan Effendi'
-				)
-			),
-			'HUMAN CAPITAL & GA' => array(
-				'HR' => array(
-					'nameKadiv' => 'Salsabila Angling',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/SalsabilaAngling.jpg',
-					'approveKadiv' => 'Salsabila Angling',
-					'nameKadept' => 'Elan Harsono',
-					'namefileKadept' => '/assets/ImgQRCodeForm/ElanHarsono.jpg',
-					'acknowledgeKadept' => 'Elan Harsono'
-				),
-				'GA' => array(
-					'nameKadiv' => 'Salsabila Angling',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/SalsabilaAngling.jpg',
-					'approveKadiv' => 'Salsabila Angling',
-					'nameKadept' => 'Catra Arisandi',
-					'namefileKadept' => '/assets/ImgQRCodeForm/CatraArisandi.jpg',
-					'acknowledgeKadept' => 'Catra Arisandi'
-				) 
-			),
-			'NON DIVISION' => array(
-				'SECRETARY' => array(
-					'nameKadiv' => 'Pribadi Arijanto',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
-					'approveKadiv' => 'Pribadi Arijanto',
-					'nameKadept' => $requestName,
-					'namefileKadept' => $qrcodeFile,
-					'acknowledgeKadept' => $requestName	
-				),
-				'NON DEPARTMENT' => array(
-					'nameKadiv'=> 'Pribadi Arijanto',
-					'namafileKadiv'=> '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
-					'approveKadiv'=> 'Pribadi Arijanto',
-					'nameKadept' => $requestName,
-					'namefileKadept' => $qrcodeFile,
-					'acknowledgeKadept' => $requestName   
-				)
-			),
-			'OFFICE OPERATION' => array(
-				'IT' => array(
-					'nameKadiv' => 'Pribadi Arijanto',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
-					'approveKadiv' => 'PribadiArijanto',
-					'nameKadept' => 'Hendra Roesli',
-					'namefileKadept' => '/assets/ImgQRCodeForm/HendraRoesli.jpg',
-					'acknowledgeKadept' => 'Hendra Roesli' 
-				),
-				'LEGAL' => array(
-					'nameKadiv'=> 'Pribadi Arijanto',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
-					'approveKadiv' => 'Pribadi Arijanto',
-					'nameKadept' => 'Pribadi Arijanto',
-					'namefileKadept' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
-					'acknowledgeKadept' => 'Pribadi Arijanto' 
-				),
-				'PROCUREMENT' => array(
-					'nameKadiv'=> 'Pribadi Arijanto',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/PribadiArijanto.jpg',
-					'approveKadiv' => 'Pribadi Arijanto',
-					'nameKadept' => 'Deffandra Putra',
-					'namefileKadept' => '/assets/ImgQRCodeForm/DeffandraPutra.jpg',
-					'acknowledgeKadept' => 'Deffandra Putra'
-				)
-			),
-			'OIL & GAS COMMERCIAL & OPERATION' => array(
-				'COMMERCIAL' => array(
-					'nameKadiv'=> 'Nick Djatnika',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/NickDjatnika.jpg',
-					'approveKadiv' => 'Nick Djatnika',
-					'nameKadept' => 'Aditya Ilham Nusantara',
-					'namefileKadept' => '/assets/ImgQRCodeForm/Adityailham.jpg',
-					'acknowledgeKadept' => 'Aditya Ilham Nusantara'
-				),
-				'OPERATION' => array(
-					'nameKadiv'=> 'Nick Djatnika',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/NickDjatnika.jpg',
-					'approveKadiv' => 'Nick Djatnika',
-					'nameKadept' => 'Aditya Ilham Nusantara',
-					'namefileKadept' => '/assets/ImgQRCodeForm/Adityailham.jpg',
-					'acknowledgeKadept' => 'Aditya Ilham Nusantara'
-				)
-			),
-			'SHIP MANAGEMENT' => array(
-				'OWNER SUPERINTENDENT (TECHNICAL)' => array(
-					'nameKadiv'=> 'Eddy Sukmono',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/EddySukmono.jpg',
-					'approveKadiv' => 'Eddy Sukmono',
-					'nameKadept' => 'Hari Joko Purnomo',
-					'namefileKadept' => '/assets/ImgQRCodeForm/HariJoko.jpg',
-					'acknowledgeKadept' => 'Hari Joko'
-				),
-				'CREWING' => array(
-					'nameKadiv'=> 'Eddy Sukmono',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/EddySukmono.jpg',
-					'approveKadiv' => 'Eddy Sukmono',
-					'nameKadept' => 'Eva Marliana ',
-					'namefileKadept' => '/assets/ImgQRCodeForm/EvaMarliana.jpg',
-					'acknowledgeKadept' => 'Eva Marliana'
-				),
-				'QHSE'=> array(
-					'nameKadiv'=> 'Eddy Sukmono',
-					'namafileKadiv' => '/assets/ImgQRCodeForm/EddySukmono.jpg',
-					'approveKadiv' => 'Eddy Sukmono',
-					'nameKadept' => 'Hardi Gunarto',
-					'namefileKadept' => '/assets/ImgQRCodeForm/HardiGunarto.jpg',
-					'acknowledgeKadept' => 'Hardi Gunarto'
-				) 
-			)
-			
-		);
 
-		if (isset($Mapping[$division])) {
-			if (is_array($Mapping[$division])) {
-				if (isset($Mapping[$division][$department])) {
-					return $Mapping[$division][$department]; 
-				} else if (isset($Mapping[$division]['department']) && $Mapping[$division]['department'] == $department) {
-					return $Mapping[$division]; 
-				}
+		if (count($form) > 0 && isset($form[0])) {
+			$queryFormDetail = "SELECT * FROM `form_detail` WHERE `id_form` = $id AND `sts_delete` = 0";
+			$form_details = $this->myapp->getDataQueryDB6($queryFormDetail);
+				
+			$form_details = array_filter($form_details, function($detail) {
+				return !empty($detail->description) && !empty($detail->type) && !empty($detail->reason) && $detail->quantity > 0;
+			});
+
+			$qrCodeImgPath = base_url("assets/imgQRCodeForm/" . base64_encode($form[0]->batchno) . ".jpg");
+				
+			$data = array(
+				'form' => $form[0],
+				'form_details' => $form_details,
+				'note' => isset($form[0]->note) ? $form[0]->note : 'No notes available',
+				'imageLogo' => "<img src=\"" . base_url($logo_company) . "\" alt=\"Company Logo\" height=\"50\" style=\"align-items: left; margin-bottom: -50px;\">",
+				'qrCode' => "<img src=\"" . $qrCodeImgPath . "\" alt=\"QR Code\" height=\"100\" width=\"100\" />",
+				'qrCodeAcknowledge' => null,
+				'qrCodeApprove' => null,
+				'nameKadept' => isset($form[0]->name_acknowledge) ? $form[0]->name_acknowledge : 'Not acknowledged',
+				'nameKadiv' => isset($form[0]->name_approve) ? $form[0]->name_approve : 'Not approved',
+				'button' => $button
+			);	
+	
+			if ($form[0]->st_acknowledge == 'Y') {
+				$data['qrCodeAcknowledge'] = "<img src=\"" . base_url("assets/imgQRCodeForm/" . $this->createQRCode($form[0]->id, 'ack')) . "\" alt=\"QR Code Acknowledge\" height=\"100\" width=\"100\" />";
 			}
-		}
 
-		return null;
+			if ($form[0]->st_approval == 'Y') {
+				$data['qrCodeApprove'] = "<img src=\"" . base_url("assets/imgQRCodeForm/" . $this->createQRCode($form[0]->id, 'app')) . "\" alt=\"QR Code Approval\" height=\"100\" width=\"100\" />";
+			}
+				
+			if ($typeView == 'request' && $form[0]->st_submit == 'N' && $form[0]->st_acknowledge == 'N' && $form[0]->st_approval == 'N') {
+				$button .= "<button onclick=\"sendData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnSubmit_{$form[0]->id}\" type=\"button\" title=\"Submit\"><i class=\"fa fa-send-o\"></i> Send</button>";
+			}
+			if($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'N' && $form[0]->st_approval == 'N'){
+				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\"><i class=\"fa fa-download\"></i> Download</button>";
+			}
+			if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
+				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" 		id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\">
+							<i class=\"fa fa-download\"></i> Download
+							</button>";
+			}
+			if ($typeView == 'acknowledge' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'N'){
+				$button .= "<button onclick=\"acknowledgeData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" type=\"button\" style=\"margin: 5px;\">
+										<i class=\"fa fa-print\"></i> Acknowledge
+									</button>";
+			}
+			if ($typeView == 'approval' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'N'){
+				$button .= "<button onclick=\"approveData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" type=\"button\" style=\"margin: 5px;\">
+										<i class=\"fa fa-thumbs-up\"></i> Approve
+									</button>";
+			}
+			if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'Y')
+			{
+				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\"><i class=\"fa fa-download\"></i> Download</button>";
+			}
+
+			$data['button'] = $button;
+
+			print json_encode($data);
+
+		} else {
+			show_error('Form not found', 404);
+		}
 	}
 
 	function userSetting() {
@@ -1108,8 +927,6 @@ class Form extends CI_Controller
 		return $dataOut;
 	}
 
-
-	
 	function getBatchNo()
 	{
 		$batchNo = "1";
@@ -1132,8 +949,9 @@ class Form extends CI_Controller
 		$reqName = $this->session->userdata('fullNameMyApps');
 		$IdForm = $data['txtIdForm'];
 		$response = array();
+		$acknowledgeUserId = isset($data['slcAcknowledge']) ? $data['slcAcknowledge'] : null;
+		$approveUserId = isset($data['slcApprove']) ? $data['slcApprove'] : null;
 
-		// Proses utama untuk saveFormRequest
 		if (empty($IdForm)) {
 			$dataIns = array(
 				'batchno' => $this->getBatchNo(),
@@ -1147,7 +965,11 @@ class Form extends CI_Controller
 				'required_date' => isset($data['txtRequiredDate']) ? $data['txtRequiredDate'] : $dateNow,
 				'userid_submit' => $userId,
 				'add_date' => $dateNow,
-				'request_name' => $reqName
+				'request_name' => $reqName,
+				'name_acknowledge' => $data['slcAcknowledgeText'],
+				'userid_acknowledge' => $acknowledgeUserId,
+				'name_approve' => $data['slcApproveText'],
+				'userid_approve' => $approveUserId,
 			);
 			try {
 				$this->myapp->insDataDb6($dataIns, 'form');
@@ -1180,7 +1002,11 @@ class Form extends CI_Controller
 				'required_date' => isset($data['txtRequiredDate']) ? $data['txtRequiredDate'] : $dateNow,
 				'update_userid' => $userId,
 				'update_date' => $dateNow,
-				'request_name' => $reqName
+				'request_name' => $reqName,
+				'name_acknowledge' => $data['slcAcknowledgeText'],
+				'userid_acknowledge' => $acknowledgeUserId,
+				'name_approve' => $data['slcApproveText'],
+				'userid_approve' => $approveUserId,
 			);
 
 			try {
@@ -1289,4 +1115,38 @@ class Form extends CI_Controller
 		return $optNya;
 	}
 
-}
+	function getOptAcknowledge()
+	{
+		$optNya = "<option value=\"\">- Select -</option>";
+
+		$sql = "SELECT userid, userfullnm FROM login WHERE userid IN ('00121', '00027', '00130', '00162', 
+				'00092', '00118', '00178', '00002', '00128', '00172', '00030', '00151', '00012', '00107') 
+				AND deletests = 0";
+
+		$result = $this->myapp->getDataQueryDb2($sql);
+
+		foreach ($result as $val) {
+			$optNya .= "<option value=\"{$val->userfullnm}\">{$val->userfullnm}</option>";
+		}
+
+		return $optNya;
+	}
+
+	function getOptApprove()
+	{
+		$optNya = "<option value=\"\">- Select -</option>";
+
+		$sql = "SELECT userid, userfullnm FROM login WHERE userid IN ('00054', '00061', '00116', '00166', 
+				'00053', '00032') 
+				AND deletests = 0";
+
+		$result = $this->myapp->getDataQueryDb2($sql);
+
+		foreach ($result as $val) {
+			$optNya .= "<option value=\"{$val->userfullnm}\">{$val->userfullnm}</option>";
+		}
+
+		return $optNya;
+	}
+
+} 

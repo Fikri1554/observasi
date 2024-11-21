@@ -12,6 +12,20 @@
     <link rel="icon" href="<?php echo base_url("assets/img/andhika.gif"); ?>">
     <script type="text/javascript">
     $(document).ready(function() {
+        $("#txtRequiredDate").datepicker({
+            dateFormat: 'yy-mm-dd',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            defaultDate: new Date(),
+        });
+        $("#txtRequiredDateEdit").datepicker({
+            dateFormat: 'yy-mm-dd',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            defaultDate: new Date(),
+        });
         $('#saveFormRequest').click(function() {
             var projectReference = $('#txtprojectReference').val();
             var purpose = $('#txtpurpose').val();
@@ -20,12 +34,15 @@
             var divisi = $("#slcDivisi").val();
             var department = $("#slcDepartment").val();
             var requiredDate = $("#txtRequiredDate").val();
+            var acknowledge = $("#slcAcknowledge").val();
+            var approve = $("#slcApprove").val();
             var txtIdForm = $("#txtIdForm").val();
 
             if (!projectReference || !purpose) {
                 alert("Field Project Reference and Purpose are required.");
                 return;
             }
+
 
             var formData = new FormData();
             formData.append('txtprojectReference', projectReference);
@@ -36,6 +53,10 @@
             formData.append('slcDivisi', divisi);
             formData.append('slcDepartment', department);
             formData.append('txtRequiredDate', requiredDate);
+            formData.append('slcAcknowledgeText', $("#slcAcknowledge option:selected").text());
+            formData.append('slcAcknowledge', acknowledge);
+            formData.append('slcApprove', approve);
+            formData.append('slcApproveText', $("#slcApprove option:selected").text());
             formData.append('txtIdForm', txtIdForm);
 
             function appendData(fieldName, selector) {
@@ -132,8 +153,8 @@
             "SHIP MANAGEMENT": ["OWNER SUPERINTENDENT (TECHNICAL)", "CREWING", "QHSE", "AGENCY & BRANCH"]
         };
         $('#slcDivisiEdit').change(function() {
-            let selectedDivision = $(this).val();
-            let departmentSelect = $('#slcDepartmentEdit');
+            var selectedDivision = $(this).val();
+            var departmentSelect = $('#slcDepartmentEdit');
 
             departmentSelect.empty();
             departmentSelect.append('<option value="">- Select Department -</option>');
@@ -169,17 +190,22 @@
                     $("#txtprojectReferenceEdit").val(formData.project_reference || "");
                     $("#txtpurposeEdit").val(formData.purpose || "");
                     $("#txtlocationEdit").val(formData.location || "");
-                    $("#slcCompanyEdit").val(formData.company || "");
-                    $("#slcDivisiEdit").val(formData.divisi || "");
+                    $("#slcCompanyEdit").val(formData.company || "").trigger('change');
+                    $("#slcDivisiEdit").val(formData.divisi || "").trigger('change');
+
+                    // Tunggu event "change" selesai, lalu isi department
+                    setTimeout(() => {
+                        $("#slcDepartmentEdit").val(formData.department || "").trigger('change');
+                    }, 100);
+
+                    $("#slcAcknowledgeEdit").val(formData.name_acknowledge || "").trigger('change');
+                    $("#slcApproveEdit").val(formData.name_approve || "").trigger('change');
                     $("#txtRequiredDateEdit").val(formData.required_date || "");
 
                     $('#slcDivisiEdit').trigger('change');
 
-                    setTimeout(() => {
-                        $("#slcDepartmentEdit").val(formData.department || "");
-                    }, 100);
 
-                    let detailContent = '';
+                    var detailContent = '';
                     response.details.forEach(function(detail, index) {
                         const showRemoveButton = response.details.length > 1 ? '' :
                             'style="display:none;"';
@@ -223,54 +249,59 @@
     }
 
     function createDetailRow(index, detail = {}, showRemoveButton = '') {
-        return `
-            <div class="row" style="margin-bottom: 15px;">
-                <div class="col-md-12">
-                    <div class="form-row">
-                        <input type="hidden" id="txtIdDetail_${index}" name="txtIdDetail[]" value="${detail.id || ''}">
-                        <input type="hidden" id="txtIdEditForm" name="txtIdEditForm" value="${detail.id_form || ''}">
-                        <div class="col-md-2 col-xs-12">
-                            <div class="form-group">
-                                <label for="txtdescription_${index}"><u>Description:</u></label>
-                                <input type="text" name="txtdescriptionEdit[]" class="form-control input-sm" id="txtdescriptionEdit_${index}" value="${detail.description || ''}" placeholder="Description">
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-xs-12">
-                            <div class="form-group">
-                                <label for="txttype_${index}"><u>Type:</u></label>
-                                <input type="text" name="txttypeEdit[]" class="form-control input-sm" id="txttypeEdit_${index}" value="${detail.type || ''}" placeholder="Type">
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-xs-12">
-                            <div class="form-group">
-                                <label for="txtreason_${index}"><u>Reason:</u></label>
-                                <input type="text" name="txtreasonEdit[]" class="form-control input-sm" id="txtreasonEdit_${index}" value="${detail.reason || ''}" placeholder="Reason">
-                            </div>
-                        </div>
-                        <div class="col-md-1 col-xs-12">
-                            <div class="form-group">
-                                <label for="txtquantity_${index}"><u>Quantity:</u></label>
-                                <input type="text" name="txtquantityEdit[]" class="form-control input-sm" id="txtquantityEdit_${index}" value="${detail.quantity || ''}" onkeypress="return isNumber(event)">
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-xs-12">
-                            <div class="form-group">
-                                <label for="txtnote_${index}"><u>Note:</u></label>
-                                <input type="text" name="txtnoteEdit[]" class="form-control input-sm" id="txtnoteEdit_${index}" value="${detail.note || ''}">
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-xs-2" style="flex: 1 1 auto;">
-                            <button type="button" class="btn btn-primary btn-xs btnAddRowEdit" style="margin-top: 25px;">
-                                <i class="glyphicon glyphicon-plus"></i>
-                            </button>
-                            <button type="button" class="btn btn-danger btn-xs btnRemoveRowEdit" ${showRemoveButton} style="margin-top: 25px;">
-                                <i class="glyphicon glyphicon-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        return '<div class="row" style="margin-bottom: 15px;">' +
+            '<div class="col-md-12">' +
+            '<div class="form-row">' +
+            '<input type="hidden" id="txtIdDetail_' + index + '" name="txtIdDetail[]" value="' + (detail.id || '') +
+            '">' +
+            '<input type="hidden" id="txtIdEditForm" name="txtIdEditForm" value="' + (detail.id_form || '') + '">' +
+            '<div class="col-md-2 col-xs-12">' +
+            '<div class="form-group">' +
+            '<label for="txtdescription_' + index + '"><u>Description:</u></label>' +
+            '<input type="text" name="txtdescriptionEdit[]" class="form-control input-sm" id="txtdescriptionEdit_' +
+            index + '" value="' + (detail.description || '') + '" placeholder="Description">' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-md-2 col-xs-12">' +
+            '<div class="form-group">' +
+            '<label for="txttype_' + index + '"><u>Type/Merk:</u></label>' +
+            '<input type="text" name="txttypeEdit[]" class="form-control input-sm" id="txttypeEdit_' + index +
+            '" value="' + (detail.type || '') + '" placeholder="Type/Merk">' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-md-2 col-xs-12">' +
+            '<div class="form-group">' +
+            '<label for="txtreason_' + index + '"><u>Reason:</u></label>' +
+            '<input type="text" name="txtreasonEdit[]" class="form-control input-sm" id="txtreasonEdit_' + index +
+            '" value="' + (detail.reason || '') + '" placeholder="Reason">' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-md-1 col-xs-12">' +
+            '<div class="form-group">' +
+            '<label for="txtquantity_' + index + '"><u>Quantity:</u></label>' +
+            '<input type="text" name="txtquantityEdit[]" class="form-control input-sm" id="txtquantityEdit_' + index +
+            '" value="' + (detail.quantity || '') + '" onkeypress="return isNumber(event)">' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-md-3 col-xs-12">' +
+            '<div class="form-group">' +
+            '<label for="txtnote_' + index + '"><u>Note:</u></label>' +
+            '<input type="text" name="txtnoteEdit[]" class="form-control input-sm" id="txtnoteEdit_' + index +
+            '" value="' + (detail.note || '') + '">' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-md-2 col-xs-2" style="flex: 1 1 auto;">' +
+            '<button type="button" class="btn btn-primary btn-xs btnAddRowEdit" style="margin-top: 25px;">' +
+            '<i class="glyphicon glyphicon-plus"></i>' +
+            '</button>' +
+            '<button type="button" class="btn btn-danger btn-xs btnRemoveRowEdit" ' + showRemoveButton +
+            ' style="margin-top: 25px;">' +
+            '<i class="glyphicon glyphicon-minus"></i>' +
+            '</button>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
     }
 
     function updateRemoveButtons() {
@@ -313,7 +344,6 @@
 
             var formData = new FormData();
 
-            // Menambahkan data ke formData
             formData.append('txtIdEditForm', $('#txtIdEditForm').val());
             formData.append('txtprojectReferenceEdit', $('#txtprojectReferenceEdit').val());
             formData.append('txtpurposeEdit', $('#txtpurposeEdit').val());
@@ -323,6 +353,10 @@
             formData.append('slcDivisiEdit', $("#slcDivisiEdit").val());
             formData.append('slcDepartmentEdit', $("#slcDepartmentEdit").val());
             formData.append('txtRequiredDateEdit', $("#txtRequiredDateEdit").val());
+            formData.append('slcAcknowledgeEdit', $("#slcAcknowledgeEdit").val());
+            formData.append('slcAcknowledgeText', $("#slcAcknowledgeEdit option:selected").text());
+            formData.append('slcApproveEdit', $("#slcApproveEdit").val());
+            formData.append('slcApproveText', $("#slcApproveEdit option:selected").text());
 
             function appendData(fieldName, selector) {
                 $(selector).each(function() {
@@ -331,7 +365,6 @@
                     formData.append(fieldName + '_isDeleted[]', isDeleted);
                 });
             }
-
             appendData('txtdescriptionEdit', "input[name='txtdescriptionEdit[]']");
             appendData('txttypeEdit', "input[name='txttypeEdit[]']");
             appendData('txtreasonEdit', "input[name='txtreasonEdit[]']");
@@ -365,7 +398,6 @@
             });
         });
     });
-
 
     function ViewPrint(id, typeView) {
         $.ajax({
@@ -411,14 +443,15 @@
                 var detailHtml = '';
                 if (data.form_details && data.form_details.length > 0) {
                     data.form_details.forEach(function(detail) {
-                        detailHtml += `
-                        <tr>
-                            <td>${detail.description || ''}</td>
-                            <td>${detail.type || ''}</td>
-                            <td>${detail.quantity || ''}</td>
-                            <td>${detail.reason || ''}</td>
-                            <td>${detail.note || ''}</td>
-                        </tr>`;
+                        detailHtml +=
+                            '<tr>' +
+                            '<td>' + (detail.description || '') + '</td>' +
+                            '<td>' + (detail.type || '') + '</td>' +
+                            '<td>' + (detail.quantity || '') + '</td>' +
+                            '<td>' + (detail.reason || '') + '</td>' +
+                            '<td>' + (detail.note || '') + '</td>' +
+                            '</tr>';
+
                     });
                 } else {
                     detailHtml = '<tr><td colspan="5">No details available</td></tr>';
@@ -429,9 +462,9 @@
                 $('#ictRequestModal .modal-bodyPreview .signature-box').eq(0).html(data
                     .qrCode);
                 $('#ictRequestModal .modal-bodyPreview .signature-box').eq(1).html(data
-                    .kadept);
+                    .qrCodeAcknowledge);
                 $('#ictRequestModal .modal-bodyPreview .signature-box').eq(2).html(data
-                    .kadiv);
+                    .qrCodeApprove);
 
                 $('.reqName').html(data.form.request_name);
                 $('.nameKadept').html(data.nameKadept);
@@ -489,11 +522,13 @@
                 id: idForm
             },
             success: function(response) {
-                const res = JSON.parse(response);
+                var res = JSON.parse(response);
                 if (res.status === 'success') {
-                    alert("The data has been sent to Acknowledge🕒");
+                    alert("The data has been sent to Acknowledge 🕒");
                     $("#ictRequestModal").modal('hide');
                     $("#idTbody").load("<?php echo base_url('form/getDataForm'); ?> #idTbody > *");
+                } else if (res.status === 'failed') {
+                    alert(res.message);
                 }
             },
             error: function(xhr, status, error) {
@@ -510,22 +545,30 @@
                 id: idForm
             },
             success: function(response) {
-                const res = JSON.parse(response);
-                if (res.status === 'success') {
-                    alert("The data has been sent to Acknowledge🕒");
-                    $("#ictRequestModal").modal('hide');
+                try {
+                    var res = JSON.parse(response);
+                    if (res === 'success') {
+                        alert("The data has been acknowledged and sent to approve! 🕒");
+                        $("#ictRequestModal").modal('hide');
 
-                    $("#idTbodyAcknowledge").load(
-                        "<?php echo base_url('form/getDataForm'); ?> #idTbodyAcknowledge > *"
-                    );
+                        $("#idTbodyAcknowledge").load(
+                            "<?php echo base_url('form/getDataForm'); ?> #idTbodyAcknowledge > *"
+                        );
+                    } else {
+                        console.error("Acknowledgement failed: ", res);
+                        alert("Acknowledgement failed. Please try again.");
+                    }
+                } catch (e) {
+                    console.error("Error parsing response:", e);
+                    alert("Unexpected server response. Please try again.");
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error:', error);
+                alert("Failed to send acknowledgment. Please check your connection.");
             }
         });
     }
-
 
     function approveData(idForm) {
         $.ajax({
@@ -535,23 +578,31 @@
                 id: idForm
             },
             success: function(response) {
-                console.log("Response:", response);
-                const res = JSON.parse(response);
-                if (res.status == 'success') {
-                    const statusElement = document.getElementById("status_" + idForm);
-                    if (statusElement) {
-                        statusElement.innerHTML = "Approve Success";
-                        alert("Request has been approved!👍");
-                        setTimeout(function() {
-                            reloadPage();
-                        }, 500);
+                try {
+                    var res = JSON.parse(response); // Pastikan response JSON dapat diparsing
+                    if (res === 'success') { // PHP hanya mengembalikan "success" sebagai string
+                        const statusElement = document.getElementById("status_" + idForm);
+                        if (statusElement) {
+                            statusElement.innerHTML = "Approve Success";
+                        }
+                        alert("Request has been approved! 👍");
+                        $("#ictRequestModal").modal('hide');
+
+                        $("#idTbodyApproval").load(
+                            "<?php echo base_url('form/getDataForm'); ?> #idTbodyApproval > *"
+                        );
+                    } else {
+                        console.error("Approval failed: ", res);
+                        alert("Approval failed. Please try again.");
                     }
-                } else {
-                    console.error("Unexpected response status:", res.status);
+                } catch (e) {
+                    console.error("Error parsing response:", e);
+                    alert("Unexpected server response. Please try again.");
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error:', error);
+                alert("Failed to send approval. Please check your connection.");
             }
         });
     }
@@ -578,27 +629,30 @@
                 dataType: 'json',
                 success: function(response) {
                     console.log('Response:', response);
-                    let data = response.data;
-                    let tbody = $('#idTbodyAcknowledge');
+                    var data = response.data;
+                    var tbody = $('#idTbodyAcknowledge');
                     tbody.empty();
-                    let no = 1;
+                    var no = 1;
 
                     if (Array.isArray(data) && data.length) {
                         data.forEach(function(item) {
-                            let row = `
-                    <tr id="row_${item.id}">
-                        <td style="text-align:center;">${no++}</td>
-                        <td style="text-align:center;">${item.project_reference}</td>
-                        <td style="text-align:center;">${item.purpose}</td>
-                        <td style="text-align:center;">${item.company}</td>
-                        <td style="text-align:center;">${item.location}</td>
-                        <td style="text-align:center;">${item.divisi}</td>
-                        <td style="text-align:center;">
-                            <button onclick="ViewPrint(${item.id}, '${type}');" class="btn btn-success btn-xs" type="button">
-                                <i class="fa fa-eye"></i> View
-                            </button>
-                        </td>
-                    </tr>`;
+                            var row =
+                                '<tr id="row_' + item.id + '">' +
+                                '<td style="text-align:center;">' + (no++) + '</td>' +
+                                '<td style="text-align:center;">' + item.project_reference +
+                                '</td>' +
+                                '<td style="text-align:center;">' + item.purpose + '</td>' +
+                                '<td style="text-align:center;">' + item.company + '</td>' +
+                                '<td style="text-align:center;">' + item.location + '</td>' +
+                                '<td style="text-align:center;">' + item.divisi + '</td>' +
+                                '<td style="text-align:center;">' +
+                                '<button onclick="ViewPrint(' + item.id + ', \'' + type +
+                                '\');" class="btn btn-success btn-xs" type="button">' +
+                                '<i class="fa fa-eye"></i> View' +
+                                '</button>' +
+                                '</td>' +
+                                '</tr>';
+
                             tbody.append(row);
                         });
                     } else {
@@ -623,24 +677,30 @@
                 dataType: 'json',
                 success: function(response) {
                     console.log('Response:', response);
-                    let data = response.data;
-                    let tbody = $('#idTbodyApproval');
+                    var data = response.data;
+                    var tbody = $('#idTbodyApproval');
                     tbody.empty();
-                    let no = 1;
+                    var no = 1;
 
                     if (Array.isArray(data) && data.length) {
                         data.forEach(function(item) {
-                            let row = `<tr>
-                                <td style="text-align:center;">${no++}</td>
-                                <td style="text-align:center;">${item.project_reference}</td>
-                                <td style="text-align:center;">${item.purpose}</td>
-                                <td style="text-align:center;">${item.company}</td>
-                                <td style="text-align:center;">${item.location}</td>
-                                <td style="text-align:center;">${item.divisi}</td>
-                                <td style="text-align:center;">
-                                    <button onclick="ViewPrint(${item.id}, '${type}');" class="btn btn-primary btn-xs" type="button"><i class="fa fa-eye"></i> View</button>
-                                </td>
-                            </tr>`;
+                            var row =
+                                '<tr>' +
+                                '<td style="text-align:center;">' + (no++) + '</td>' +
+                                '<td style="text-align:center;">' + item.project_reference +
+                                '</td>' +
+                                '<td style="text-align:center;">' + item.purpose + '</td>' +
+                                '<td style="text-align:center;">' + item.company + '</td>' +
+                                '<td style="text-align:center;">' + item.location + '</td>' +
+                                '<td style="text-align:center;">' + item.divisi + '</td>' +
+                                '<td style="text-align:center;">' +
+                                '<button onclick="ViewPrint(' + item.id + ', \'' + type +
+                                '\');" class="btn btn-primary btn-xs" type="button">' +
+                                '<i class="fa fa-eye"></i> View' +
+                                '</button>' +
+                                '</td>' +
+                                '</tr>';
+
                             tbody.append(row);
                         });
                     } else {
@@ -655,7 +715,6 @@
                 }
             });
         }
-
     }
 
     $(document).ready(function() {
@@ -678,11 +737,10 @@
                 "AGENCY & BRANCH"
             ]
         };
-
         $('#slcDivisi').change(function() {
-            let selectedDivision = $(this).val();
+            var selectedDivision = $(this).val();
             console.log("Selected Division: " + selectedDivision);
-            let departmentSelect = $('#slcDepartment');
+            var departmentSelect = $('#slcDepartment');
 
             departmentSelect.empty();
             departmentSelect.append('<option value="">- Select Department -</option>');
@@ -700,7 +758,6 @@
             }
         });
     });
-
 
     $(document).ready(function() {
         function updateButtonVisibility() {
@@ -740,7 +797,7 @@
             if (event.target.tagName === "A" && event.target.classList.contains("page-link")) {
                 event.preventDefault();
 
-                let url = event.target.getAttribute("href");
+                var url = event.target.getAttribute("href");
 
                 fetch(url, {
                         method: "GET",
@@ -799,7 +856,7 @@
                                                     <div class="row requestRow">
                                                         <div class="col-md-3 col-xs-12">
                                                             <div class="form-group">
-                                                                <label for="txtprojectReference"><b><u>Project Reff
+                                                                <label for="txtprojectReference"><b><u>Project Ref
                                                                             :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="txtprojectReference" name="txtprojectReference"
@@ -829,6 +886,9 @@
                                                                     id="txtlocation" name="txtlocation">
                                                             </div>
                                                         </div>
+                                                    </div>
+
+                                                    <div class="row requestRow">
                                                         <div class="col-md-3 col-xs-12">
                                                             <div class="form-group">
                                                                 <label for="slcDivisi"><b><u>Divisi :</u></b></label>
@@ -847,21 +907,38 @@
                                                                 </select>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-2 col-xs-12"
-                                                            style="padding-right: 10px; padding-left: 10px;">
+                                                        <div class="col-md-3 col-xs-12">
                                                             <div class="form-group">
                                                                 <label for="txtRequiredDate"><u>Required
                                                                         Date:</u></label>
-                                                                <input type="date" name="txtrequired_date[]"
+                                                                <input type="text" name="txtrequired_date[]"
                                                                     class="form-control input-sm" id="txtRequiredDate"
                                                                     autocomplete="off">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4 col-xs-12">
+                                                            <div class="form-group">
+                                                                <label for="slcAcknowledge"><b><u>Acknowledge
+                                                                            By:</u></b></label>
+                                                                <select id="slcAcknowledge"
+                                                                    class="form-control input-sm">
+                                                                    <?php echo $getOptAcknowledge; ?>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4 col-xs-12">
+                                                            <div class="form-group">
+                                                                <label for="slcApprove"><b><u>Approve
+                                                                            By:</u></b></label>
+                                                                <select id="slcApprove" class="form-control input-sm">
+                                                                    <?php echo $getOptApprove; ?>
+                                                                </select>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-
                                         <!-- Form Detail -->
                                         <div id="idFieldDetail">
                                             <legend><label id="lblForm">Add Request Detail</label></legend>
@@ -1103,7 +1180,7 @@
                                                         <label for="txtprojectReference"><b><u>Project Reff
                                                                     :</u></b></label>
                                                         <input type="text" class="form-control input-sm"
-                                                            id="txtprojectReferenceEdit" name="txtprojectReference"
+                                                            id="txtprojectReferenceEdit" name="txtprojectReference[]"
                                                             value="">
                                                     </div>
                                                 </div>
@@ -1152,6 +1229,24 @@
                                                         <input type="date" name="txtrequired_date[]"
                                                             class="form-control input-sm" id="txtRequiredDateEdit"
                                                             autocomplete="off">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-5 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label for="slcAcknowledge"><b><u>Acknowledge
+                                                                    By:</u></b></label>
+                                                        <select id="slcAcknowledgeEdit" class="form-control input-sm">
+                                                            <?php echo $getOptAcknowledge; ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-5 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label for="slcApprove"><b><u>Approve
+                                                                    By:</u></b></label>
+                                                        <select id="slcApproveEdit" class="form-control input-sm">
+                                                            <?php echo $getOptApprove; ?>
+                                                        </select>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1256,6 +1351,7 @@
                                                 <td style="text-align: center;">Acknowledge by<br>
                                                     <div class="signature-box"
                                                         style="text-align: center; margin-bottom: 5px;">
+
                                                     </div>
                                                     <div class="name-wrapper nameKadept"
                                                         style="text-align: center; margin-top: 5px; font-weight: bold; font-size: 12px;">
@@ -1265,6 +1361,7 @@
                                                 <td style="text-align: center;">Approved by<br>
                                                     <div class="signature-box"
                                                         style="text-align: center; margin-bottom: 5px;">
+
                                                     </div>
                                                     <div class="name-wrapper nameKadiv"
                                                         style="text-align: center; margin-top: 5px; font-weight: bold; font-size: 12px;">
