@@ -605,7 +605,7 @@ class Form extends CI_Controller
 		$config['black']		= array(224,255,255);
 		$config['white']		= array(0,0,128);
 		$this->ciqrcode->initialize($config);
-		
+			
 		$imgName = base64_encode($id).'.jpg';
 		
 		if($type == 'ack')
@@ -628,7 +628,7 @@ class Form extends CI_Controller
     	return $imgName;
 	}
 	
-
+ 
 	function createNo($noNya = "")
 	{
 		$dt = strlen($noNya);
