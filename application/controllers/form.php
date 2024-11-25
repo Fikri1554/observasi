@@ -20,9 +20,7 @@ class Form extends CI_Controller
 		$userDiv = trim($this->session->userdata('nmDiv')); 
 		$userDept = trim($this->session->userdata('nmDept')); 
 		$userId = $this->session->userdata('userIdMyApps');
-		$userFullName = $this->session->userdata('fullNameMyApps');
-		
-		// print_r($userDept);exit;		
+		$userFullName = $this->session->userdata('fullNameMyApps');	
 
 		$where = "WHERE sts_delete = '0' ";
 
@@ -121,7 +119,7 @@ class Form extends CI_Controller
 			} else {
 				$btnExport = "<button onclick=\"ViewPrint('" . $value->id . "', 'request');\" class=\"btn btn-success btn-xs\" id=\"btnView_" . $value->id . "\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>";
 				$btnDelete = "<button onclick=\"delData('" . $value->id . "');\" class=\"btn btn-danger btn-xs\" id=\"btnDelete_" . $value->id . "\" type=\"button\" title=\"Delete\"><i class=\"fa fa-trash-o\"></i> Delete</button>";
-			}
+			} 
 			$tr .= "<tr id='row_" . $value->id . "'>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $no . "</td>";
 				$tr .= "<td align='center'>" . $btnDetail . "</td>"; 
@@ -186,7 +184,7 @@ class Form extends CI_Controller
 			} else {
 				$listPage .= "<li class=\"page-item\"><a class=\"page-link\" href=\"" . base_url('form/getDataForm') . "\">First</a></li>";
 			}
-
+			
 			if ($page > 1) {
 				$listPage .= "<li class=\"page-item\"><a class=\"page-link\" href=\"" . $linkBfr . "\">" . $bfrPage . "</a></li>";
 			}
@@ -197,7 +195,6 @@ class Form extends CI_Controller
 				$listPage .= "<li class=\"page-item\"><a class=\"page-link\" href=\"" . $linkAft . "\">" . $aftPage . "</a></li>";
 			}
 
-			// Kondisi untuk tombol "Last"
 			if ($page < $ttlList) {
 				$listPage .= "<li class=\"page-item\"><a class=\"page-link\" href=\"" . $linkLast . "\">Last</a></li>";
 			}
