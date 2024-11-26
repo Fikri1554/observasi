@@ -369,7 +369,7 @@ class Form extends CI_Controller
 	}
 	
  	function updateSubmitStatus() {
-		$id_form = $this->input->post('id'); 
+		$IdForm = $this->input->post('id'); 
 		$userid_submit = $this->session->userdata('userIdMyApps');
 		$date_submit = date('Y-m-d');
 		
@@ -379,9 +379,11 @@ class Form extends CI_Controller
 			'date_submit' => $date_submit
 		);
 
-		$this->myapp->updateDataDb6('form', $data, array('id' => $id_form));
+		$this->myapp->updateDataDb6('form', $data, array('id' => $IdForm));
 
-		$this->addDataMyAppLetter($id_form);
+		$this->addDataMyAppLetter($IdForm);
+		
+		$this->sendRemindByEmail($IdForm);
 
 		echo json_encode(array('status' => 'success'));
 	}
@@ -449,8 +451,7 @@ class Form extends CI_Controller
 	function getAcknowledgeData() {
 		$userType = $this->session->userdata('userTypeMyApps');
 		$userDiv = trim($this->input->get('divisi')); 
-    	$userDept = trim($this->input->get('department')); // gunakan department dari dropdown
-
+    	$userDept = trim($this->input->get('department')); 
 
 		$where = "WHERE st_submit = 'Y' 
 				AND st_acknowledge = 'N' 
@@ -516,6 +517,136 @@ class Form extends CI_Controller
 		} else {
 			echo json_encode(array('data' => array()));
 		}
+	}
+
+	function sendRemindByEmail($IdForm = "")
+	{
+		$mail = "";
+		$subject = "";
+		$isiEmail = "";	
+	
+		$sql = "SELECT id, project_reference, purpose, request_name FROM form WHERE sts_delete = '0' AND id = '".$IdForm."'";	
+		$rsl = $this->myapp->getDataQueryDB6($sql);
+
+		if(count($rsl) > 0)
+		{	
+			$mail = "muhamad.fikri@andhika.com";
+			$subject = "Waitting Acknowledge and Approve Form IT Request From ".$rsl[0]->request_name;
+			$isiEmail = $this->getContentSendMail($IdForm,$rsl[0]->request_name);
+			
+			mail($mail, $subject, $isiEmail, $this->headers());
+		}
+	}	
+		
+	function headers()
+	{
+		$headers = "";
+		$headers .= "MIME-Version: 1.0\n";
+		$headers .= "Content-type: text/html; charset=iso-8859-1\n";
+		$headers .= "X-Priority: 3\n";
+		$headers .= "X-MSMail-Priority: Normal\n";
+		$headers .= "X-Mailer: php\n";
+		$headers .= "From: noreply@andhika.com\n";
+		
+		
+		return $headers;
+	}
+
+	function getContentSendMail($IdForm = '', $reqName = '')
+	{
+		$data = $this->getisiContent($IdForm);
+		
+		$isiMessage = "";
+
+		$isiMessage .= "<p>";
+			$isiMessage .= "*************************************************<br>";
+			$isiMessage .= "PLEASE DO NOT REPLY THIS EMAIL..!!<br>";
+			$isiMessage .= "*************************************************<br>";
+		$isiMessage .= "</p>";
+
+		$isiMessage .= "<b>&nbsp;***** ".$reqName." Send Form IT Request. Please Acknowledge and Approve it. *****</b>";
+
+		$isiMessage.= "<table width=\"800px\" border=\"1\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-top:30px;\">";
+			$isiMessage.= $data["tr"];
+		$isiMessage.= "</table>";
+
+		$isiMessage.= "<p style=\"margin-top:20px;\"><b><i>:::</i> Detail Form <i>:::</i></b></p>";
+
+		$isiMessage.= "<table width=\"800px\" border=\"1\" cellpadding=\"0\" cellspacing=\"0\">";
+			$isiMessage.= "<tr>";
+				$isiMessage.= "<td align=\"center\">Description</td>";
+				$isiMessage.= "<td align=\"center\">Type</td>";
+				$isiMessage.= "<td align=\"center\">Quantity</td>";
+				$isiMessage.= "<td align=\"center\">Reason</td>";
+				$isiMessage.= "<td align=\"center\">Note</td>";
+			$isiMessage.= "</tr>";
+			$isiMessage.= $data["trDet"];
+		$isiMessage.= "</table>";
+
+		$isiMessage .= "<p>To respon this Request, please check <a href=\"http://myapps.andhika.com/observasi/myapps\" target=\"_blank\">www.myapps.andhika.com</a></p>";
+
+		$isiMessage .= "<p>";
+			$isiMessage .= "*************************************************<br>";
+			$isiMessage .= "END OF NOTIFICATION<br>";
+			$isiMessage .= "*************************************************<br>";
+		$isiMessage .= "</p>";
+
+		return $isiMessage;
+	}
+
+	function getisiContent($IdForm = '')
+	{
+		$dataOut = array();
+		$tr = '';
+		$trDet = '';
+
+		$sql = "SELECT * FROM form WHERE id = '".$IdForm."' AND sts_delete = '0'";
+		$rsl = $this->myapp->getDataQueryDB6($sql);
+
+		foreach ($rsl as $key => $value)
+		{
+			$tr .= "<tr>";
+				$tr .= "<td style=\"vertical-align:top;width:15%;\">Project Referencel</td>";
+				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->project_reference."</td>";
+				$tr .= "<td style=\"vertical-align:top;width:15%;\">Purpose</td>";
+				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->purpose."</td>";
+				$tr .= "<td style=\"vertical-align:top;width:15%;\">Company</td>";
+				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->company."</td>";
+				$tr .= "<td style=\"vertical-align:top;width:15%;\">Location</td>";
+				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->location."</td>";
+				$tr .= "<td style=\"vertical-align:top;width:15%;\">Divisi</td>";
+				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->divisi."</td>";
+				$tr .= "<td style=\"vertical-align:top;width:15%;\">Department</td>";
+				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->department."</td>";
+				$tr .= "<td style=\"vertical-align:top;width:15%;\">Required Date</td>";
+				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$this->convertReturnName($value->required_date)."</td>";
+			$tr .= "</tr>";
+			$tr .= "<tr>";
+				$tr .= "<td style=\"vertical-align: top;width:15%;\">Request Name</td>";
+				$tr .= "<td style=\"vertical-align: top;width:35%;color:#000080;\"> ".$value->request_name."</td>";
+				$tr .= "<td style=\"vertical-align: top;width:15%;\">Date Request</td>";
+				$tr .= "<td style=\"vertical-align: top;width:35%;color:#000080;\"> ".$value->date_submit."</td>";
+			$tr .= "</tr>";
+		}
+
+		$sqlDet = "SELECT * FROM form_detail WHERE id_form = '".$IdForm."' AND sts_delete = '0'";
+		$rslDet = $this->myapp->getDataQueryDB6($sqlDet);
+
+		foreach($rslDet as $key => $value)
+		{
+			$trDet .= "<tr>";
+				$trDet .= "<td align=\"center\" style=\"vertical-align:top;width:15%;color:#000080;font-size:12px;\">".$value->description."</td>";
+				$trDet .= "<td style=\"vertical-align:top;width:30%;color:#000080;font-size:12px;\">".$value->type."</td>";
+				$trDet .= "<td align=\"center\" style=\"vertical-align:top;width:9%;color:#000080;font-size:12px;\">".$value->quantity."</td>";
+				$trDet .= "<td align=\"center\" style=\"vertical-align:top;width:10%;color:#000080;font-size:12px;\">".$value->reason."</td>";
+				$trDet .= "<td align=\"center\" style=\"vertical-align:top;width:12%;color:#000080;font-size:12px;\">".$value->note."</td>";
+			$trDet .= "</tr>";
+		}
+		
+		$dataOut['tr'] = $tr;
+		$dataOut['trDet'] = $trDet;
+
+		return $dataOut;
 	}
 
 	function getApprovalData() {
@@ -648,7 +779,7 @@ class Form extends CI_Controller
 		
 		return $outNo;
 	}
-
+ 
 	function addDataMyAppLetter($IdForm = "")
 	{
 		$dateNow = date("Y-m-d");
@@ -867,7 +998,7 @@ class Form extends CI_Controller
 			if ($typeView == 'request' && $form[0]->st_submit == 'Y' && $form[0]->st_acknowledge == 'Y' && $form[0]->st_approval == 'Y')
 			{
 				$button .= "<button onclick=\"downloadPdf({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnDownload_{$form[0]->id}\" type=\"button\" title=\"Download\"><i class=\"fa fa-download\"></i> Download</button>";
-			}
+			}	 	
 
 			$data['button'] = $button;
 
@@ -1144,6 +1275,28 @@ class Form extends CI_Controller
 		}
 
 		return $optNya;
+	}
+
+	function convertReturnName($dateNya = "")
+	{
+		$dt = explode("-", $dateNya);
+		$tgl = $dt[2];
+		$bln = $dt[1];
+		$thn = $dt[0];
+		if($bln == "01" || $bln == "1"){ $bln = "Jan"; }
+		else if($bln == "02" || $bln == "2"){ $bln = "Feb"; }
+		else if($bln == "03" || $bln == "3"){ $bln = "Mar"; }
+		else if($bln == "04" || $bln == "4"){ $bln = "Apr"; }
+		else if($bln == "05" || $bln == "5"){ $bln = "Mei"; }
+		else if($bln == "06" || $bln == "6"){ $bln = "Jun"; }
+		else if($bln == "07" || $bln == "7"){ $bln = "Jul"; }
+		else if($bln == "08" || $bln == "8"){ $bln = "Agus"; }
+		else if($bln == "09" || $bln == "9"){ $bln = "Sep"; }
+		else if($bln == "10"){ $bln = "Okt"; }
+		else if($bln == "11"){ $bln = "Nov"; }
+		else if($bln == "12"){ $bln = "Des"; }
+
+		return $tgl." ".$bln." ".$thn;
 	}
 
 } 
