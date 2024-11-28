@@ -1,4 +1,7 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowe	d');
+<?php 
+if ( ! defined('BASEPATH')) exit('No direct script access allowe	d');
+require_once APPPATH . 'third_party/PHPMailer/class.phpmailer.php';
+require_once APPPATH . 'third_party/PHPMailer/class.smtp.php';	
 
 class Form extends CI_Controller
 {
@@ -6,7 +9,7 @@ class Form extends CI_Controller
 	{
 		parent::__construct();
     	$this->load->model('myapp'); 
-		$this->load->helper(array('form'	, 'url'));
+		$this->load->helper(array('form', 'url'));
 	}
  
 	function getDataForm($searchNya = "", $pageNya = "") { 
@@ -20,8 +23,7 @@ class Form extends CI_Controller
 		$userDiv = trim($this->session->userdata('nmDiv')); 
 		$userDept = trim($this->session->userdata('nmDept')); 
 		$userId = $this->session->userdata('userIdMyApps');
-		$userFullName = $this->session->userdata('fullNameMyApps');	
-
+		$userFullName = $this->session->userdata('fullNameMyApps');			
 		$where = "WHERE sts_delete = '0' ";
 
 		if ($userType == 'admin') {
@@ -368,11 +370,12 @@ class Form extends CI_Controller
 		echo json_encode($stData);
 	}
 	
- 	function updateSubmitStatus() {
-		$IdForm = $this->input->post('id'); 
+ 	function updateSubmitStatus()
+	{
+		$IdForm = $this->input->post('id');
 		$userid_submit = $this->session->userdata('userIdMyApps');
 		$date_submit = date('Y-m-d');
-		
+
 		$data = array(
 			'st_submit' => 'Y',
 			'userid_submit' => $userid_submit,
@@ -382,13 +385,13 @@ class Form extends CI_Controller
 		$this->myapp->updateDataDb6('form', $data, array('id' => $IdForm));
 
 		$this->addDataMyAppLetter($IdForm);
-		
-		$this->sendRemindByEmail($IdForm);
 
-		echo json_encode(array('status' => 'success'));
+		$emailResult = $this->sendRemindByEmail($IdForm);
+
+		echo json_encode(array_merge(array('status' => 'success'), $emailResult));
 	}
 
-	
+
 	function acknowledgeData() {
 		$id_form = $this->input->post('id');
 		$userid_submit = $this->session->userdata('userIdMyApps');
@@ -521,36 +524,59 @@ class Form extends CI_Controller
 
 	function sendRemindByEmail($IdForm = "")
 	{
-		$mail = "";
+		$mail = new PHPMailer();
 		$subject = "";
-		$isiEmail = "";	
-	
-		$sql = "SELECT id, project_reference, purpose, request_name FROM form WHERE sts_delete = '0' AND id = '".$IdForm."'";	
+		$isiEmail = "";
+
+		$recipients = array(
+			"muhamad.fikri@andhika.com", 
+			"ahmad.maulana@andhika.com"
+		);
+
+		$sql = "SELECT id, project_reference, purpose, request_name 
+				FROM form 
+				WHERE sts_delete = '0' AND id = '" . $IdForm . "'";
 		$rsl = $this->myapp->getDataQueryDB6($sql);
 
-		if(count($rsl) > 0)
-		{	
-			$mail = "muhamad.fikri@andhika.com";
-			$subject = "Waitting Acknowledge and Approve Form IT Request From ".$rsl[0]->request_name;
-			$isiEmail = $this->getContentSendMail($IdForm,$rsl[0]->request_name);
-			
-			mail($mail, $subject, $isiEmail, $this->headers());
+		if (count($rsl) > 0) {
+			$subject = "Waiting Acknowledge and Approve Form IT Request From " . $rsl[0]->request_name;
+			$isiEmail = $this->getContentSendMail($IdForm, $rsl[0]->request_name);
+
+			try {
+				// Konfigurasi SMTP
+				$mail->isSMTP();
+				$mail->Host = 'smtp.zoho.com';
+				$mail->SMTPAuth = true;
+				$mail->Username = 'noreply@andhika.com';
+				$mail->Password = 'PCWLzCWDQH8C';
+				$mail->SMTPSecure = 'tls';
+				$mail->Port = 587;
+
+				$mail->setFrom('noreply@andhika.com', 'IT Request Notification');
+
+				// Tambahkan penerima
+				foreach ($recipients as $email) {
+					$mail->addAddress($email);
+				}
+
+				$mail->isHTML(true);
+				$mail->Subject = $subject;
+				$mail->Body = $isiEmail;
+
+				// Kirim email
+				if ($mail->send()) {
+					return array('status' => 'success', 'message' => 'The Data has been sent to Acknowledge.');
+				} else {
+					return array('status' => 'failed', 'message' => $mail->ErrorInfo);
+				}
+			} catch (Exception $e) {
+				return array('status' => 'failed', 'message' => $mail->ErrorInfo);
+			}
 		}
-	}	
-		
-	function headers()
-	{
-		$headers = "";
-		$headers .= "MIME-Version: 1.0\n";
-		$headers .= "Content-type: text/html; charset=iso-8859-1\n";
-		$headers .= "X-Priority: 3\n";
-		$headers .= "X-MSMail-Priority: Normal\n";
-		$headers .= "X-Mailer: php\n";
-		$headers .= "From: noreply@andhika.com\n";
-		
-		
-		return $headers;
+
+		return array('status' => 'failed', 'message' => 'No data found.');
 	}
+
 
 	function getContentSendMail($IdForm = '', $reqName = '')
 	{
@@ -566,22 +592,27 @@ class Form extends CI_Controller
 
 		$isiMessage .= "<b>&nbsp;***** ".$reqName." Send Form IT Request. Please Acknowledge and Approve it. *****</b>";
 
-		$isiMessage.= "<table width=\"800px\" border=\"1\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-top:30px;\">";
-			$isiMessage.= $data["tr"];
-		$isiMessage.= "</table>";
+		$isiMessage .= "<table width=\"800px\" border=\"1\" cellpadding=\"10\" cellspacing=\"0\" style=\"margin-top:30px; border-collapse:collapse; font-family: Arial, sans-serif; color: #333; border: 1px solid #ddd;\">";
+			$isiMessage .= $data["tr"];
+		$isiMessage .= "</table>";
 
-		$isiMessage.= "<p style=\"margin-top:20px;\"><b><i>:::</i> Detail Form <i>:::</i></b></p>";
+		$isiMessage .= "<p style=\"margin-top:20px; font-size:16px; font-weight:bold; text-align:center; color:#0056b3;\"><i>:::</i> Detail Form <i>:::</i></p>";
 
-		$isiMessage.= "<table width=\"800px\" border=\"1\" cellpadding=\"0\" cellspacing=\"0\">";
-			$isiMessage.= "<tr>";
-				$isiMessage.= "<td align=\"center\">Description</td>";
-				$isiMessage.= "<td align=\"center\">Type</td>";
-				$isiMessage.= "<td align=\"center\">Quantity</td>";
-				$isiMessage.= "<td align=\"center\">Reason</td>";
-				$isiMessage.= "<td align=\"center\">Note</td>";
-			$isiMessage.= "</tr>";
-			$isiMessage.= $data["trDet"];
-		$isiMessage.= "</table>";
+		$isiMessage .= "<table width=\"800px\" border=\"1\" cellpadding=\"10\" cellspacing=\"0\" style=\"border-collapse:collapse; font-family: Arial, sans-serif; color: #333; border: 1px solid #ddd;\">";
+		$isiMessage .= "<thead>";
+		$isiMessage .= "<tr style=\"background-color:#f1f1f1; color:#333; font-weight:bold; text-align:center;\">";
+		$isiMessage .= "<th style=\"padding:8px; border: 1px solid #ddd;\">Description</th>";
+		$isiMessage .= "<th style=\"padding:8px; border: 1px solid #ddd;\">Type</th>";
+		$isiMessage .= "<th style=\"padding:8px; border: 1px solid #ddd;\">Quantity</th>";
+		$isiMessage .= "<th style=\"padding:8px; border: 1px solid #ddd;\">Reason</th>";
+		$isiMessage .= "<th style=\"padding:8px; border: 1px solid #ddd;\">Note</th>";
+		$isiMessage .= "</tr>";
+		$isiMessage .= "</thead>";
+		$isiMessage .= "<tbody>";
+		$isiMessage .= $data["trDet"];
+		$isiMessage .= "</tbody>";
+		$isiMessage .= "</table>";
+
 
 		$isiMessage .= "<p>To respon this Request, please check <a href=\"http://myapps.andhika.com/observasi/myapps\" target=\"_blank\">www.myapps.andhika.com</a></p>";
 
@@ -606,27 +637,34 @@ class Form extends CI_Controller
 		foreach ($rsl as $key => $value)
 		{
 			$tr .= "<tr>";
-				$tr .= "<td style=\"vertical-align:top;width:15%;\">Project Referencel</td>";
-				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->project_reference."</td>";
-				$tr .= "<td style=\"vertical-align:top;width:15%;\">Purpose</td>";
-				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->purpose."</td>";
-				$tr .= "<td style=\"vertical-align:top;width:15%;\">Company</td>";
-				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->company."</td>";
-				$tr .= "<td style=\"vertical-align:top;width:15%;\">Location</td>";
-				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->location."</td>";
-				$tr .= "<td style=\"vertical-align:top;width:15%;\">Divisi</td>";
-				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->divisi."</td>";
-				$tr .= "<td style=\"vertical-align:top;width:15%;\">Department</td>";
-				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$value->department."</td>";
-				$tr .= "<td style=\"vertical-align:top;width:15%;\">Required Date</td>";
-				$tr .= "<td style=\"vertical-align:top;width:35%;color:#000080;\"> ".$this->convertReturnName($value->required_date)."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Project Reference</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->project_reference."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Purpose</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->purpose."</td>";
+				$tr .= "</tr>";
+				$tr .= "<tr>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Company</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->company."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Location</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->location."</td>";
+				$tr .= "</tr>";
+				$tr .= "<tr>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Divisi</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->divisi."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Department</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->department."</td>";
+				$tr .= "</tr>";
+				$tr .= "<tr>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Required Date</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$this->convertReturnName($value->required_date)."</td>";
+				$tr .= "</tr>";
+				$tr .= "<tr>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Request Name</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->request_name."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Date Request</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->date_submit."</td>";
 			$tr .= "</tr>";
-			$tr .= "<tr>";
-				$tr .= "<td style=\"vertical-align: top;width:15%;\">Request Name</td>";
-				$tr .= "<td style=\"vertical-align: top;width:35%;color:#000080;\"> ".$value->request_name."</td>";
-				$tr .= "<td style=\"vertical-align: top;width:15%;\">Date Request</td>";
-				$tr .= "<td style=\"vertical-align: top;width:35%;color:#000080;\"> ".$value->date_submit."</td>";
-			$tr .= "</tr>";
+
 		}
 
 		$sqlDet = "SELECT * FROM form_detail WHERE id_form = '".$IdForm."' AND sts_delete = '0'";
@@ -634,13 +672,14 @@ class Form extends CI_Controller
 
 		foreach($rslDet as $key => $value)
 		{
-			$trDet .= "<tr>";
-				$trDet .= "<td align=\"center\" style=\"vertical-align:top;width:15%;color:#000080;font-size:12px;\">".$value->description."</td>";
-				$trDet .= "<td style=\"vertical-align:top;width:30%;color:#000080;font-size:12px;\">".$value->type."</td>";
-				$trDet .= "<td align=\"center\" style=\"vertical-align:top;width:9%;color:#000080;font-size:12px;\">".$value->quantity."</td>";
-				$trDet .= "<td align=\"center\" style=\"vertical-align:top;width:10%;color:#000080;font-size:12px;\">".$value->reason."</td>";
-				$trDet .= "<td align=\"center\" style=\"vertical-align:top;width:12%;color:#000080;font-size:12px;\">".$value->note."</td>";
+			$trDet .= "<tr>";	
+				$trDet .= "<td align=\"center\" style=\"vertical-align:top; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080; font-size:12px;\">".$value->description."</td>";
+				$trDet .= "<td align=\"center\" style=\"vertical-align:top; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080; font-size:12px;\">".$value->type."</td>";
+				$trDet .= "<td align=\"center\" style=\"vertical-align:top; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080; font-size:12px;\">".$value->quantity."</td>";
+				$trDet .= "<td align=\"center\" style=\"vertical-align:top; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080; font-size:12px;\">".$value->reason."</td>";
+				$trDet .= "<td align=\"center\" style=\"vertical-align:top; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080; font-size:12px;\">".$value->note."</td>";
 			$trDet .= "</tr>";
+
 		}
 		
 		$dataOut['tr'] = $tr;
@@ -922,7 +961,6 @@ class Form extends CI_Controller
 		$button = "";
 		$logo_company = "/assets/img";
 		$form_details = array();
-		
 
 		$queryForm = "SELECT * FROM `form` WHERE `id` = $id AND `sts_delete` = 0";
 		$form = $this->myapp->getDataQueryDB6($queryForm);
@@ -965,15 +1003,12 @@ class Form extends CI_Controller
 				'nameKadiv' => isset($form[0]->name_approve) ? $form[0]->name_approve : 'Not approved',
 				'button' => $button
 			);	
-	
 			if ($form[0]->st_acknowledge == 'Y') {
-				$data['qrCodeAcknowledge'] = "<img src=\"" . base_url("assets/imgQRCodeForm/" . $this->createQRCode($form[0]->id, 'ack')) . "\" alt=\"QR Code Acknowledge\" height=\"100\" width=\"100\" />";
+				$data['qrCodeAcknowledge'] = "<img src=\"" . base_url("assets/imgQRCodeForm/".$this->createQRCode($form[0]->id, 'ack'))."\" alt=\"QR Code Acknowledge\" height=\"100\" width=\"100\" />";
 			}
-
 			if ($form[0]->st_approval == 'Y') {
-				$data['qrCodeApprove'] = "<img src=\"" . base_url("assets/imgQRCodeForm/" . $this->createQRCode($form[0]->id, 'app')) . "\" alt=\"QR Code Approval\" height=\"100\" width=\"100\" />";
+				$data['qrCodeApprove'] = "<img src=\"" . base_url("assets/imgQRCodeForm/".$this->createQRCode($form[0]->id, 'app'))."\" alt=\"QR Code Approval\" height=\"100\" width=\"100\" />";
 			}
-				
 			if ($typeView == 'request' && $form[0]->st_submit == 'N' && $form[0]->st_acknowledge == 'N' && $form[0]->st_approval == 'N') {
 				$button .= "<button onclick=\"sendData({$form[0]->id});\" class=\"btn btn-primary btn-xs\" id=\"btnSubmit_{$form[0]->id}\" type=\"button\" title=\"Submit\"><i class=\"fa fa-send-o\"></i> Send</button>";
 			}
@@ -1032,7 +1067,6 @@ class Form extends CI_Controller
 							</button>
 						</div>';
 		} else if (count($result) > 0) {
-			// Jika user bukan admin, cek berdasarkan nmDiv dan nmDept
 			if ($result[0]->nmDiv != "") {
 				$buttonApp = '<div class="col-md-4">
 								<button class="btn btn-primary btn-block" onclick="changeBtnNavigation(\'approval\');">

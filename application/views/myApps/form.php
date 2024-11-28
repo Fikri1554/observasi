@@ -524,11 +524,11 @@
             success: function(response) {
                 var res = JSON.parse(response);
                 if (res.status === 'success') {
-                    alert("The data has been sent to Acknowledge 🕒");
+                    alert(res.message);
                     $("#ictRequestModal").modal('hide');
                     $("#idTbody").load("<?php echo base_url('form/getDataForm'); ?> #idTbody > *");
                 } else if (res.status === 'failed') {
-                    alert(res.message);
+                    alert("Error: " + res.message);
                 }
             },
             error: function(xhr, status, error) {
@@ -536,6 +536,8 @@
             }
         });
     }
+
+
 
     function acknowledgeData(idForm) {
         $.ajax({
