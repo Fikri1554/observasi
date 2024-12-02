@@ -1268,7 +1268,7 @@ class Form extends CI_Controller
 				AND deletests = '0' 
 				ORDER BY FIELD(kdcmp, '02', '01', '21', '63', '09', '67') 
 				LIMIT 6";
-		
+			
 		$rsl = $this->myapp->getDataQueryDB6($sql);
 
 		foreach ($rsl as $key => $value)
@@ -1285,7 +1285,7 @@ class Form extends CI_Controller
 		$sql = "SELECT userid, userfullnm, useremail FROM login WHERE userid IN ('00121', '00027', '00130', '00162', 
 				'00092', '00118', '00178', '00002', '00128', '00172', '00030', '00151', '00012', '00107') 
 				AND deletests = 0";
-
+	
 		$result = $this->myapp->getDataQueryDb2($sql);
 
 		foreach ($result as $val) {
