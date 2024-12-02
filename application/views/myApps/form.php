@@ -169,7 +169,7 @@
     });
 
     function editData(id) {
-        $("#idLoading").show();
+        $("#idLoading").show();;
 
         $.ajax({
             url: '<?php echo base_url('form/getEditForm'); ?>',
@@ -180,27 +180,28 @@
             },
             dataType: 'json',
             success: function(response) {
+
                 $("#idLoading").hide();
                 $('#idFormEditModal').modal('show');
 
                 if (response.status === 'success') {
+
                     const formData = response.formData[0];
                     console.log(formData);
 
-                    $("#txtprojectReferenceEdit").val(formData.project_reference || "");
-                    $("#txtpurposeEdit").val(formData.purpose || "");
-                    $("#txtlocationEdit").val(formData.location || "");
-                    $("#slcCompanyEdit").val(formData.company || "").trigger('change');
-                    $("#slcDivisiEdit").val(formData.divisi || "").trigger('change');
+                    $("#txtprojectReferenceEdit").val(formData.project_reference);
+                    $("#txtpurposeEdit").val(formData.purpose);
+                    $("#txtlocationEdit").val(formData.location);
+                    $("#slcCompanyEdit").val(formData.company);
+                    $("#slcDivisiEdit").val(formData.divisi);
 
-                    // Tunggu event "change" selesai, lalu isi department
                     setTimeout(() => {
-                        $("#slcDepartmentEdit").val(formData.department || "").trigger('change');
+                        $("#slcDepartmentEdit").val(formData.department);
                     }, 100);
 
-                    $("#slcAcknowledgeEdit").val(formData.name_acknowledge || "").trigger('change');
-                    $("#slcApproveEdit").val(formData.name_approve || "").trigger('change');
-                    $("#txtRequiredDateEdit").val(formData.required_date || "");
+                    $("#slcAcknowledgeEdit").val(formData.userid_acknowledge);
+                    $("#slcApproveEdit").val(formData.userid_approve);
+                    $("#txtRequiredDateEdit").val(formData.required_date);
 
                     $('#slcDivisiEdit').trigger('change');
 
@@ -233,7 +234,6 @@
                             row.hide();
                             row.data("isDeleted", true);
                         });
-
 
                     updateRemoveButtons();
                 } else {
@@ -515,11 +515,21 @@
     }
 
     function sendData(idForm) {
+        var acknowledgeEmail = $("#slcAcknowledge option:selected").data("email");
+        var approveEmail = $("#slcApprove option:selected").data("email");
+
+        if (!acknowledgeEmail || !approveEmail) {
+            alert("Please select both Acknowledge and Approve users.");
+            return;
+        }
+
         $.ajax({
             url: "<?php echo base_url('form/updateSubmitStatus'); ?>",
             type: "POST",
             data: {
-                id: idForm
+                id: idForm,
+                acknowledgeEmail: acknowledgeEmail,
+                approveEmail: approveEmail
             },
             success: function(response) {
                 var res = JSON.parse(response);
@@ -536,8 +546,6 @@
             }
         });
     }
-
-
 
     function acknowledgeData(idForm) {
         $.ajax({
@@ -1197,7 +1205,7 @@
                                                     <div class="form-group">
                                                         <label for="slcCompany"><b><u>Company:</u></b></label>
                                                         <select id="slcCompanyEdit" class="form-control input-sm">
-                                                            <?php echo $getOptCompany; ?> -->
+                                                            <?php echo $getOptCompany; ?>
                                                         </select>
                                                     </div>
                                                 </div>

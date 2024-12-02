@@ -373,8 +373,15 @@ class Form extends CI_Controller
  	function updateSubmitStatus()
 	{
 		$IdForm = $this->input->post('id');
+		$acknowledgeEmail = $this->input->post('acknowledgeEmail');
+		$approveEmail = $this->input->post('approveEmail');
 		$userid_submit = $this->session->userdata('userIdMyApps');
 		$date_submit = date('Y-m-d');
+
+		if (empty($acknowledgeEmail) || empty($approveEmail)) {
+			echo json_encode(array('status' => 'failed', 'message' => 'Acknowledge and Approve emails must be selected.'));
+			return;
+		}
 
 		$data = array(
 			'st_submit' => 'Y',
@@ -383,14 +390,12 @@ class Form extends CI_Controller
 		);
 
 		$this->myapp->updateDataDb6('form', $data, array('id' => $IdForm));
-
 		$this->addDataMyAppLetter($IdForm);
 
-		$emailResult = $this->sendRemindByEmail($IdForm);
+		$emailResult = $this->sendRemindByEmail($IdForm, $acknowledgeEmail, $approveEmail);
 
 		echo json_encode(array_merge(array('status' => 'success'), $emailResult));
 	}
-
 
 	function acknowledgeData() {
 		$id_form = $this->input->post('id');
@@ -522,16 +527,11 @@ class Form extends CI_Controller
 		}
 	}
 
-	function sendRemindByEmail($IdForm = "")
+	function sendRemindByEmail($IdForm = "", $acknowledgeEmail = "", $approveEmail = "")
 	{
-		$mail = new PHPMailer();
+		$mail = new PHPMailer(true);
 		$subject = "";
 		$isiEmail = "";
-
-		$recipients = array(
-			"muhamad.fikri@andhika.com", 
-			"ahmad.maulana@andhika.com"
-		);
 
 		$sql = "SELECT id, project_reference, purpose, request_name 
 				FROM form 
@@ -542,8 +542,10 @@ class Form extends CI_Controller
 			$subject = "Waiting Acknowledge and Approve Form IT Request From " . $rsl[0]->request_name;
 			$isiEmail = $this->getContentSendMail($IdForm, $rsl[0]->request_name);
 
+			$recipients = array($acknowledgeEmail, $approveEmail);
+
 			try {
-				// Konfigurasi SMTP
+				
 				$mail->isSMTP();
 				$mail->Host = 'smtp.zoho.com';
 				$mail->SMTPAuth = true;
@@ -554,7 +556,7 @@ class Form extends CI_Controller
 
 				$mail->setFrom('noreply@andhika.com', 'IT Request Notification');
 
-				// Tambahkan penerima
+			
 				foreach ($recipients as $email) {
 					$mail->addAddress($email);
 				}
@@ -563,18 +565,17 @@ class Form extends CI_Controller
 				$mail->Subject = $subject;
 				$mail->Body = $isiEmail;
 
-				// Kirim email
 				if ($mail->send()) {
-					return array('status' => 'success', 'message' => 'The Data has been sent to Acknowledge.');
+					return array('status' => 'success', 'message' => 'Data has been sent to Acknowledge.');
 				} else {
 					return array('status' => 'failed', 'message' => $mail->ErrorInfo);
 				}
 			} catch (Exception $e) {
-				return array('status' => 'failed', 'message' => $mail->ErrorInfo);
+				return array('status' => 'failed', 'message' => $e->getMessage());
 			}
 		}
 
-		return array('status' => 'failed', 'message' => 'No data found.');
+		return array('status' => 'failed', 'message' => 'No data found for the provided form ID.');
 	}
 
 
@@ -614,7 +615,7 @@ class Form extends CI_Controller
 		$isiMessage .= "</table>";
 
 
-		$isiMessage .= "<p>To respon this Request, please check <a href=\"http://myapps.andhika.com/observasi/myapps\" target=\"_blank\">www.myapps.andhika.com</a></p>";
+		$isiMessage .= "<p>To respon this Request, please check <a href=\"http://myapps.andhika.com/observasi/myapps\" target=\"_blank\">www.myapps.andhika.com</a>. For kadept check in Acknowledge Menu, and for kadiv check in Approve menu.</p>";
 
 		$isiMessage .= "<p>";
 			$isiMessage .= "*************************************************<br>";
@@ -1281,14 +1282,15 @@ class Form extends CI_Controller
 	{
 		$optNya = "<option value=\"\">- Select -</option>";
 
-		$sql = "SELECT userid, userfullnm FROM login WHERE userid IN ('00121', '00027', '00130', '00162', 
+		$sql = "SELECT userid, userfullnm, useremail FROM login WHERE userid IN ('00121', '00027', '00130', '00162', 
 				'00092', '00118', '00178', '00002', '00128', '00172', '00030', '00151', '00012', '00107') 
 				AND deletests = 0";
 
 		$result = $this->myapp->getDataQueryDb2($sql);
 
 		foreach ($result as $val) {
-			$optNya .= "<option value=\"{$val->userfullnm}\">{$val->userfullnm}</option>";
+			$emailWithDomain = "{$val->useremail}@andhika.com";
+			$optNya .= "<option value=\"{$val->userid}\" data-email=\"{$emailWithDomain}\">{$val->userfullnm}</option>";
 		}
 
 		return $optNya;
@@ -1298,14 +1300,15 @@ class Form extends CI_Controller
 	{
 		$optNya = "<option value=\"\">- Select -</option>";
 
-		$sql = "SELECT userid, userfullnm FROM login WHERE userid IN ('00054', '00061', '00116', '00166', 
+		$sql = "SELECT userid, userfullnm, useremail FROM login WHERE userid IN ('00054', '00061', '00116', '00166', 
 				'00053', '00032') 
 				AND deletests = 0";
 
 		$result = $this->myapp->getDataQueryDb2($sql);
 
 		foreach ($result as $val) {
-			$optNya .= "<option value=\"{$val->userfullnm}\">{$val->userfullnm}</option>";
+			$emailWithDomain = "{$val->useremail}@andhika.com";
+			$optNya .= "<option value=\"{$val->userid}\" data-email=\"{$emailWithDomain}\">{$val->userfullnm}</option>";
 		}
 
 		return $optNya;
