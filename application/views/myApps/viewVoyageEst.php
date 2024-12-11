@@ -2,20 +2,26 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+	<link href="<?php echo base_url('assets/css/datetimepicker.css'); ?>" rel="stylesheet"/>
+	<script src="<?php echo base_url('assets/js/datetimepicker.js');?>"></script>
 	<script type="text/javascript">
 		$(document).ready(function(){
-			$( "[id^=txtDate]" ).datepicker({
-				dateFormat: 'yy-mm-dd',
+		    $("#txtDate_prepared").datetimepicker({
+		        dateFormat: 'yy-mm-dd',
+		        timeFormat: 'hh:mm',
 		        showButtonPanel: true,
 		        changeMonth: true,
 		        changeYear: true,
-		        defaultDate: new Date(),
+		        defaultDate: new Date()
 		    });
 			$("#idBtnAdd").click(function(){
 				$("#idDataTable").hide();
 				$("#idForm").show(255);
 			});
 			$("#idBtnAddFormVoyEst").click(function(){
+				$("#idBodyFreightForm").empty();
+				$("#txtRowData").val('0');
+				addRowData();
 				$("#idDataTable").hide();
 				$("#idForm").hide();
 				$("#idDataTableFreight").hide();
@@ -37,6 +43,7 @@
 			var formData = new FormData();
 
 			formData.append('idEdit',$('#txtIdEditEstimate').val());
+			formData.append('slcTypeBunker',$('#slcTypeBunker').val());
 			formData.append('txtBunkerTitle',$('#txtBunkerTitle').val());
 			formData.append('txtDate_prepared',$('#txtDate_prepared').val());
 			formData.append('txtCargo',$('#txtCargo').val());
@@ -56,10 +63,16 @@
 			formData.append('txtActualTTDP',$('#txtActualTTDP').val());
 			formData.append('txtWaitingLP',$('#txtWaitingLP').val());
 			formData.append('txtWaitingDP',$('#txtWaitingDP').val());
-			formData.append('slcDemmurage',$('#slcDemmurage').val());
-			formData.append('txtDemmurage',$('#txtDemmurage').val());
-			formData.append('slcDespatch',$('#slcDespatch').val());
-			formData.append('txtDespatch',$('#txtDespatch').val());
+
+			formData.append('slcDemmurageLoad',$('#slcDemmurageLoad').val());
+			formData.append('txtDemmurageLoad',$('#txtDemmurageLoad').val());
+			formData.append('slcDespatchLoad',$('#slcDespatchLoad').val());
+			formData.append('txtDespatchLoad',$('#txtDespatchLoad').val());
+
+			formData.append('slcDemmurageDisch',$('#slcDemmurageDisch').val());
+			formData.append('txtDemmurageDisch',$('#txtDemmurageDisch').val());
+			formData.append('slcDespatchDisch',$('#slcDespatchDisch').val());
+			formData.append('txtDespatchDisch',$('#txtDespatchDisch').val());
 
 			formData.append('txtDistanceLaden',$('#txtDistanceLaden').val());
 			formData.append('txtDistanceBallast',$('#txtDistanceBallast').val());
@@ -138,6 +151,7 @@
 				function(data) 
 				{
 					$("#txtIdEditEstimate").val(data['data'][0].id);
+					$("#slcTypeBunker").val(data['data'][0].type_bunker);
 					$("#txtBunkerTitle").val(data['data'][0].title);
 					$('#txtDate_prepared').val(data['data'][0].date_prepared);
 					$('#txtCargo').val(data['data'][0].cargo);
@@ -155,10 +169,16 @@
 					$('#txtActualTTDP').val(data['data'][0].actual_tt_dp);
 					$('#txtWaitingLP').val(data['data'][0].waiting_lp);
 					$('#txtWaitingDP').val(data['data'][0].waiting_dp);
-					$('#slcDemmurage').val(data['data'][0].demmurage_curr);
-					$('#txtDemmurage').val(data['data'][0].demmurage);
-					$('#slcDespatch').val(data['data'][0].despatch_curr);
-					$('#txtDespatch').val(data['data'][0].despatch);
+
+					$('#slcDemmurageLoad').val(data['data'][0].demmurage_load_curr);
+					$('#txtDemmurageLoad').val(data['data'][0].demmurage_load);
+					$('#slcDespatchLoad').val(data['data'][0].despatch_load_curr);
+					$('#txtDespatchLoad').val(data['data'][0].despatch_load);
+					$('#slcDemmurageDisch').val(data['data'][0].demmurage_disch_curr);
+					$('#txtDemmurageDisch').val(data['data'][0].demmurage_disch);
+					$('#slcDespatchDisch').val(data['data'][0].despatch_disch_curr);
+					$('#txtDespatchDisch').val(data['data'][0].despatch_disch);
+
 					$('#txtDistanceLaden').val(data['data'][0].distance_laden);
 					$('#txtDistanceBallast').val(data['data'][0].distance_ballast);
 					$('#txtSeaSpeedLaden').val(data['data'][0].sea_speed_laden);
@@ -240,8 +260,13 @@
 					$('#lblModalActualTTatDP').text(parseFloat(data['data'][0].actual_tt_dp).toLocaleString()+" Day");
 					$('#lblModalWaitatLP').text(parseFloat(data['data'][0].waiting_lp).toLocaleString()+" Day");
 					$('#lblModalWaitatDP').text(parseFloat(data['data'][0].waiting_dp).toLocaleString()+" Day");
-					$('#lblModalDemmurage').text(data['data'][0].demmurage_curr+" "+parseFloat(data['data'][0].demmurage).toLocaleString());
-					$('#lblModalDespatch').text(data['data'][0].despatch_curr+" "+parseFloat(data['data'][0].despatch).toLocaleString());
+
+					$('#lblModalDemmurageLoad').text(data['data'][0].demmurage_load_curr+" "+parseFloat(data['data'][0].demmurage_load).toLocaleString());
+					$('#lblModalDespatchLoad').text(data['data'][0].despatch_load_curr+" "+parseFloat(data['data'][0].despatch_load).toLocaleString());
+
+					$('#lblModalDemmurageDisch').text(data['data'][0].demmurage_disch_curr+" "+parseFloat(data['data'][0].demmurage_disch).toLocaleString());
+					$('#lblModalDespatchDisch').text(data['data'][0].despatch_disch_curr+" "+parseFloat(data['data'][0].despatch_disch).toLocaleString());
+
 					$('#lblModalDistanceLaden').text(parseFloat(data['data'][0].distance_laden).toLocaleString()+" nm");
 					$('#lblModalDistanceBallast').text(parseFloat(data['data'][0].distance_ballast).toLocaleString()+" nm");
 					$('#lblModalSeaSpeedLaden').text(parseFloat(data['data'][0].sea_speed_laden).toLocaleString()+" Knots/Hr");
@@ -287,7 +312,13 @@
 					$('#lblModalOtherPMT').text(data['ttlOther']);
 					$('#lblModalTotalPMT').text(data['ttlCostPMT']);
 
+					$('#lblModalTotalOprCost').text(data['ttlOprCost']);
+					$('#lblModalTotalDemdes').text(data['ttlDemDes']);
+
 					$("#btnModalExportPDF").attr('onclick',"exportData('"+id+"','pdf')");
+
+					$("#idBodyModalDataTableFreight").empty();
+					$("#idBodyModalDataTableFreight").append(data['trNya']);
 
 					$("#idLoading").hide();
 					$('#idModalShowVoyEstNew').modal("show");
@@ -384,7 +415,7 @@
 			}
 
 			var freighBaseUSD = "";
-			var valFreighBaseUSD = $("td[id^='freightBaseConv_']").map(function(){return $(this).text();}).get();
+			var valFreighBaseUSD = $("input[id^='txtFreightUsd_']").map(function(){return $(this).val();}).get();
 			for (var l = 0; l < valFreighBaseUSD.length; l++)
 			{
 				if(valFreighBaseUSD[l] == "")
@@ -441,18 +472,31 @@
 		        }
 		 	});
 		}
-		function editDataReportVoyEstEdit(id)
+		function editDataReportVoyEstEdit(id,typeBunker)
 		{
 			$("#idLoading").show();
+
+			$("#idBodyFreightForm").empty();
+			$("#txtRowData").val('0');
+			addRowData();
 
 			$.post('<?php echo base_url("shipCommercial/getEdit"); ?>',
 			{ id : id, action : "editDataReportVoyEstEdit" },
 				function(data) 
 				{
-					$("#txtIdEditReportVoyage_1").val(data['data'][0].id);
-					$("#txtFreight_1").val(data['data'][0].freightbase_idr_ton);
-					hitungEstVoyReport('1');
+					$("#txtIdEditReportVoyage_1").val(data['data'][0].id);					
 
+					if(typeBunker == 'cqd')
+					{
+						$("#txtFreight_1").val(data['data'][0].freightbase_idr_ton);
+						hitungEstVoyReport('1');
+					}
+					else if(typeBunker == 'demdes')
+					{
+						$("#txtFreightUsd_1").val(data['data'][0].freightbase_usd_ton);
+						hitungEstVoyReportUsd('1');
+					}
+					
 					$("#idDataTable").hide();
 					$("#idForm").hide();
 					$("#idDataTableFreight").hide();
@@ -603,6 +647,7 @@
 					$("#txtTotalAddCommForm").val(data.totalAddComm);
 					$("#txtTotalActRVForm").val(data.totalActRV);
 					$("#txtTotalOptCost").val(data.totalOptCost);
+					$("#txtTotalOptCostAfterDemdes").val(data.totalOptCostAfterDemdes);
 
 					$("#idBodyDataTableFreight").empty();
 					$("#idBodyDataTableFreight").append(data.trNya);
@@ -610,11 +655,34 @@
 					$("#idBodyAnalisaVoy").empty();
 					$("#idBodyAnalisaVoy").append(data.trAnalisNya);
 
-					if(data.trNya == "")
+					if(data.stDataANalis == "new")
 					{
 						$("#idBtnAddFormVoyEst").attr('disabled',true);
 					}else{
 						$("#idBtnAddFormVoyEst").attr('disabled',false);
+					}
+
+					if(data.typeBunker == "cqd")
+					{
+						$("#lblFormTblFreight5").html('Bottom&nbspLines&nbsp/ Gross Profit');
+						$("#lblTblFreight6").html('Bottom&nbspLines&nbsp/ Gross Profit');
+						$("#lblFormTblFreight6").text('Add Comm / MDI');
+						$("#lblTblFreight7").html('Add Comm / MDI');
+						$("#lblCurrFormTblFreight5").text('IDR / Ton');
+						$("#lblCurrTblFreight6").text('IDR / Ton');
+						$("#lblCurrFormTblFreight6").text('IDR / Shipment');
+						$("#lblCurrTblFreight7").text('IDR / Shipment');
+					}
+					else if(data.typeBunker == "demdes")
+					{
+						$("#lblFormTblFreight5").text('Freight including 11% VAT');
+						$("#lblTblFreight6").text('Freight including 11% VAT');
+						$("#lblFormTblFreight6").text('Bottom Lines / Gross Profit');
+						$("#lblTblFreight7").html('Bottom&nbspLines&nbsp/ Gross Profit');
+						$("#lblCurrFormTblFreight5").text('USD / Ton');
+						$("#lblCurrTblFreight6").text('USD / Ton');
+						$("#lblCurrFormTblFreight6").text('IDR / Shipment');
+						$("#lblCurrTblFreight7").text('IDR / Shipment');
 					}
 
 					$("#idDataTable").hide();
@@ -796,9 +864,10 @@
 				if(val1 > 0 && val2 > 0)
 				{
 					total = (parseFloat(val1)/parseFloat(val2))+parseFloat(val3)+parseFloat(val4);
-					total = parseFloatNya(total,2);
+					// total = parseFloatNya(total,2);
+					total = total.toFixed(2);
 				}
-
+				
 				$("#txtActualLPDays").val(total);
 
 				if($("#txtActualDPDays").val() != "")
@@ -835,7 +904,8 @@
 				if(val1 > 0 && val2 > 0)
 				{
 					total = (parseFloat(val1)/parseFloat(val2))+parseFloat(val3)+parseFloat(val4);
-					total = parseFloatNya(total,2);
+					// total = parseFloatNya(total,2);
+					total = total.toFixed(2);
 				}
 
 				$("#txtActualDPDays").val(total);
@@ -880,6 +950,8 @@
 			grandTotal3 = (parseFloat(total2) + parseFloat(total3)).toFixed(2);
 
 			$("#txtActualRVDays").val(grandTotal3);
+
+			hitungNumberOfShipAndMaxCargo();
 		}
 		function getBunkerPrice(id)
 		{
@@ -909,6 +981,7 @@
 			var ttlRowTblAnalis = $("#totalRowTableAnalisVoyage").val();
 			var idEdit = $("#txtIdEditTblAnalisVoy").val();
 			var idEstVoy = $("#txtIdEstVoyage").val();
+			var typeData = $("#txtIdHiddenTypeBunker").val();
 			var nameNya = "";
 			var valNya = "";
 			var tempVar = "";
@@ -921,53 +994,107 @@
 			formData.append('idEdit',idEdit);
 			formData.append('idEstVoy',idEstVoy);
 
-			for (var lan = 1; lan < parseFloat(ttlRowTblAnalis); lan++)
+			if(typeData == "cqd")
 			{
-				nameNya = $('#analisName_'+lan).text();
-				valNya = $('#analisValue_'+lan).text();
-
-				if(lan >= 5 && lan <= 13)
+				for (var lan = 1; lan < parseFloat(ttlRowTblAnalis); lan++)
 				{
-					valNya = $('#txtTglHid_'+lan).val();
-				}
+					nameNya = $('#analisName_'+lan).text();
+					valNya = $('#analisValue_'+lan).text();
 
-				if(lan >= 47 && lan <= 48)
-				{
-					valNya = $('#txtFormInput_'+lan).val();
-				}
+					if(lan >= 5 && lan <= 13)
+					{
+						valNya = $('#txtTglHid_'+lan).val();
+					}
+					else if(lan >= 47 && lan <= 48)
+					{
+						valNya = $('#txtFormInput_'+lan).val();
+					}
+					else if(lan >= 58 && lan <= 59)
+					{
+						valNya = $('#txtFormInput_'+lan).val();
+					}
+					else if(lan == 60)
+					{
+						valNya = $('#lblInput_'+lan).text();
+					}
+					else if(lan >= 61 && lan <= 65)
+					{
+						valNya = $('#txtFormInput_'+lan).val();
+					}
+					else if(lan == 66)
+					{
+						valNya = $('#lblInput_'+lan).text();
+					}
 
-				if(lan >= 58 && lan <= 59)
-				{
-					valNya = $('#txtFormInput_'+lan).val();
-				}
+					if(nameNya == "")
+					{
+						nameNya = "^";
+					}
 
-				if(lan == 60)
-				{
-					valNya = $('#lblInput_'+lan).text();
-				}
+					if(valNya == "")
+					{
+						valNya = "^";
+					}
 
-				if(lan >= 61 && lan <= 65)
-				{
-					valNya = $('#txtFormInput_'+lan).val();
-				}
-
-				if(nameNya == "")
-				{
-					nameNya = "^";
-				}
-
-				if(valNya == "")
-				{
-					valNya = "^";
-				}
-
-				if(tempVar == "")
-				{
-					tempVar = nameNya+"*"+valNya;
-				}else{
-					tempVar += "<=>"+nameNya+"*"+valNya;
+					if(tempVar == "")
+					{
+						tempVar = nameNya+"*"+valNya;
+					}else{
+						tempVar += "<=>"+nameNya+"*"+valNya;
+					}
 				}
 			}
+			else if(typeData == "demdes")
+			{
+				for (var lan = 1; lan < parseFloat(ttlRowTblAnalis); lan++)
+				{
+					nameNya = $('#analisName_'+lan).text();
+					valNya = $('#analisValue_'+lan).text();
+
+					if(lan >= 5 && lan <= 13)
+					{
+						valNya = $('#txtTglHid_'+lan).val();
+					}
+					else if(lan >= 47 && lan <= 51)
+					{
+						valNya = $('#txtFormInput_'+lan).val();
+					}
+					else if(lan >= 61 && lan <= 62)
+					{
+						valNya = $('#txtFormInput_'+lan).val();
+					}
+					else if(lan == 63)
+					{
+						valNya = $('#lblInput_'+lan).text();
+					}
+					else if(lan >= 64 && lan <= 68)
+					{
+						valNya = $('#txtFormInput_'+lan).val();
+					}
+					else if(lan == 69)
+					{
+						valNya = $('#lblInput_'+lan).text();
+					}
+
+					if(nameNya == "")
+					{
+						nameNya = "^";
+					}
+
+					if(valNya == "")
+					{
+						valNya = "^";
+					}
+
+					if(tempVar == "")
+					{
+						tempVar = nameNya+"*"+valNya;
+					}else{
+						tempVar += "<=>"+nameNya+"*"+valNya;
+					}
+				}
+			}
+			
 
 			formData.append('tempVar',tempVar);
 			
@@ -1008,9 +1135,10 @@
 
 			expectTCE = ((parseFloat(varInput) * parseFloat(totalCargoForm)) - (parseFloat(ttlEarIDR) * parseFloat(totalAddCommForm)) - parseFloat(totalOptCost)) / parseFloat(totalActRVForm) / parseFloat(totalFXForm);
 
+			expectTCE = parseFloat(expectTCE.toFixed(2));
+
 			grossProfit = parseFloat(expectTCE) * parseFloat(totalActRVForm) * parseFloat(totalFXForm);
-
-
+			
 			const format2blkgKoma = new Intl.NumberFormat(undefined, {minimumFractionDigits: 2});
 			const format0blkgKoma = new Intl.NumberFormat(undefined, {minimumFractionDigits: 0});
 
@@ -1031,7 +1159,58 @@
 			$("#erningIDR_"+rowId).text(ttlEarIDR);
 			$("#erningUSD_"+rowId).text(ttlEarUSD);
 			$("#tce_"+rowId).text(expectTCE);
-			$("#freightBaseConv_"+rowId).text(freightBase);
+			$("#txtFreightUsd_"+rowId).val(freightBase);
+			$("#grossProfit_"+rowId).text(grossProfit);
+			$("#addComm_"+rowId).text(addComm);
+		}
+		function hitungEstVoyReportUsd(rowId = '')
+		{
+			var ttlEarIDR = 0;
+			var ttlEarUSD = 0;
+			var expectTCE = 0;
+			var freightBase = 0;
+			var grossProfit = 0;
+			var addComm = 0;
+
+			var totalCargoForm = $('#txtTotalCargoForm').val();
+			var totalFXForm = $('#txtTotalFXForm').val();
+			var totalAddCommForm = $('#txtTotalAddCommForm').val();
+			var totalActRVForm = $('#txtTotalActRVForm').val();
+			var totalOptCost = $('#txtTotalOptCost').val();
+			var totalOptCostAfterDemdes = $('#txtTotalOptCostAfterDemdes').val();
+			var varInput = $("#txtFreightUsd_"+rowId).val();
+
+			totalAddCommForm = parseFloat(totalAddCommForm) / 100;
+
+			freightBase = parseFloat(varInput) * parseFloat(totalFXForm);
+			ttlEarIDR = parseFloat(totalCargoForm) * parseFloat(freightBase);
+			ttlEarUSD = parseFloat(totalCargoForm) * parseFloat(varInput);
+			expectTCE = ((parseFloat(freightBase) * parseFloat(totalCargoForm)) - (parseFloat(ttlEarIDR) * parseFloat(totalAddCommForm)) - parseFloat(totalOptCostAfterDemdes)) / parseFloat(totalActRVForm) / parseFloat(totalFXForm);
+			expectTCE = parseFloat(expectTCE.toFixed(2));
+			grossProfit = parseFloat(varInput) * 1.11;
+			addComm = parseFloat(expectTCE) * parseFloat(totalActRVForm) * parseFloat(totalFXForm);
+			
+			const format2blkgKoma = new Intl.NumberFormat(undefined, {minimumFractionDigits: 2});
+			const format0blkgKoma = new Intl.NumberFormat(undefined, {minimumFractionDigits: 0});
+
+			const cttlEarIDR = ttlEarIDR.toFixed(2);
+			const cttlEarUSD = ttlEarUSD.toFixed(2);
+			const cfreightBase = freightBase.toFixed(2);
+			const caddComm = addComm.toFixed(0);
+			const cexpectTCE = expectTCE.toFixed(2);
+			const cgrossProfit = grossProfit.toFixed(2);
+
+			ttlEarIDR = format2blkgKoma.format(cttlEarIDR);
+			ttlEarUSD = format2blkgKoma.format(cttlEarUSD);
+			freightBase = format2blkgKoma.format(cfreightBase);
+			expectTCE = format2blkgKoma.format(cexpectTCE);
+			grossProfit = format0blkgKoma.format(cgrossProfit);
+			addComm = format0blkgKoma.format(caddComm);			
+
+			$("#erningIDR_"+rowId).text(ttlEarIDR);
+			$("#erningUSD_"+rowId).text(ttlEarUSD);
+			$("#txtFreight_"+rowId).val(freightBase);
+			$("#tce_"+rowId).text(expectTCE);			
 			$("#grossProfit_"+rowId).text(grossProfit);
 			$("#addComm_"+rowId).text(addComm);
 		}
@@ -1068,6 +1247,31 @@
 
 			$('#txtIFOPriceAfterDisc').val(afterDisc1.toFixed(2));
 			$('#txtMGOPriceAfterDisc').val(afterDisc2.toFixed(2));
+		}
+		function hitungNumberOfShipAndMaxCargo()
+		{
+			var ttlDay = 360;
+			var actualRV = 0;
+			var numberOfShip = 0;
+			var ttlCargo = 0;
+			var maxCargo = 0;
+
+			if($('#txtActualRVDays').val() != '')
+			{
+				actualRV = $('#txtActualRVDays').val();
+
+				numberOfShip = parseFloat(ttlDay) / parseFloat(actualRV);
+			}
+
+			if(parseFloat(numberOfShip) > 0)
+			{
+				ttlCargo = $('#txtCargoShipment').val();
+				
+				maxCargo = numberOfShip * ttlCargo;
+			}
+
+			$('#txtNumberShips').val(numberOfShip.toFixed(0));
+			$('#txtMaxCgoQty').val(maxCargo.toFixed(0));
 		}
 		function hitungOtherCost(type = '')
 		{
@@ -1128,38 +1332,97 @@
 			var total = 0;
 			var totalFresh = 0;
 
-			var txtShipUnloader = $('#txtFormInput_47').val();
-			var txtCleaningHolds = $('#txtFormInput_48').val();
-			var txtFwInPort = $('#txtFormInput_58').val();
-			var txtFwAtSea = $('#txtFormInput_59').val();
-			var txtPremi = $('#txtFormInput_61').val();
-			var txtOtherCost = $('#txtFormInput_62').val();
-			var txtCommission = $('#txtFormInput_63').val();
-			var txtPph = $('#txtFormInput_64').val();
-			var txtPerizinan = $('#txtFormInput_65').val();
+			if(type == 'cqd')
+			{
+				var txtShipUnloader = $('#txtFormInput_47').val();
+				var txtCleaningHolds = $('#txtFormInput_48').val();
+				var txtFwInPort = $('#txtFormInput_58').val();
+				var txtFwAtSea = $('#txtFormInput_59').val();
+				var txtPremi = $('#txtFormInput_61').val();
+				var txtOtherCost = $('#txtFormInput_62').val();
+				var txtCommission = $('#txtFormInput_63').val();
+				var txtPph = $('#txtFormInput_64').val();
+				var txtPerizinan = $('#txtFormInput_65').val();
 
-			var totalDemmurage = $("#txtIdHiddenDemmurage").val();
-			var totalAll = $("#txtTotalTempAnalis").val();
+				var totalDemmurage = $("#txtIdHiddenDemmurage").val();
+				var totalAll = $("#txtTotalTempAnalis").val();
 
-			if(txtShipUnloader == ''){ txtShipUnloader = "0"; }
-			if(txtCleaningHolds == ''){ txtCleaningHolds = "0"; }
-			if(txtFwInPort == ''){ txtFwInPort = "0"; }
-			if(txtFwAtSea == ''){ txtFwAtSea = "0"; }
-			if(txtPremi == ''){ txtPremi = "0"; }
-			if(txtOtherCost == ''){ txtOtherCost = "0"; }
-			if(txtCommission == ''){ txtCommission = "0"; }
-			if(txtPph == ''){ txtPph = "0"; }
-			if(txtPerizinan == ''){ txtPerizinan = "0"; }
+				if(txtShipUnloader == ''){ txtShipUnloader = 0; }
+				if(txtCleaningHolds == ''){ txtCleaningHolds = 0; }
+				if(txtFwInPort == ''){ txtFwInPort = 0; }
+				if(txtFwAtSea == ''){ txtFwAtSea = 0; }
+				if(txtPremi == ''){ txtPremi = 0; }
+				if(txtOtherCost == ''){ txtOtherCost = 0; }
+				if(txtCommission == ''){ txtCommission = 0; }
+				if(txtPph == ''){ txtPph = 0; }
+				if(txtPerizinan == ''){ txtPerizinan = 0; }
 
-			totalFresh = parseFloat(txtFwInPort) + parseFloat(txtFwAtSea);
-			$('#lblInput_60').text(totalFresh.toLocaleString(2));
+				totalFresh = parseFloat(txtFwInPort) + parseFloat(txtFwAtSea);
+				$('#lblInput_60').text(totalFresh.toLocaleString(2));
 
-			total = (parseFloat(totalAll) + parseFloat(txtShipUnloader) + parseFloat(txtCleaningHolds) + parseFloat(txtPremi) + parseFloat(txtOtherCost) + parseFloat(txtPph) + parseFloat(txtPerizinan) + parseFloat(txtFwInPort) + parseFloat(txtFwAtSea)) - parseFloat(totalDemmurage);
+				total = (parseFloat(totalAll) + parseFloat(txtShipUnloader) + parseFloat(txtCleaningHolds) + parseFloat(txtPremi) + parseFloat(txtOtherCost) + parseFloat(txtPph) + parseFloat(txtCommission) + parseFloat(txtPerizinan) + parseFloat(txtFwInPort) + parseFloat(txtFwAtSea)) - parseFloat(totalDemmurage);
 
-			const format2blkgKoma = new Intl.NumberFormat(undefined, {minimumFractionDigits: 2});
-			total = format2blkgKoma.format(total);
+				const format2blkgKoma = new Intl.NumberFormat(undefined, {minimumFractionDigits: 2});
+				total = format2blkgKoma.format(total);
 
-			$('#lblInput_66').text(total);
+				$('#lblInput_66').text(total);
+			}
+			else if(type == 'demdes')
+			{
+				var totalAfterDemdes = 0;
+				var txtShipUnloader = $('#txtFormInput_47').val();
+				var txtCleaningHolds = $('#txtFormInput_51').val();
+				var txtFwInPort = $('#txtFormInput_61').val();
+				var txtFwAtSea = $('#txtFormInput_62').val();
+				var txtPremi = $('#txtFormInput_64').val();
+				var txtOtherCost = $('#txtFormInput_65').val();
+				var txtCommission = $('#txtFormInput_66').val();
+				var txtPph = $('#txtFormInput_67').val();
+				var txtPerizinan = $('#txtFormInput_68').val();
+				var txtBunkerCost = $('#txtIdHiddenBunkerCost').val();
+				var txtPDALP = $('#txtIdHiddenPDALP').val();
+				var txtPDADP = $('#txtIdHiddenPDADP').val();
+				var txtDermaga = $('#txtFormInput_48').val();
+				var txtJasaBongkar = $('#txtFormInput_49').val();
+				var txtFloatingCrane = $('#txtFormInput_50').val();
+				var txtOtherCostPMT = $('#txtIdHiddenOtherCostPMT').val();
+				var txtDemdesLoad = $('#txtIdHiddenDemDesLoad').val();
+				var txtDemdesDisch = $('#txtIdHiddenDemDesDisch').val();
+
+				if(txtShipUnloader == ''){ txtShipUnloader = 0; }
+				if(txtCleaningHolds == ''){ txtCleaningHolds = 0; }
+				if(txtFwInPort == ''){ txtFwInPort = 0; }
+				if(txtFwAtSea == ''){ txtFwAtSea = 0; }
+				if(txtPremi == ''){ txtPremi = 0; }
+				if(txtOtherCost == ''){ txtOtherCost = 0; }
+				if(txtCommission == ''){ txtCommission = 0; }
+				if(txtPph == ''){ txtPph = 0; }
+				if(txtPerizinan == ''){ txtPerizinan = 0; }
+				if(txtBunkerCost == ''){ txtBunkerCost = 0; }
+				if(txtPDALP == ''){ txtPDALP = 0; }
+				if(txtPDADP == ''){ txtPDADP = 0; }
+				if(txtDermaga == ''){ txtDermaga = 0; }
+				if(txtJasaBongkar == ''){ txtJasaBongkar = 0; }
+				if(txtFloatingCrane == ''){ txtFloatingCrane = 0; }
+				if(txtOtherCostPMT == ''){ txtOtherCostPMT = 0; }
+				if(txtDemdesLoad == ''){ txtDemdesLoad = 0; }
+				if(txtDemdesDisch == ''){ txtDemdesDisch = 0; }
+
+				totalFresh = parseFloat(txtFwInPort) + parseFloat(txtFwAtSea);
+				$('#lblInput_63').text(totalFresh.toLocaleString(2));
+
+				total = parseFloat(txtBunkerCost) + parseFloat(txtPDALP) + parseFloat(txtPDADP) + parseFloat(txtShipUnloader) + parseFloat(txtDermaga) + parseFloat(txtJasaBongkar) + parseFloat(txtFloatingCrane) + parseFloat(txtCleaningHolds) + parseFloat(txtOtherCostPMT) + parseFloat(totalFresh) + parseFloat(txtPremi) + parseFloat(txtOtherCost) + parseFloat(txtPph) + parseFloat(txtCommission) + parseFloat(txtPerizinan);
+
+				totalAfterDemdes = parseFloat(txtBunkerCost) + parseFloat(txtPDALP) + parseFloat(txtPDADP) + parseFloat(txtShipUnloader) + parseFloat(txtDermaga) + parseFloat(txtJasaBongkar) + parseFloat(txtFloatingCrane) + parseFloat(txtCleaningHolds) + parseFloat(txtOtherCostPMT) + parseFloat(txtDemdesLoad) + parseFloat(txtDemdesDisch) + parseFloat(totalFresh) + parseFloat(txtPremi) + parseFloat(txtOtherCost) + parseFloat(txtPph) + parseFloat(txtPerizinan);
+
+				const format2blkgKoma = new Intl.NumberFormat(undefined, {minimumFractionDigits: 2});
+
+				total = format2blkgKoma.format(total);
+				totalAfterDemdes = format2blkgKoma.format(totalAfterDemdes);
+
+				$('#lblInput_69').text(total);
+				$('#lblInput_70').text(totalAfterDemdes);
+			}
 		}
 		function clearFormModalBunker()
 		{
@@ -1189,12 +1452,19 @@
 					html += '<input type="text" class="form-control input-sm" id="txtFreight_'+NewRow+'" value="0" oninput="hitungEstVoyReport('+"'"+NewRow+"'"+');">';
 				html += '</td>';
 				html += '<td id="tce_'+NewRow+'" style="text-align:center;"></td>';
-				html += '<td id="freightBaseConv_'+NewRow+'" style="text-align:center;"></td>';
+				html += '<td>';
+					html += '<input type="text" class="form-control input-sm" id="txtFreightUsd_'+NewRow+'" value="0" oninput="hitungEstVoyReportUsd('+"'"+NewRow+"'"+');">';
+				html += '</td>';
+				//html += '<td id="freightBaseConv_'+NewRow+'" style="text-align:center;"></td>';
 				html += '<td id="grossProfit_'+NewRow+'" style="text-align:center;"></td>';
 				html += '<td id="addComm_'+NewRow+'" style="text-align:center;"></td>';
 				html += '<td align="center">';
-					html += '<button class="btn btn-primary btn-xs" onclick=\"addRowData();\"><i class="fa fa-plus"></i></button>&nbsp&nbsp';
-					html += '<button class="btn btn-danger btn-xs" onclick=\"delRowData('+NewRow+');\"><i class="fa fa-minus"></i></button>';
+				
+				html += '<button class="btn btn-primary btn-xs btn-block" onclick=\"addRowData();\"><i class="fa fa-plus"></i></button>&nbsp&nbsp';
+				if(NewRow > 1)
+				{
+					html += '<button class="btn btn-danger btn-xs btn-block" onclick=\"delRowData('+NewRow+');\"><i class="fa fa-minus"></i></button>';
+				}					
 				html += '</td>';
 			html += '</tr>';
 
@@ -1274,9 +1544,18 @@
 				<div id="idForm" style="display:none;">
 					<div class="form-panel">
 						<div class="row">
-							<div class="col-md-12 col-xs-12">
+							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
-									<label for="txtBunkerTitle" style="font-size:12px;color:#0030FF;">Bunker Title :</label>
+									<label for="slcTypeBunker" style="font-size:12px;color:#0030FF;">Type :</label>
+									<select class="form-control" id="slcTypeBunker">
+										<option value="cqd">CQD</option>
+										<option value="demdes">Demdes</option>
+									</select>
+								</div>
+							</div>
+							<div class="col-md-10 col-xs-12">
+								<div class="form-group">
+									<label for="txtBunkerTitle" style="font-size:12px;color:#0030FF;">Title :</label>
 									<input type="text" class="form-control input-sm" id="txtBunkerTitle" value="" placeholder="Title">
 								</div>
 							</div>
@@ -1384,38 +1663,70 @@
 							</div>
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
-									<label for="txtDemmurage" style="font-size:12px;color:#0030FF;">Demmurage :</label>
+									<label for="txtDemmurage" style="font-size:12px;color:#0030FF;">Demmurage Loading Port :</label>
 									<div class="row">
 										<div class="col-md-6 col-xs-12" style="margin-bottom:5px;">
-											<select class="form-control" id="slcDemmurage">
+											<select class="form-control" id="slcDemmurageLoad">
 												<option value="idr">Rp</option>
 												<option value="usd">USD</option>
 											</select>
 										</div>
 										<div class="col-md-6 col-xs-12" style="padding-left:0px;">
-											<input type="text" class="form-control input-sm" id="txtDemmurage" value="" placeholder="0" onkeypress="return isNumberKey(event);">
+											<input type="text" class="form-control input-sm" id="txtDemmurageLoad" value="" placeholder="0" onkeypress="return isNumberKey(event);">
 										</div>
 									</div>
 								</div>
 							</div>
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
-									<label for="txtDespatch" style="font-size:12px;color:#0030FF;">Despatch :</label>
+									<label for="txtDespatch" style="font-size:12px;color:#0030FF;">Despatch Loading Port :</label>
 									<div class="row">
 										<div class="col-md-6 col-xs-12" style="margin-bottom:5px;">
-											<select class="form-control" id="slcDespatch">
+											<select class="form-control" id="slcDespatchLoad">
 												<option value="idr">Rp</option>
 												<option value="usd">USD</option>
 											</select>
 										</div>
 										<div class="col-md-6 col-xs-12" style="padding-left:0px;">
-											<input type="text" class="form-control input-sm" id="txtDespatch" value="" placeholder="0" onkeypress="return isNumberKey(event);">
+											<input type="text" class="form-control input-sm" id="txtDespatchLoad" value="" placeholder="0" onkeypress="return isNumberKey(event);">
 										</div>
-									</div>								
+									</div>
 								</div>
 							</div>
 						</div>
 						<div class="row">
+							<div class="col-md-2 col-xs-12">
+								<div class="form-group">
+									<label for="txtDemmurage" style="font-size:12px;color:#0030FF;">Demmurage Disch. Port :</label>
+									<div class="row">
+										<div class="col-md-6 col-xs-12" style="margin-bottom:5px;">
+											<select class="form-control" id="slcDemmurageDisch">
+												<option value="idr">Rp</option>
+												<option value="usd">USD</option>
+											</select>
+										</div>
+										<div class="col-md-6 col-xs-12" style="padding-left:0px;">
+											<input type="text" class="form-control input-sm" id="txtDemmurageDisch" value="" placeholder="0" onkeypress="return isNumberKey(event);">
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-2 col-xs-12">
+								<div class="form-group">
+									<label for="txtDespatch" style="font-size:12px;color:#0030FF;">Despatch Disch. Port :</label>
+									<div class="row">
+										<div class="col-md-6 col-xs-12" style="margin-bottom:5px;">
+											<select class="form-control" id="slcDespatchDisch">
+												<option value="idr">Rp</option>
+												<option value="usd">USD</option>
+											</select>
+										</div>
+										<div class="col-md-6 col-xs-12" style="padding-left:0px;">
+											<input type="text" class="form-control input-sm" id="txtDespatchDisch" value="" placeholder="0" onkeypress="return isNumberKey(event);">
+										</div>
+									</div>
+								</div>
+							</div>
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtDistanceLaden" style="font-size:12px;color:#0030FF;">Distance Laden <span style="font-size:10px;color:#f00;">(nm)</span> :</label>
@@ -1439,7 +1750,9 @@
 									<label for="txtSeaSpeedBallast" style="font-size:12px;color:#0030FF;">Sea&nbspSpeed&nbspBallast&nbsp<span style="font-size:10px;color:#f00;">(Knots/Hr)</span>&nbsp:</label>
 									<input type="number" class="form-control input-sm" id="txtSeaSpeedBallast" value="" placeholder="0" onkeypress="return isNumberKey(event);" oninput="hitungForm('sailingBallastdays');">
 								</div>
-							</div>
+							</div>							
+						</div>
+						<div class="row">
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtSailingLaden" style="font-size:11px;">Sailing&nbspLaden&nbspDays&nbsp<span style="font-size:10px;color:#f00;">(Days/Voy)</span>&nbsp:</label>
@@ -1452,8 +1765,6 @@
 									<input type="text" class="form-control input-sm" id="txtSailingBallast" value="" placeholder="0" disabled="disabled">
 								</div>
 							</div>
-						</div>
-						<div class="row">
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtTotalSailingDays" style="font-size:11px;">Total&nbspsailing&nbspDays&nbsp<span style="font-size:10px;color:#f00;">(Days/Voy)</span>&nbsp:</label>
@@ -1477,7 +1788,9 @@
 									<label for="txtAllowPortDays" style="font-size:11px;">Allow Port Days <span style="font-size:10px;color:#f00;">(Days/Voy)</span> :</label>
 									<input type="text" class="form-control input-sm" id="txtAllowPortDays" value="" placeholder="0" disabled="disabled">
 								</div>
-							</div>
+							</div>							
+						</div>
+						<div class="row">
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtActualLPDays" style="font-size:11px;">Actual L/P Days <span style="font-size:10px;color:#f00;">(Days/Voy)</span> :</label>
@@ -1490,8 +1803,6 @@
 									<input type="text" class="form-control input-sm" id="txtActualDPDays" value="" placeholder="0" disabled="disabled">
 								</div>
 							</div>
-						</div>
-						<div class="row">
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtActualPortDays" style="font-size:11px;">Actual Port Days <span style="font-size:10px;color:#f00;">(Days/Voy)</span> :</label>
@@ -1517,7 +1828,9 @@
 										<?php echo $optPeriode; ?>
 									</select>
 								</div>
-							</div>
+							</div>							
+						</div>
+						<div class="row">
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtIFOprice" style="font-size:11px;">IFO Price/ltr <span style="font-size:10px;color:#f00;">(ltr)</span> :</label>
@@ -1530,8 +1843,6 @@
 									<input type="text" class="form-control input-sm" id="txtMGOPrice" value="" placeholder="0" disabled="disabled">
 								</div>
 							</div>
-						</div>
-						<div class="row">
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtDiscOnIFO" style="font-size:11px;color:#0030FF;">Discount On IFO <span style="font-size:10px;color:#f00;">(%)</span> :</label>
@@ -1555,7 +1866,9 @@
 									<label for="txtMGOPriceAfterDisc" style="font-size:11px;">MGO Price after disc.<span style="font-size:10px;color:#f00;">(ltr)</span> :</label>
 									<input type="text" class="form-control input-sm" id="txtMGOPriceAfterDisc" value="" placeholder="0" disabled="disabled">
 								</div>
-							</div>
+							</div>							
+						</div>
+						<div class="row">
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtIFOConsSeaLdn" style="font-size:11px;color:#0030FF;">IFO&nbspcons&nbspat&nbspSea&nbspLdn&nbsp<span style="font-size:10px;color:#f00;">(MT/Day)</span>&nbsp:</label>
@@ -1568,8 +1881,6 @@
 									<input type="text" class="form-control input-sm" id="txtIFOConsSeaBllst" value="" placeholder="0" onkeypress="return isNumberKey(event);">
 								</div>
 							</div>
-						</div>
-						<div class="row">
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtMGOConsSeaLdn" style="font-size:11px;color:#0030FF;">MGO&nbspcons&nbspat&nbspSea&nbspLdn&nbsp<span style="font-size:10px;color:#f00;">(MT/Day)</span>&nbsp:</label>
@@ -1593,7 +1904,9 @@
 									<label for="txtIFOConsPortWrkg" style="font-size:11px;color:#0030FF;">IFO&nbspcons&nbspat&nbspport&nbspwrkg&nbsp<span style="font-size:10px;color:#f00;">(MT/Day)</span>&nbsp:</label>
 									<input type="text" class="form-control input-sm" id="txtIFOConsPortWrkg" value="" placeholder="0">
 								</div>
-							</div>
+							</div>							
+						</div>
+						<div class="row">
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtMGOConsPortIdle" style="font-size:11px;color:#0030FF;">MGO&nbspcons&nbspat&nbspport&nbspidle&nbsp<span style="font-size:10px;color:#f00;">(MT/Day)</span>&nbsp:</label>
@@ -1606,8 +1919,6 @@
 									<input type="text" class="form-control input-sm" id="txtMGOConsPortWrkg" value="" placeholder="0">
 								</div>
 							</div>
-						</div>
-						<div class="row">
 							<div class="col-md-3 col-xs-12">
 								<div class="form-group">
 									<label for="txtPDALP" style="font-size:12px;color:#0030FF;">PDA L/P :</label>
@@ -1643,13 +1954,15 @@
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtNumberShips" style="font-size:11px;color:#0030FF;">Number of Ship(s) :</label>
-									<input type="text" class="form-control input-sm" id="txtNumberShips" value="" placeholder="0">
+									<input type="text" class="form-control input-sm" id="txtNumberShips" value="" placeholder="0" disabled="disabled">
 								</div>
-							</div>
+							</div>							
+						</div>
+						<div class="row">
 							<div class="col-md-2 col-xs-12">
 								<div class="form-group">
 									<label for="txtMaxCgoQty" style="font-size:11px;color:#0030FF;">Max Cgo Qty/Year :</label>
-									<input type="text" class="form-control input-sm" id="txtMaxCgoQty" value="" placeholder="0">
+									<input type="text" class="form-control input-sm" id="txtMaxCgoQty" value="" placeholder="0" disabled="disabled">
 								</div>
 							</div>
 							<div class="col-md-2 col-xs-12">
@@ -1657,9 +1970,7 @@
 									<label for="txtAddCommPMT" style="font-size:11px;color:#0030FF;">Addcomm PMT/Voy <span style="font-size:10px;color:#f00;">(%)</span> :</label>
 									<input type="text" class="form-control input-sm" id="txtAddCommPMT" value="" placeholder="0">
 								</div>
-							</div>							
-						</div>
-						<div class="row">
+							</div>
 							<div class="col-md-3 col-xs-12">
 								<div class="form-group">
 									<label for="txtOtherCostPMT" style="font-size:12px;color:#0030FF;">Other Cost PMT/Voy :</label>
@@ -1762,13 +2073,13 @@
 						<div id="idDataTableFreight">
 							<div class="row" style="margin-bottom:5px;">
 								<div class="col-md-1 col-xs-12">
-									<button type="button" class="btn btn-primary btn-sm btn-block" title="Back" onclick="reloadPage();"><i class="fa fa-mail-reply-all" style="margin-right:5px;"></i> Back</button>
+									<button type="button" class="btn btn-primary btn-xs btn-block" title="Back" onclick="reloadPage();"><i class="fa fa-mail-reply-all" style="margin-right:5px;"></i> Back</button>
 								</div>
 								<div class="col-md-1 col-xs-12">
-									<button type="button" id="idBtnAddFormVoyEst" class="btn btn-info btn-sm btn-block" title="Add"><i class="fa fa-plus-square" style="margin-right:5px;"></i> Add</button>
+									<button type="button" id="idBtnAddFormVoyEst" class="btn btn-info btn-xs btn-block" title="Add"><i class="fa fa-plus-square" style="margin-right:5px;"></i> Add</button>
 								</div>
 								<div class="col-md-2 col-xs-6">
-									<button type="button" id="idBtnRefresh" onclick="backPage();" class="btn btn-success btn-sm btn-block" title="Refresh"><i class="glyphicon glyphicon-refresh"></i> Refresh</button>
+									<button type="button" id="idBtnRefresh" onclick="backPage();" class="btn btn-success btn-xs btn-block" title="Refresh"><i class="glyphicon glyphicon-refresh"></i> Refresh</button>
 								</div>
 							</div>
 							<div class="row">
@@ -1782,8 +2093,8 @@
 													<th style="vertical-align:middle;text-align:center;">Freight Based</th>
 													<th style="vertical-align:middle;text-align:center;">Expected TCE / Shipment</th>
 													<th style="vertical-align:middle;text-align:center;">Freight Based</th>
-													<th style="vertical-align:middle;text-align:center;">Bottom Lines / Gross Profit</th>
-													<th style="vertical-align:middle;text-align:center;">Add Comm / MDI</th>
+													<th style="vertical-align:middle;text-align:center;" id="lblTblFreight6">Bottom Lines / Gross Profit</th>
+													<th style="vertical-align:middle;text-align:center;" id="lblTblFreight7">Add Comm / MDI</th>
 												</tr>
 												<tr style="background-color: #5C2F02;color: #FFF;">											
 													<th style="vertical-align:middle;text-align:center;width:14%">IDR</th>
@@ -1791,8 +2102,8 @@
 													<th style="vertical-align:middle;text-align:center;width:14%">IDR / Ton</th>
 													<th style="vertical-align:middle;text-align:center;width:13%">USD / Day</th>
 													<th style="vertical-align:middle;text-align:center;width:13%">USD / Ton</th>
-													<th style="vertical-align:middle;text-align:center;width:14%">IDR / Ton</th>
-													<th style="vertical-align:middle;text-align:center;width:14%">USD / Shipment</th>
+													<th style="vertical-align:middle;text-align:center;width:14%" id="lblCurrTblFreight6">IDR / Ton</th>
+													<th style="vertical-align:middle;text-align:center;width:14%" id="lblCurrTblFreight7">IDR / Shipment</th>
 												</tr>
 											</thead>
 											<tbody id="idBodyDataTableFreight">
@@ -1801,7 +2112,7 @@
 									</div>
 								</div>
 								<div class="col-md-3 col-xs-12">
-									<div class="pre-scrollable">
+									<div class="pre-scrollable" style="max-height:500px;">
 										<div class="table-responsive">
 											<table class="table table-hover table-border table-bordered table-condensed table-advance" style="font-size:11px;">
 												<thead>
@@ -1841,8 +2152,8 @@
 													<th style="vertical-align:middle;text-align:center;">Freight Based</th>
 													<th style="vertical-align:middle;text-align:center;">Expected TCE / Shipment</th>
 													<th style="vertical-align:middle;text-align:center;">Freight Based</th>
-													<th style="vertical-align:middle;text-align:center;">Bottom Lines / Gross Profit</th>
-													<th style="vertical-align:middle;text-align:center;">Add Comm/ MDI</th>
+													<th style="vertical-align:middle;text-align:center;" id="lblFormTblFreight5">Bottom Lines / Gross Profit</th>
+													<th style="vertical-align:middle;text-align:center;" id="lblFormTblFreight6">Add Comm/ MDI</th>
 													<th style="vertical-align:middle;text-align:center;width:5%" rowspan="2">#</th>
 												</tr>
 												<tr style="background-color: #5C2F02;color: #FFF;">											
@@ -1851,8 +2162,8 @@
 													<th style="vertical-align:middle;text-align:center;width:14%">IDR / Ton</th>
 													<th style="vertical-align:middle;text-align:center;width:13%">USD / Day</th>
 													<th style="vertical-align:middle;text-align:center;width:13%">USD / Ton</th>
-													<th style="vertical-align:middle;text-align:center;width:14%">IDR / Ton</th>
-													<th style="vertical-align:middle;text-align:center;width:14%">IDR / Shipment</th>
+													<th style="vertical-align:middle;text-align:center;width:14%" id="lblCurrFormTblFreight5">IDR / Ton</th>
+													<th style="vertical-align:middle;text-align:center;width:14%" id="lblCurrFormTblFreight6">IDR / Shipment</th>
 												</tr>
 											</thead>
 											<tbody id="idBodyFreightForm">
@@ -1885,6 +2196,7 @@
 									<input type="hidden" id="txtTotalAddCommForm" value="">
 									<input type="hidden" id="txtTotalActRVForm" value="">
 									<input type="hidden" id="txtTotalOptCost" value="">
+									<input type="hidden" id="txtTotalOptCostAfterDemdes" value="">
 									<button class="btn btn-primary btn-xs btn-block" onclick="saveDataReportVoyEst();"><i class="fa fa-save"></i> Save</button>
 								</div>
 								<div class="col-md-6 col-xs-6">
@@ -1907,7 +2219,12 @@
 		        <div class="modal-body">
 		          <div class="row">
 		          	<div class="col-md-1 col-xs-12">
-						<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<button type="button" class="btn btn-primary btn-xs btn-block" onclick="reloadPage();">
+						<i class="fa fa-mail-reply-all"></i> Back
+					    </button>
+		          	</div>
+		          	<div class="col-md-1 col-xs-12">
+						<button type="button" class="btn btn-success btn-xs btn-block dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 					      Export
 					      <span class="caret"></span>
 					    </button>
@@ -1915,8 +2232,8 @@
 					      <li><a style="cursor:pointer;" id="btnModalExportPDF">PDF</a></li>
 					    </ul>
 		          	</div>
-		          	<div class="col-md-10 col-xs-12" align="center">
-		          		<label id="lblModalBunkerTitle" style="font-size:20px;text-align:center;font-weight:bold;"></label>
+		          	<div class="col-md-10 col-xs-12">
+		          		<label id="lblModalBunkerTitle" style="font-size:20px;text-align:left;font-weight:bold;"></label>
 		          	</div>
 		          </div>
 		          <div class="row">
@@ -1978,7 +2295,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Discharge Port (D/P)</label>
+		          				<label>Discharge&nbspPort&nbsp(D/P)</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -1989,7 +2306,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Allowable Load Rate</label>
+		          				<label>Allowable&nbspLoad&nbspRate</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2033,7 +2350,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Allowable TT at L/P</label>
+		          				<label>Allowable&nbspTT&nbspat&nbspL/P</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2044,7 +2361,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Allowable TT at D/P</label>
+		          				<label>Allowable&nbspTT&nbspat&nbspD/P</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2099,24 +2416,46 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Demmurage</label>
+		          				<label>Demmurage Load</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
 		          			</div>
 		          			<div class="col-md-7 col-xs-6" style="padding-left:0px;">
-		          				<label id="lblModalDemmurage"></label>
+		          				<label id="lblModalDemmurageLoad"></label>
 		          			</div>
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Despatch</label>
+		          				<label>Despatch Load</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
 		          			</div>
 		          			<div class="col-md-7 col-xs-6" style="padding-left:0px;">
-		          				<label id="lblModalDespatch"></label>
+		          				<label id="lblModalDespatchLoad"></label>
+		          			</div>
+		          		</div>
+		          		<div class="row">
+		          			<div class="col-md-4 col-xs-5">
+		          				<label>Demmurage&nbspDisch.</label>
+		          			</div>
+		          			<div class="col-md-1 col-xs-1">
+		          				<label style="font-weight:bold;">:</label>
+		          			</div>
+		          			<div class="col-md-7 col-xs-6" style="padding-left:0px;">
+		          				<label id="lblModalDemmurageDisch"></label>
+		          			</div>
+		          		</div>
+		          		<div class="row">
+		          			<div class="col-md-4 col-xs-5">
+		          				<label>Despatch&nbspDisch.</label>
+		          			</div>
+		          			<div class="col-md-1 col-xs-1">
+		          				<label style="font-weight:bold;">:</label>
+		          			</div>
+		          			<div class="col-md-7 col-xs-6" style="padding-left:0px;">
+		          				<label id="lblModalDespatchDisch"></label>
 		          			</div>
 		          		</div>
 		          	</div>
@@ -2167,7 +2506,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Sailing Laden Days</label>
+		          				<label>Sailing&nbspLaden&nbspDays</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2178,7 +2517,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Sailing Ballast Days</label>
+		          				<label>Sailing&nbspBallast&nbspDays</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2200,7 +2539,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Allowable L/P Days</label>
+		          				<label>Allowable&nbspL/P&nbspDays</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2211,7 +2550,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Allowable D/P Days</label>
+		          				<label>Allowable&nbspD/P&nbspDays</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2222,7 +2561,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Allowable Port Days</label>
+		          				<label>Allowable&nbspPort&nbspDays</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2288,7 +2627,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Bunker Price Period</label>
+		          				<label>Bunker&nbspPrice&nbspPeriod</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2343,7 +2682,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>IFO Price after disc.</label>
+		          				<label>IFO&nbspPrice&nbspafter&nbspdisch.</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2354,7 +2693,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>MGO&nbspPrice&nbspafter&nbspdisc.</label>
+		          				<label>MGO&nbspPrice&nbspafter&nbspdisch.</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2367,7 +2706,7 @@
 		          	<div class="col-md-4 col-xs-12">
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>IFO cons at Sea Ldn</label>
+		          				<label>IFO&nbspcons&nbspat&nbspSea&nbspLdn</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2378,7 +2717,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>IFO cons at Sea Bllst</label>
+		          				<label>IFO&nbspcons&nbspat&nbspSea&nbspBllst</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2389,7 +2728,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>MGO cons at Sea Ldn</label>
+		          				<label>MGO&nbspcons&nbspat&nbspSea&nbspLdn</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2411,7 +2750,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>IFO cons at port idle</label>
+		          				<label>IFO&nbspcons&nbspat&nbspport&nbspidle</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2499,7 +2838,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Addcomm PMT/Voy</label>
+		          				<label>Addcomm&nbspPMT/Voy</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2510,7 +2849,7 @@
 		          		</div>
 		          		<div class="row">
 		          			<div class="col-md-4 col-xs-5">
-		          				<label>Other Cost PMT/Voy</label>
+		          				<label>Other&nbspCost&nbspPMT/Voy</label>
 		          			</div>
 		          			<div class="col-md-1 col-xs-1">
 		          				<label style="font-weight:bold;">:</label>
@@ -2577,8 +2916,60 @@
 					          				<label id="lblModalTotalPMT"></label>
 					          			</div>
 					          		</div>
+					          		<div class="row">
+					          			<div class="col-md-5 col-xs-5">
+					          				<label>Total Operating Cost</label>
+					          			</div>
+					          			<div class="col-md-1 col-xs-1">
+					          				<label style="font-weight:bold;">:</label>
+					          			</div>
+					          			<div class="col-md-6 col-xs-6" style="text-align:right;">
+					          				<label id="lblModalTotalOprCost"></label>
+					          			</div>
+					          		</div>
+					          		<div class="row">
+					          			<div class="col-md-5 col-xs-5">
+					          				<label>Total Demdes</label>
+					          			</div>
+					          			<div class="col-md-1 col-xs-1">
+					          				<label style="font-weight:bold;">:</label>
+					          			</div>
+					          			<div class="col-md-6 col-xs-6" style="text-align:right;">
+					          				<label id="lblModalTotalDemdes"></label>
+					          			</div>
+					          		</div>
 					          	</div>
 		          			</div>
+		          		</div>
+		          	</div>
+		          </div>
+		          <div class="row" style="margin-top:10px;">
+		          	<div class="col-md-12 col-xs-12">
+		          		<div class="table-responsive">
+		          			<table class="table table-hover table-border table-bordered table-condensed table-advance" style="font-size:12px;">
+								<thead>
+									<tr style="background-color: #ba5500;color: #FFF;">
+										<th style="vertical-align:middle;text-align:center;width:3%" rowspan="2">No</th>
+										<th style="vertical-align:middle;text-align:center;" colspan="2">Total Earning Per Voyage</th>
+										<th style="vertical-align:middle;text-align:center;">Freight Based</th>
+										<th style="vertical-align:middle;text-align:center;">Expected TCE / Shipment</th>
+										<th style="vertical-align:middle;text-align:center;">Freight Based</th>
+										<th style="vertical-align:middle;text-align:center;">Bottom Lines / Gross Profit</th>
+										<th style="vertical-align:middle;text-align:center;">Add Comm / MDI</th>
+									</tr>
+									<tr style="background-color: #5C2F02;color: #FFF;">											
+										<th style="vertical-align:middle;text-align:center;width:14%">IDR</th>
+										<th style="vertical-align:middle;text-align:center;width:13%">USD</th>
+										<th style="vertical-align:middle;text-align:center;width:14%">IDR / Ton</th>
+										<th style="vertical-align:middle;text-align:center;width:13%">USD / Day</th>
+										<th style="vertical-align:middle;text-align:center;width:13%">USD / Ton</th>
+										<th style="vertical-align:middle;text-align:center;width:14%">IDR / Ton</th>
+										<th style="vertical-align:middle;text-align:center;width:14%">IDR / Shipment</th>
+									</tr>
+								</thead>
+								<tbody id="idBodyModalDataTableFreight">
+								</tbody>
+							</table>
 		          		</div>
 		          	</div>
 		          </div>

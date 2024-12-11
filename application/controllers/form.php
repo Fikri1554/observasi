@@ -578,7 +578,6 @@ class Form extends CI_Controller
 		return array('status' => 'failed', 'message' => 'No data found for the provided form ID.');
 	}
 
-
 	function getContentSendMail($IdForm = '', $reqName = '')
 	{
 		$data = $this->getisiContent($IdForm);
@@ -593,20 +592,20 @@ class Form extends CI_Controller
 
 		$isiMessage .= "<b>&nbsp;***** ".$reqName." Send Form IT Request. Please Acknowledge and Approve it. *****</b>";
 
-		$isiMessage .= "<table width=\"800px\" border=\"1\" cellpadding=\"10\" cellspacing=\"0\" style=\"margin-top:30px; border-collapse:collapse; font-family: Arial, sans-serif; color: #333; border: 1px solid #ddd;\">";
-			$isiMessage .= $data["tr"];
+		$isiMessage .= "<table width=\"800px\" cellpadding=\"10\" cellspacing=\"0\" style=\"margin-top:30px; border-collapse:collapse; font-family: Arial, sans-serif; color: #333; border: 1px solid #ddd; background-color: #fefefe; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;\">";
+		$isiMessage .= $data["tr"];
 		$isiMessage .= "</table>";
 
-		$isiMessage .= "<p style=\"margin-top:20px; font-size:16px; font-weight:bold; text-align:center; color:#0056b3;\"><i>:::</i> Detail Form <i>:::</i></p>";
+		$isiMessage .= "<p style=\"margin-top:20px; font-size:18px; font-weight:bold; text-align:center; color:#007bff; text-shadow: 0 1px 3px rgba(0,0,0,0.2);\"><i>:::</i> Detail Form <i>:::</i></p>";
 
-		$isiMessage .= "<table width=\"800px\" border=\"1\" cellpadding=\"10\" cellspacing=\"0\" style=\"border-collapse:collapse; font-family: Arial, sans-serif; color: #333; border: 1px solid #ddd;\">";
+		$isiMessage .= "<table width=\"800px\" cellpadding=\"10\" cellspacing=\"0\" style=\"border-collapse:collapse; font-family: Arial, sans-serif; color: #333; border: 1px solid #ddd; background-color: #fefefe; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;\">";
 		$isiMessage .= "<thead>";
-		$isiMessage .= "<tr style=\"background-color:#f1f1f1; color:#333; font-weight:bold; text-align:center;\">";
-		$isiMessage .= "<th style=\"padding:8px; border: 1px solid #ddd;\">Description</th>";
-		$isiMessage .= "<th style=\"padding:8px; border: 1px solid #ddd;\">Type</th>";
-		$isiMessage .= "<th style=\"padding:8px; border: 1px solid #ddd;\">Quantity</th>";
-		$isiMessage .= "<th style=\"padding:8px; border: 1px solid #ddd;\">Reason</th>";
-		$isiMessage .= "<th style=\"padding:8px; border: 1px solid #ddd;\">Note</th>";
+		$isiMessage .= "<tr style=\"background-color:#007bff; color:#fff; font-weight:bold; text-align:center;\">";
+		$isiMessage .= "<th style=\"padding:12px; border-bottom: 2px solid #ddd;\">Description</th>";
+		$isiMessage .= "<th style=\"padding:12px; border-bottom: 2px solid #ddd;\">Type</th>";
+		$isiMessage .= "<th style=\"padding:12px; border-bottom: 2px solid #ddd;\">Quantity</th>";
+		$isiMessage .= "<th style=\"padding:12px; border-bottom: 2px solid #ddd;\">Reason</th>";
+		$isiMessage .= "<th style=\"padding:12px; border-bottom: 2px solid #ddd;\">Note</th>";
 		$isiMessage .= "</tr>";
 		$isiMessage .= "</thead>";
 		$isiMessage .= "<tbody>";
@@ -638,32 +637,32 @@ class Form extends CI_Controller
 		foreach ($rsl as $key => $value)
 		{
 			$tr .= "<tr>";
-				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Project Reference</td>";
-				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->project_reference."</td>";
-				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Purpose</td>";
-				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->purpose."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; font-weight:bold;\">Project Reference</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; color:#0056b3;\">".$value->project_reference."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; font-weight:bold;\">Purpose</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; color:#0056b3;\">".$value->purpose."</td>";
+				$tr .= "</tr>";	 
+				$tr .= "<tr>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; font-weight:bold;\">Company</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; color:#0056b3;\">".$value->company."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; font-weight:bold;\">Location</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; color:#0056b3;\">".$value->location."</td>";
 				$tr .= "</tr>";
 				$tr .= "<tr>";
-				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Company</td>";
-				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->company."</td>";
-				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Location</td>";
-				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->location."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; font-weight:bold;\">Divisi</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; color:#0056b3;\">".$value->divisi."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; font-weight:bold;\">Department</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; color:#0056b3;\">".$value->department."</td>";
 				$tr .= "</tr>";
 				$tr .= "<tr>";
-				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Divisi</td>";
-				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->divisi."</td>";
-				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Department</td>";
-				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->department."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; font-weight:bold;\">Required Date</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; color:#0056b3;\">".$this->convertReturnName($value->required_date)."</td>";
 				$tr .= "</tr>";
 				$tr .= "<tr>";
-				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Required Date</td>";
-				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$this->convertReturnName($value->required_date)."</td>";
-				$tr .= "</tr>";
-				$tr .= "<tr>";
-				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Request Name</td>";
-				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->request_name."</td>";
-				$tr .= "<td style=\"vertical-align:top; width:15%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; font-weight:bold;\">Date Request</td>";
-				$tr .= "<td style=\"vertical-align:top; width:35%; padding:8px; background-color:#f9f9f9; border: 1px solid #ddd; color:#004080;\"> ".$value->date_submit."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; font-weight:bold;\">Request Name</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; color:#0056b3;\">".$value->request_name."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; font-weight:bold;\">Date Request</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; color:#0056b3;\">".$value->date_submit."</td>";
 			$tr .= "</tr>";
 
 		}
@@ -1268,7 +1267,7 @@ class Form extends CI_Controller
 				AND deletests = '0' 
 				ORDER BY FIELD(kdcmp, '02', '01', '21', '63', '09', '67') 
 				LIMIT 6";
-			
+		
 		$rsl = $this->myapp->getDataQueryDB6($sql);
 
 		foreach ($rsl as $key => $value)
@@ -1280,12 +1279,20 @@ class Form extends CI_Controller
 
 	function getOptAcknowledge()
 	{
+		$inputUserId = $this->session->userdata('userIdMyApps');
 		$optNya = "<option value=\"\">- Select -</option>";
 
-		$sql = "SELECT userid, userfullnm, useremail FROM login WHERE userid IN ('00121', '00027', '00130', '00162', 
-				'00092', '00118', '00178', '00002', '00128', '00172', '00030', '00151', '00012', '00107') 
-				AND deletests = 0";
-	
+		if ($inputUserId === '00005') {
+			
+			$sql = "SELECT userid, userfullnm, useremail FROM login WHERE deletests = 0 AND active = 'Y' ORDER BY userfullnm ASC";
+		}
+		else {
+			
+			$sql = "SELECT userid, userfullnm, useremail FROM login WHERE userid IN ('00121', '00027', '00130', '00162', 
+					'00092', '00118', '00178', '00002', '00128', '00172', '00030', '00151', '00012', '00107') 
+					AND deletests = 0 AND active = 'Y' ORDER BY userfullnm ASC";
+		}
+
 		$result = $this->myapp->getDataQueryDb2($sql);
 
 		foreach ($result as $val) {
@@ -1298,11 +1305,18 @@ class Form extends CI_Controller
 
 	function getOptApprove()
 	{
+		$inputUserId = $this->session->userdata('userIdMyApps');
 		$optNya = "<option value=\"\">- Select -</option>";
 
-		$sql = "SELECT userid, userfullnm, useremail FROM login WHERE userid IN ('00054', '00061', '00116', '00166', 
-				'00053', '00032') 
-				AND deletests = 0";
+		if ($inputUserId === '00005') {
+			
+			$sql = "SELECT userid, userfullnm, useremail FROM login WHERE deletests = 0 AND active = 'Y' ORDER BY userfullnm ASC";
+		} else {
+			
+			$sql = "SELECT userid, userfullnm, useremail FROM login WHERE userid IN ('00054', '00061', '00116', '00166', 
+					'00053', '00032') 
+					AND deletests = 0 AND active = 'Y' ORDER BY userfullnm ASC";
+		}
 
 		$result = $this->myapp->getDataQueryDb2($sql);
 
@@ -1313,6 +1327,7 @@ class Form extends CI_Controller
 
 		return $optNya;
 	}
+
 
 	function convertReturnName($dateNya = "")
 	{

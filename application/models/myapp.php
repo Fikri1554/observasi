@@ -108,6 +108,13 @@ class Myapp extends CI_Model
 	    }
     }
 
+	function getDataQueryDb3($query = "")
+    {
+    	$this->db3 = $this->load->database('invoiceregister', TRUE);
+    	$dataOut = $this->db3->query($query)->result();
+	    return $dataOut;
+    }
+	
 	function getDataDb3($slc = "",$db = "",$whereNya = "",$order = "",$grp = "")
 	{
 		$this->db3 = $this->load->database('invoiceregister', TRUE);
@@ -129,7 +136,7 @@ class Myapp extends CI_Model
 		$query = $this->db3->get();
 		$dataOut = $query->result();
 		return $dataOut;
-	}	
+	}
 	
 	function updateDataDb3($tbl = "",$dataUpdate = "",$whereNya = "")
 	{
@@ -164,8 +171,8 @@ class Myapp extends CI_Model
 
 	function getDataQueryDb4($query = "")
     {
-    	$this->db2 = $this->load->database('vslReport', TRUE);
-    	$dataOut = $this->db2->query($query)->result();
+    	$this->db4 = $this->load->database('vslReport', TRUE);
+    	$dataOut = $this->db4->query($query)->result();
 	    return $dataOut;
     }
 
@@ -239,6 +246,84 @@ class Myapp extends CI_Model
 		$this->db6->update($tbl,$dataUpdate);
 	}
 	
+	function getDataDb7($slc = "",$db = "",$whereNya = "",$order = "",$grp = "")
+	{
+		$this->db7 = $this->load->database('paymentadvance', TRUE);
+
+		$this->db7->select($slc);
+		$this->db7->from($db);
+		if($whereNya != "")
+		{
+			$this->db7->where($whereNya);
+		}
+		if($order != "")
+		{
+			$this->db7->order_by($order);
+		}
+		if($grp != "")
+		{
+			$this->db7->group_by($order);
+		}		
+		$query = $this->db7->get();
+		$dataOut = $query->result();
+		return $dataOut;
+	}
+
+	function getDataQueryDB7($query = "")
+    {
+    	$dataOut = array();
+    	$this->db7 = $this->load->database('paymentadvance', TRUE);    	
+    	$dataOut = $this->db7->query($query)->result();
+    	return $dataOut;
+    }
+
+	function updateDataDb7($tbl = "",$dataUpdate = "",$whereNya = "")
+	{
+		$this->db7 = $this->load->database('paymentadvance', TRUE);
+
+		$this->db7->where($whereNya);
+		$this->db7->update($tbl,$dataUpdate);
+	}
+	
+	function getDataDb8($slc = "",$db = "",$whereNya = "",$order = "",$grp = "")
+	{
+		$this->db8 = $this->load->database('tblvoucher', TRUE);
+
+		$this->db8->select($slc);
+		$this->db8->from($db);
+		if($whereNya != "")
+		{
+			$this->db8->where($whereNya);
+		}
+		if($order != "")
+		{
+			$this->db8->order_by($order);
+		}
+		if($grp != "")
+		{
+			$this->db8->group_by($order);
+		}		
+		$query = $this->db8->get();
+		$dataOut = $query->result();
+		return $dataOut;
+	}
+
+	function getDataQueryDB8($query = "")
+    {
+    	$dataOut = array();
+    	$this->db8 = $this->load->database('tblvoucher', TRUE);    	
+    	$dataOut = $this->db8->query($query)->result();
+    	return $dataOut;
+    }
+
+	function updateDataDb8($tbl = "",$dataUpdate = "",$whereNya = "")
+	{
+		$this->db8 = $this->load->database('tblvoucher', TRUE);
+
+		$this->db8->where($whereNya);
+		$this->db8->update($tbl,$dataUpdate);
+	}
+	
 	function getDataQueryDBDahlia($query = "")
     {
     	$dataOut = array();
@@ -265,7 +350,7 @@ class Myapp extends CI_Model
 
 	function querySqlServer($query = "",$typeQuery = "")
 	{
-		$this->dbSqlServer = $this->load->database('hrsysV11', TRUE);
+		$this->dbSqlServer = $this->load->database('sqlSrvHRSYS', TRUE);
 		if($typeQuery == "")//untuk select data
 		{
 			$dataOut = $this->dbSqlServer->query($query)->result();
@@ -277,12 +362,12 @@ class Myapp extends CI_Model
 
 	function insDataSqlServer($tbl = "",$insData = "")
 	{
-		$this->dbSqlServer = $this->load->database('hrsys', TRUE);
+		$this->dbSqlServer = $this->load->database('sqlSrvHRSYS', TRUE);
 		$this->dbSqlServer->insert($tbl,$insData);
 	}
 	function uptDataSqlServer($tbl = "",$dataUpdate = "",$whereNya = "")
 	{
-		$this->dbSqlServer = $this->load->database('hrsys', TRUE);
+		$this->dbSqlServer = $this->load->database('sqlSrvHRSYS', TRUE);
 
 		$this->dbSqlServer->where($whereNya);
 		$this->dbSqlServer->update($tbl,$dataUpdate);

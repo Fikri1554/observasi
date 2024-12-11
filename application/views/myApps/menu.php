@@ -9,11 +9,11 @@
 
 <head>
     <meta charset="utf-8">
-    <!--<meta http-equiv="X-UA-Compatible" content="IE=edge">-->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="andhika group">
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+    <!-- <meta http-equiv="refresh" content="5"> -->
     <link rel="icon" href="<?php echo base_url("assets/img/andhika.gif"); ?>">
 
     <title>My Apps</title>
@@ -23,11 +23,10 @@
     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/style.css">
     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/style-responsive.css">
     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/jquery-ui.css">
-    <!-- CSS DataTables -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script src="<?php echo base_url();?>assets/js/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
 
-
-    <script src="<?php echo base_url();?>assets/js/jquery-1.8.3.min.js"></script>
+    <!-- <script src="<?php echo base_url();?>assets/js/jquery-1.8.3.min.js"></script> -->
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -58,6 +57,9 @@
                     if (value.name_apps == "Mail & Invoice") {
                         $("#idMailInvoice").show();
                     }
+                    if (value.name_apps == "Confirm Payment Advance") {
+                        $("#idConfirmPaymentAdvance").show();
+                    }
                     if (value.name_apps == "Status Cuti") {
                         $("#idStsCuti").show();
                         $("#idSubCuti").show();
@@ -82,6 +84,10 @@
                         $("#idVoyEst").show();
                         $("#idSubCommercial").show();
                     }
+                    if (value.name_apps == "Voyage Estimate") {
+                        $("#idVoyEstNew").show();
+                        $("#idSubCommercial").show();
+                    }
                     if (value.name_apps == "Statistik") {
                         $("#idByTrip").show();
                         $("#idSubStatistik").show();
@@ -90,17 +96,44 @@
                         $("#idReportSurvey").show();
                         $("#idSubSurveyCust").show();
                     }
-                    if (value.name_apps == "Form IT Request") {
-                        $("#idFormITReq").show();
+                    if (value.name_apps == "Upload Supporting Document") {
+                        $("#idUploadSupportDoc").show();
+                    }
+                    if (value.name_apps == "Reminder Document") {
+                        $("#idReminderDoc").show();
+                    }
+                    if (value.name_apps == "Qr Code") {
+                        $("#idQrCode").show();
                     }
                 });
             },
             "json"
         );
+
+        // (function(seconds) {
+        //     var refresh,       
+        //         intvrefresh = function() {
+        //             clearInterval(refresh);
+        //             refresh = setTimeout(function() {
+        //                location.href = location.href;
+        //             }, seconds * 1000);
+        //         };
+        //     $(document).on('keypress click', function() { intvrefresh() });
+        //     intvrefresh();
+        // }(120)); // 2 menit
+
     });
     $(document).on('focus', ':input', function() {
         $(this).attr('autocomplete', 'off');
     });
+
+    function isNumberKey(evt) {
+        var charCode = (evt.which) ? evt.which : event.keyCode
+        // if (charCode > 31 && (charCode < 48 || charCode > 57))//untuk angka saja tidak untuk decimal
+        if (charCode > 31 && (charCode != 46 && (charCode < 48 || charCode > 57))) // untuk angka dan decimal
+            return false;
+        return true;
+    }
     </script>
 </head>
 
@@ -143,9 +176,29 @@
                                         class="fa fa-envelope-o"></i> Mail & Invoice</a></li>
                         </ul>
                         <ul class="sub">
-                            <li id="idFormITReq" style="padding-left:25px;display:none;"><a
+                            <li id="idFormITReq" style="padding-left:25px;"><a
                                     href="<?php echo base_url('form/getDataForm'); ?>"><i class='fa fa-file'></i>
                                     Form IT Request</a></li>
+                        </ul>
+                        <ul class="sub">
+                            <li id="idConfirmPaymentAdvance" style="padding-left:25px;display:none;"><a
+                                    href="<?php echo base_url('myapps/getConfirmPaymentAdvance'); ?>"><i
+                                        class="fa fa-question-circle"></i> Confirm Payment & Adv</a></li>
+                        </ul>
+                        <ul class="sub">
+                            <li id="idUploadSupportDoc" style="padding-left:25px;display:none;"><a
+                                    href="<?php echo base_url('myapps/getUploadSupportingDoc'); ?>"><i
+                                        class="fa fa-cloud-upload"></i> Upload Supporting Doc.</a></li>
+                        </ul>
+                        <ul class="sub">
+                            <li id="idReminderDoc" style="padding-left:25px;display:none;"><a
+                                    href="<?php echo base_url('reminderDoc'); ?>"><i
+                                        class="fa fa-exclamation-triangle"></i> Reminder Document</a></li>
+                        </ul>
+                        <ul class="sub">
+                            <li id="idQrCode" style="padding-left:25px;display:none;"><a
+                                    href="<?php echo base_url('cqrcode'); ?>"><i class="fa fa-qrcode"></i> QR Code</a>
+                            </li>
                         </ul>
                         <ul class="sub-menu" style="padding-left: 5px;width: 100%;">
                             <li class="sub-menu" style="margin-right: 0px;display:none;" id="idSubCuti">
@@ -195,9 +248,12 @@
                                     <i class="fa fa-building-o"></i><span>Ship Commercial</span>
                                 </a>
                                 <ul class="sub">
+                                    <li id="idVoyEstNew" style="display:none;"><a
+                                            href="<?php echo base_url('shipCommercial/getVoyageEstNew'); ?>">Voyage
+                                            Estimator</a></li>
                                     <li id="idVoyEst" style="display:none;"><a
                                             href="<?php echo base_url('shipCommercial/getVoyageEst'); ?>">Voyage
-                                            Estimator</a></li>
+                                            EstimatorOLD</a></li>
                                 </ul>
                             </li>
                         </ul>
@@ -251,8 +307,6 @@
             </div>
         </aside>
     </section>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
 </body>
 
 </html>

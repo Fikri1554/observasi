@@ -1028,7 +1028,7 @@
                                 Add Request
                             </button>
                         </div>
-                        <div class="col-md-2">
+                        <!-- <div class="col-md-2">
                             <select class="form-control input-sm" id="idSlcType">
                                 <option value="projectreference">Project Refference</option>
                                 <option value="purpose">Purpose</option>
@@ -1042,7 +1042,7 @@
                         <div class="col-md-2">
                             <button type="button" id="btnSearch" class="btn btn-warning btn-sm btn-block" title="Add"><i
                                     class="fa fa-search"></i> Search</button>
-                        </div>
+                        </div> -->
                         <div class="col-md-2">
                             <button type="button" id="idBtnRefresh" onclick="reloadPage();"
                                 class="btn btn-success btn-sm btn-block" title="Refresh"><i
@@ -1256,6 +1256,8 @@
                                                                     By:</u></b></label>
                                                         <select id="slcApproveEdit" class="form-control input-sm">
                                                             <?php echo $getOptApprove; ?>
+                                                            <option value="00172"
+                                                                data-email="adhitya.ilham@andhika.com"></option>
                                                         </select>
                                                     </div>
                                                 </div>
