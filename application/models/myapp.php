@@ -374,5 +374,6 @@ class Myapp extends CI_Model
 	}
 	
 	
+	
 }
 ?>

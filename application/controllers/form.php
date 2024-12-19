@@ -1,5 +1,5 @@
 <?php 
-if ( ! defined('BASEPATH')) exit('No direct script access allowe	d');
+if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 require_once APPPATH . 'third_party/PHPMailer/class.phpmailer.php';
 require_once APPPATH . 'third_party/PHPMailer/class.smtp.php';	
 
@@ -556,7 +556,6 @@ class Form extends CI_Controller
 
 				$mail->setFrom('noreply@andhika.com', 'IT Request Notification');
 
-			
 				foreach ($recipients as $email) {
 					$mail->addAddress($email);
 				}

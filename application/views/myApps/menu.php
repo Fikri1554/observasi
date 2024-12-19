@@ -181,6 +181,12 @@
                                     Form IT Request</a></li>
                         </ul>
                         <ul class="sub">
+                            <li id="idFormITReq" style="padding-left:25px;"><a
+                                    href="<?php echo base_url('inventory/getDataInventory'); ?>"><i
+                                        class='fa fa-inbox'></i>
+                                    IT Inventory</a></li>
+                        </ul>
+                        <ul class="sub">
                             <li id="idConfirmPaymentAdvance" style="padding-left:25px;display:none;"><a
                                     href="<?php echo base_url('myapps/getConfirmPaymentAdvance'); ?>"><i
                                         class="fa fa-question-circle"></i> Confirm Payment & Adv</a></li>
