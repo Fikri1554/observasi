@@ -48,6 +48,7 @@ class Inventory Extends CI_Controller{
 
         $dataOut['tr'] = $tr;
         $dataOut['getOptCompany'] = $this->getOptCompany(); 
+        $dataOut['getOptJenisPerangkat'] = $this->getOptJenisPerangkat();
         $dataOut['getOptMstDivisi'] = $this->getOptMstDivisi();
 
         $this->load->view('myApps/inventory', $dataOut);	
@@ -68,7 +69,7 @@ class Inventory Extends CI_Controller{
         ";
 
         $data = $this->myapp->getDataQueryDB6($sql);
-        print_r($data);exit;
+
         $options = array();
 
         foreach ($data as $row) {
@@ -81,8 +82,6 @@ class Inventory Extends CI_Controller{
 
         echo json_encode($options); 
     }
-
-
 
     function getOptCompany()
     {
@@ -104,6 +103,21 @@ class Inventory Extends CI_Controller{
         return $optNya;
     }
 
+    function getOptJenisPerangkat()
+    {
+        $opt = "<option value=\"\">- Select -</option>";
+
+        $sql = "SELECT * FROM jenis_perangkat WHERE sts_delete = '0'";
+        
+        $rsl = $this->myapp->getDataQueryDB6($sql);
+
+        foreach($rsl as $key => $val)
+        {
+            $opt .= "<option value=\"".$val->nama_perangkat."\">".$val->nama_perangkat."</option>";
+        }
+
+        return $opt;
+    }
 
     function getOptMstDivisi($userDiv = "")
 	{

@@ -121,22 +121,6 @@
                                                         </div>
                                                         <div class="col-md-3 col-xs-12">
                                                             <div class="inventory-group">
-                                                                <label for="jenisperangkat"><b><u>Jenis Perangkat
-                                                                            :</u></b></label>
-                                                                <input type="text" class="form-control input-sm"
-                                                                    id="jenisperangkat" name="jenisperangkat[]">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-3 col-xs-12">
-                                                            <div class="inventory-group">
-                                                                <label for="ram"><b><u>RAM
-                                                                            :</u></b></label>
-                                                                <input type="text" class="form-control input-sm"
-                                                                    id="ram" name="ram[]">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-3 col-xs-12">
-                                                            <div class="inventory-group">
                                                                 <label for="slcDivisi"><b><u>Divisi :</u></b></label>
                                                                 <select id="slcDivisi" class="form-control input-sm">
                                                                     <?php echo $getOptMstDivisi; ?>
@@ -149,6 +133,25 @@
                                                                             :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="txtlocation" name="txtlocation[]" readonly>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3 col-xs-12">
+                                                            <div class="inventory-group">
+                                                                <label for="slcJenisPerangkat"><b><u>Jenis Perangkat
+                                                                            :</u></b></label>
+                                                                <select id="slcJenisPerangkat"
+                                                                    class="form-control input-sm"
+                                                                    onchange="generateIDName()">
+                                                                    <?php echo $getOptJenisPerangkat; ?>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3 col-xs-12">
+                                                            <div class="inventory-group">
+                                                                <label for="ram"><b><u>RAM
+                                                                            :</u></b></label>
+                                                                <input type="text" class="form-control input-sm"
+                                                                    id="ram" name="ram[]">
                                                             </div>
                                                         </div>
                                                         <div class="col-md-3 col-xs-12">
