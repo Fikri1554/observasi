@@ -4,7 +4,7 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 class Inventory Extends CI_Controller{
 
     function __construct()
-	{
+	{           
 		parent::__construct();
     	$this->load->model('myapp'); 
 		$this->load->helper(array('form', 'url'));
@@ -26,6 +26,12 @@ class Inventory Extends CI_Controller{
         $data = $this->myapp->getDataQueryDB6($sql);
    
         foreach ($data as $key => $value) {
+            $status = '';
+
+            if ($value->sts_input == 'Y') {
+				$btnDetail = "<button onclick=\"editData('".$value->id."');\" title=\"Edit Detail\" class=\"btn btn-warning btn-xs\" id=\"btnEdit_".$value->id."\" type=\"button\"><i class=\"glyphicon glyphicon-edit\"></i></button>";
+			}
+
             $tr .= "<tr id='row_" . $value->id . "'>";
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $no . "</td>";
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->id_name . "</td>";
@@ -53,34 +59,46 @@ class Inventory Extends CI_Controller{
 
         $this->load->view('myApps/inventory', $dataOut);	
     }
-
-    function getInventoryData()
+    
+    function addInventory()
     {
-        $sql = "
-            SELECT 
-                f.company, 
-                f.division, 
-                f.location,
-                i.*
-            FROM inventory i
-            LEFT JOIN form f ON f.id = i.form_id
-            WHERE i.sts_delete = '0'
-            ORDER BY i.id DESC
-        ";
+        $data = $_POST;
+        $valData = array();
+        $stData = "";
+        
+        $valData['id_name'] = $data['idName'];
+        $valData['ram'] = $data['ram'];
+        $valData['company'] = $data['company'];
+        $valData['divisi'] = $data['divisi'];
+        $valData['location'] = $data['location'];
+        $valData['hdd'] = $data['hdd'];
+        $valData['windows'] = $data['windows'];
+        $valData['win_serial'] = $data['winSerial'];
+        $valData['user'] = $data['user'];
+        $valData['tanggal_beli'] = date("Y-m-d");
+        $valData['history_user'] = $data['historyUser'];
+        $valData['po'] = $data['po'];
+        $valData['status'] = $data['status'];
 
-        $data = $this->myapp->getDataQueryDB6($sql);
-
-        $options = array();
-
-        foreach ($data as $row) {
-            $options[] = array(
-                'company' => $row->company ?: 'N/A', 
-                'division' => $row->division ?: 'N/A',
-                'location' => $row->location ?: 'N/A'
-            );
+        if($data['id'] == "")
+        {
+            try {
+                $this->myapp->insDataDb6("inventory", $data);
+                $stData = "Insert Success..!!";
+            } catch (Exception $e) {
+                $stData = "Failed =>".$e;
+            }
+        }else{
+            try {
+                $where = "id = '".$data['id']."'";
+                $this->myapp->updateDataDb6($where, $valData, "inventory");
+                $stData = "Update Success..!!";
+            } catch (Exception $e) {
+                $stData = "Failed =>".$e;
+            }
         }
 
-        echo json_encode($options); 
+        print json_encode($stData); 
     }
 
     function getOptCompany()

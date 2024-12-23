@@ -101,7 +101,7 @@ class Form extends CI_Controller
 			
 		foreach ($data as $key => $value) {
 			$status = '';
-				
+			
 			if ($value->st_submit == 'Y' && $value->st_acknowledge == 'N') {
 				$status = "Waiting Acknowledge <i class='fa fa-clock-o'></i>";
 			}

@@ -37,44 +37,56 @@
         }
     }
 
-    function loadInventoryData() {
-        $.ajax({
-            url: "<?php echo base_url('inventory/getInventoryData'); ?>",
-            type: "GET",
-            dataType: "json",
-            success: function(data) {
-                if (data.length > 0) {
-                    const companyDropdown = $("#slcCompany");
-                    const divisiDropdown = $("#slcDivisi");
-                    const locationInput = $("#txtlocation");
+    document.addEventListener('DOMContentLoaded', () => {
+        const slcJenisPerangkat = document.getElementById("slcJenisPerangkat");
+        const inputsToToggle = {
+            pc: ["brand", "port", "size"], // PC SERVER, PC DESKTOP, LAPTOP
+            network: ["ram", "harddisk", "windows", "winserial", "user", "historyuser",
+                "status"
+            ], // ROUTER, SWITCH, ACCESS POINT
+            storage: ["ram", "harddisk", "windows", "winserial", "user", "historyuser",
+                "status"
+            ] // HARDDISK, MEMORY
+        };
 
-                    companyDropdown.html("<option value=''>- Select -</option>");
-                    divisiDropdown.html("<option value=''>- Select -</option>");
+        slcJenisPerangkat.addEventListener("change", () => {
+            const selectedValue = slcJenisPerangkat.value.toUpperCase();
 
-                    data.forEach(item => {
-                        companyDropdown.append(
-                            `<option value="${item.company}" data-cmpcode="${item.company}">${item.company}</option>`
-                        );
-                        divisiDropdown.append(
-                            `<option value="${item.division}">${item.division}</option>`
-                        );
-                    });
 
-                    if (data[0].location) {
-                        locationInput.val(data[0].location);
-                    } else {
-                        locationInput.val("N/A");
-                    }
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error fetching inventory data:", error);
+            const allInputs = [
+                "ram", "harddisk", "windows", "winserial", "user", "historyuser", "status",
+                "brand", "port", "size"
+            ];
+
+            // Tentukan input yang harus disembunyikan berdasarkan pilihan
+            let inputsToHide = [];
+            if (["PC SERVER", "PC DESKTOP", "LAPTOP"].includes(selectedValue)) {
+                inputsToHide = inputsToToggle.pc;
+            } else if (["ROUTER", "SWITCH", "ACCESS POINT"].includes(selectedValue)) {
+                inputsToHide = inputsToToggle.network;
+            } else if (["HARDDISK", "MEMORY"].includes(selectedValue)) {
+                inputsToHide = inputsToToggle.storage;
             }
-        });
-    }
 
-    $("[data-target='#idInventoryModal']").on("click", function() {
-        loadInventoryData();
+            // Tentukan input yang harus ditampilkan
+            const inputsToShow = allInputs.filter(input => !inputsToHide.includes(input));
+
+            // Sembunyikan input yang sesuai
+            inputsToHide.forEach(id => {
+                const input = document.getElementById(id);
+                const label = document.querySelector(`label[for='${id}']`);
+                if (input) input.style.display = "none";
+                if (label) label.style.display = "none";
+            });
+
+            // Tampilkan input yang sesuai
+            inputsToShow.forEach(id => {
+                const input = document.getElementById(id);
+                const label = document.querySelector(`label[for='${id}']`);
+                if (input) input.style.display = "block";
+                if (label) label.style.display = "block";
+            });
+        });
     });
     </script>
 </head>
@@ -98,12 +110,11 @@
                                         <h4 class="modal-title">Add Inventory</h4>
                                     </div>
                                     <div class="modal-body">
-                                        <!-- Form Utama -->
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div id="inventoryContainer">
                                                     <div class="row inventoryRow">
-                                                        <div class="col-md-3 col-xs-12">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="slcCompany"><b><u>Company :</u></b></label>
                                                                 <select id="slcCompany" class="form-control input-sm"
@@ -112,14 +123,16 @@
                                                                 </select>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="idname"><b><u>ID Name :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="idname" name="idname[]" readonly>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                    </div>
+                                                    <div class="row inventoryRow">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="slcDivisi"><b><u>Divisi :</u></b></label>
                                                                 <select id="slcDivisi" class="form-control input-sm">
@@ -127,7 +140,7 @@
                                                                 </select>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="txtlocation"><b><u>Location
                                                                             :</u></b></label>
@@ -135,42 +148,44 @@
                                                                     id="txtlocation" name="txtlocation[]" readonly>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                    </div>
+                                                    <div class="row inventoryRow">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="slcJenisPerangkat"><b><u>Jenis Perangkat
                                                                             :</u></b></label>
                                                                 <select id="slcJenisPerangkat"
-                                                                    class="form-control input-sm"
-                                                                    onchange="generateIDName()">
+                                                                    class="form-control input-sm">
                                                                     <?php echo $getOptJenisPerangkat; ?>
                                                                 </select>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="ram"><b><u>RAM
-                                                                            :</u></b></label>
+                                                                <label for="ram"><b><u>RAM :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="ram" name="ram[]">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                    </div>
+                                                    <div class="row inventoryRow">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="harddisk"><b><u>Harddisk
-                                                                            :</u></b></label>
+                                                                <label for="harddisk"><b><u>Harddisk :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="harddisk" name="harddisk[]">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="windows"><b><u>Windows
-                                                                            :</u></b></label>
+                                                                <label for="windows"><b><u>Windows :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="windows" name="windows[]">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                    </div>
+                                                    <div class="row inventoryRow">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="winserial"><b><u>Win Serial
                                                                             :</u></b></label>
@@ -178,24 +193,25 @@
                                                                     id="winserial" name="winserial[]">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="user"><b><u>User
-                                                                            :</u></b></label>
+                                                                <label for="user"><b><u>User :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="user" name="user[]">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                    </div>
+                                                    <div class="row inventoryRow">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="tanggalbeli"><u>Tanggal
-                                                                        Beli:</u></label>
+                                                                <label for="tanggalbeli"><b><u>Tanggal Beli
+                                                                            :</u></b></label>
                                                                 <input type="text" name="tanggalbeli[]"
                                                                     class="form-control input-sm" id="tanggalbeli"
                                                                     autocomplete="off">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="historyuser"><b><u>History User
                                                                             :</u></b></label>
@@ -203,20 +219,41 @@
                                                                     id="historyuser" name="historyuser[]">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
-                                                            <div class="inv entory-group">
-                                                                <label for="po"><b><u>PO
-                                                                            :</u></b></label>
+                                                    </div>
+                                                    <div class="row inventoryRow">
+                                                        <div class="col-md-6">
+                                                            <div class="inventory-group">
+                                                                <label for="po"><b><u>PO :</u></b></label>
                                                                 <input type="text" class="form-control input-sm" id="po"
                                                                     name="po[]">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                        <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="status"><b><u>Status
-                                                                            :</u></b></label>
+                                                                <label for="status"><b><u>Status :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="status" name="status[]">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="inventory-group">
+                                                                <label for="brand"><b><u>Brand :</u></b></label>
+                                                                <input type="text" class="form-control input-sm"
+                                                                    id="brand" name="brand[]">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="inventory-group">
+                                                                <label for="port"><b><u>Port :</u></b></label>
+                                                                <input type="text" class="form-control input-sm"
+                                                                    id="port" name="port[]">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="inventory-group">
+                                                                <label for="size"><b><u>Size :</u></b></label>
+                                                                <input type="text" class="form-control input-sm"
+                                                                    id="size" name="size[]">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -228,7 +265,7 @@
                                         <input type="hidden" id="txtIdForm" value="">
                                         <button type="button" class="btn btn-secondary"
                                             data-dismiss="modal">Close</button>
-                                        <button type="button" class="btn btn-primary" id="saveFormRequest">Save
+                                        <button type="button" class="btn btn-primary" id="saveInventory">Save
                                             changes</button>
                                     </div>
                                 </div>
@@ -309,8 +346,6 @@
                                     </tbody>
                                 </table>
                             </div>
-
-
                         </div>
                     </div>
                 </div>
