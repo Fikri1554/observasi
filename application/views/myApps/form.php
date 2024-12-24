@@ -919,6 +919,16 @@
                                                         </div>
                                                         <div class="col-md-3 col-xs-12">
                                                             <div class="form-group">
+                                                                <label for="slcJenisPerangkat"><b><u>Jenis Perangkat
+                                                                            :</u></b></label>
+                                                                <select id="slcJenisPerangkat"
+                                                                    class="form-control input-sm">
+                                                                    <?php echo $getOptJenisPerangkat; ?>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3 col-xs-12">
+                                                            <div class="form-group">
                                                                 <label for="txtRequiredDate"><u>Required
                                                                         Date:</u></label>
                                                                 <input type="text" name="txtrequired_date[]"
@@ -1073,6 +1083,9 @@
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Divisi
+                                            </th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Jenis Perangkat
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Status
@@ -1328,6 +1341,10 @@
                                     </tr>
                                     <tr>
                                         <th>Required Date</th>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Device Type / Jenis Perangkat</th>
                                         <td></td>
                                     </tr>
                                 </table>

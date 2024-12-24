@@ -27,6 +27,7 @@ class Inventory Extends CI_Controller{
    
         foreach ($data as $key => $value) {
             $status = '';
+            $btnDetail = '';        
 
             if ($value->sts_input == 'Y') {
 				$btnDetail = "<button onclick=\"editData('".$value->id."');\" title=\"Edit Detail\" class=\"btn btn-warning btn-xs\" id=\"btnEdit_".$value->id."\" type=\"button\"><i class=\"glyphicon glyphicon-edit\"></i></button>";
@@ -34,12 +35,13 @@ class Inventory Extends CI_Controller{
 
             $tr .= "<tr id='row_" . $value->id . "'>";
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $no . "</td>";
+            $tr .= "<td align='center'>" . $btnDetail . "</td>"; 
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->id_name . "</td>";
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->ram . "</td>";
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->company . "</td>";
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->divisi . "</td>";
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->location . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->hdd . "</td>";
+            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->harddisk . "</td>";
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->windows . "</td>";
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->win_serial . "</td>";
             $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->user . "</td>";
@@ -55,7 +57,7 @@ class Inventory Extends CI_Controller{
         $dataOut['tr'] = $tr;
         $dataOut['getOptCompany'] = $this->getOptCompany(); 
         $dataOut['getOptJenisPerangkat'] = $this->getOptJenisPerangkat();
-        $dataOut['getOptMstDivisi'] = $this->getOptMstDivisi();
+        $dataOut['getOptLocation'] = $this->getOptLocation();
 
         $this->load->view('myApps/inventory', $dataOut);	
     }
@@ -66,59 +68,88 @@ class Inventory Extends CI_Controller{
         $valData = array();
         $stData = "";
         
-        $valData['id_name'] = $data['idName'];
-        $valData['ram'] = $data['ram'];
-        $valData['company'] = $data['company'];
-        $valData['divisi'] = $data['divisi'];
-        $valData['location'] = $data['location'];
-        $valData['hdd'] = $data['hdd'];
-        $valData['windows'] = $data['windows'];
-        $valData['win_serial'] = $data['winSerial'];
-        $valData['user'] = $data['user'];
-        $valData['tanggal_beli'] = date("Y-m-d");
-        $valData['history_user'] = $data['historyUser'];
-        $valData['po'] = $data['po'];
-        $valData['status'] = $data['status'];
+        $valData['id'] = isset($data['txtIdInventory']) ? $data['txtIdInventory'] : '';
+        $valData['id_name'] = isset($data['idname']) ? $data['idname'] : '';
+        $valData['ram'] = isset($data['ram']) ? $data['ram'] : '';
+        $valData['company'] = isset($data['company']) ? $data['company'] : '';  
+        $valData['init_cmp'] = isset($data['init_cmp']) ? $data['init_cmp'] : '';  
+        $valData['divisi'] = isset($data['divisi']) ? $data['divisi'] : '';  
+        $valData['location'] = isset($data['txtlocation']) ? $data['txtlocation'] : '';
+        $valData['harddisk'] = isset($data['harddisk']) ? $data['harddisk'] : '';
+        $valData['windows'] = isset($data['windows']) ? $data['windows'] : '';
+        $valData['win_serial'] = isset($data['winserial']) ? $data['winserial'] : '';
+        $valData['user'] = isset($data['user']) ? $data['user'] : '';
+        $valData['tanggal_beli'] = date("Y-m-d"); 
+        $valData['history_user'] = isset($data['historyuser']) ? $data['historyuser'] : '';
+        $valData['po'] = isset($data['po']) ? $data['po'] : '';
+        $valData['status'] = isset($data['status']) ? $data['status'] : '';
+        $valData['brand'] = isset($data['brand']) ? $data['brand'] : '';
+        $valData['port'] = isset($data['port']) ? $data['port'] : '';
+        $valData['size'] = isset($data['size']) ? $data['size'] : '';
 
-        if($data['id'] == "")
-        {
+        if ($data['txtIdInventory'] == "") {
             try {
-                $this->myapp->insDataDb6("inventory", $data);
+                $this->myapp->insDataDb6($valData, "inventory");  
+                $txtIdInventory = $this->db->insert_id();
+                $this->db->set('sts_input', 'Y');
+                $this->db->where('id', $txtIdInventory);
+                $this->db->update('inventory');
                 $stData = "Insert Success..!!";
             } catch (Exception $e) {
-                $stData = "Failed =>".$e;
+                $stData = "Failed =>" . $e;
             }
-        }else{
+        } else {
             try {
-                $where = "id = '".$data['id']."'";
+                $where = "id = '" . $data['txtIdInventory'] . "'";
                 $this->myapp->updateDataDb6($where, $valData, "inventory");
+                $this->db->set('sts_input', 'Y');
+                $this->db->where('id', $data['txtIdInventory']);
+                $this->db->update('inventory');
                 $stData = "Update Success..!!";
             } catch (Exception $e) {
-                $stData = "Failed =>".$e;
+                $stData = "Failed =>" . $e;
             }
         }
 
         print json_encode($stData); 
     }
 
-    function getOptCompany()
-    {
-        $optNya = "<option value=\"\">- Select -</option>";
-            
-        $sql = "SELECT kdcmp, nmcmp, cmpcode
-                FROM tblMstCmpNSrt 
-                WHERE kdcmp IN ('02', '01', '21', '63', '09', '67') 
-                AND deletests = '0' 
-                ORDER BY FIELD(kdcmp, '02', '01', '21', '63', '09', '67') 
-                LIMIT 6";
-            
-        $rsl = $this->myapp->getDataQueryDB6($sql);
 
-        foreach ($rsl as $key => $value)
-        {
-            $optNya .= "<option value=\"".$value->nmcmp."\" data-cmpcode=\"".$value->cmpcode."\">".$value->nmcmp."</option>";
+    function getOptCompany() {
+        $sql = "SELECT DISTINCT company FROM form WHERE sts_delete = '0' ORDER BY company ASC";
+        $result = $this->myapp->getDataQueryDB6($sql);
+        $options = '<option value="">Select Company</option>';
+        foreach ($result as $row) {
+            $options .= '<option value="' . $row->company . '">' . $row->company . '</option>';
         }
-        return $optNya;
+        return $options;
+    }
+
+    function getOptDivisiByCompany() {
+        $company = $this->input->post('company'); 
+
+        $company = $this->db->escape($company); 
+
+        $sql = "SELECT DISTINCT divisi FROM form WHERE sts_delete = '0' AND company = $company ORDER BY divisi ASC";
+        $result = $this->myapp->getDataQueryDB6($sql);
+
+        $options = '<option value="">Select Divisi</option>';
+        foreach ($result as $row) {
+            $options .= '<option value="' . htmlspecialchars($row->divisi) . '">' . htmlspecialchars($row->divisi) . '</option>';
+        }
+
+        echo $options; 
+    }
+
+
+    function getOptLocation() {
+        $sql = "SELECT DISTINCT location FROM form WHERE sts_delete = '0' ORDER BY location ASC";
+        $result = $this->myapp->getDataQueryDB6($sql);
+        $options = '<option value="">Select Location</option>';
+        foreach ($result as $row) {
+            $options .= '<option value="' . $row->location . '">' . $row->location . '</option>';
+        }
+        return $options;
     }
 
     function getOptJenisPerangkat()
@@ -136,28 +167,6 @@ class Inventory Extends CI_Controller{
 
         return $opt;
     }
-
-    function getOptMstDivisi($userDiv = "")
-	{
-		$opt = "<option value=\"\">- Select -</option>";
-		
-		$whereNya = "";
-
-		if($userDiv != "")
-		{
-			$whereNya = " AND kddiv = ".$userDiv." ";
-		}
-
-		$sql = " SELECT * FROM tblmstdivisi WHERE deletests = '0' ".$whereNya." ORDER BY nmdiv ASC ";
-		$rsl = $this->myapp->getDataQueryDb2($sql);
-
-		foreach ($rsl as $key => $val)
-		{
-			$opt .= "<option value=\"".$val->nmdiv."\">".$val->nmdiv."</option>";
-		}
-
-		return $opt;
-	}
 
     
 }

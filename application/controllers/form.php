@@ -130,6 +130,7 @@ class Form extends CI_Controller
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->company . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->location . "</td>";
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->divisi . "</td>";
+				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->jenisperangkat . "</td>";
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;' id='status_" . $value->id . "'>" . $status . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$btnExport.$btnDelete."</td>";
 				$tr .= "</tr>";
@@ -143,6 +144,7 @@ class Form extends CI_Controller
 
 		$dataOut['tr'] = $tr;
 		$dataOut["listPage"] = $dataOut['listPage'];
+		$dataOut['getOptJenisPerangkat'] = $this->getOptJenisPerangkat();
 		$dataOut['getOptAcknowledge'] = $this->getOptAcknowledge();
 		$dataOut['getOptApprove'] = $this->getOptApprove();	
 		$dataOut['getOptCompany'] = $this->getOptCompany(); 
@@ -1275,6 +1277,22 @@ class Form extends CI_Controller
 		}
 		return $optNya;
 	}
+
+	function getOptJenisPerangkat()
+    {
+        $opt = "<option value=\"\">- Select -</option>";
+
+        $sql = "SELECT * FROM jenis_perangkat WHERE sts_delete = '0'";
+        
+        $rsl = $this->myapp->getDataQueryDB6($sql);
+
+        foreach($rsl as $key => $val)
+        {
+            $opt .= "<option value=\"".$val->nama_perangkat."\">".$val->nama_perangkat."</option>";
+        }
+
+        return $opt;
+    }
 
 	function getOptAcknowledge()
 	{

@@ -20,6 +20,55 @@
             changeYear: true,
             defaultDate: new Date(),
         });
+        $("#saveInventory").click(function() {
+            var formData = new FormData();
+            var fields = [
+                'company', 'init_cmp', 'idname', 'divisi', 'txtlocation', 'jenisperangkat',
+                'ram', 'harddisk', 'windows', 'winserial', 'user', 'tanggalbeli',
+                'historyuser', 'po', 'status', 'brand', 'port', 'size', 'txtIdInventory'
+            ];
+
+            fields.forEach(function(field) {
+                var value = $("#" + field).val();
+                formData.append(field, value || '');
+            });
+
+
+            $.ajax({
+                url: "<?php echo base_url('inventory/addInventory'); ?>",
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    alert(response);
+                    location.reload(); // Reload untuk memperbarui tampilan
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                    alert("Gagal menyimpan data!");
+                }
+            });
+        });
+        $('#slcCompany').on('change', function() {
+            var selectedCompany = $(this).val();
+
+            $.ajax({
+                url: "<?php echo base_url('inventory/getOptDivisiByCompany'); ?>",
+                type: "POST",
+                data: {
+                    company: selectedCompany
+                },
+                success: function(response) {
+                    $('#slcDivisi').html(
+                        response);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error: " + error);
+                }
+            });
+        });
+
     });
 
     function generateIDName() {
@@ -136,16 +185,17 @@
                                                             <div class="inventory-group">
                                                                 <label for="slcDivisi"><b><u>Divisi :</u></b></label>
                                                                 <select id="slcDivisi" class="form-control input-sm">
-                                                                    <?php echo $getOptMstDivisi; ?>
+                                                                    <option value="">Select Divisi</option>
                                                                 </select>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="txtlocation"><b><u>Location
+                                                                <label for="slcLocation"><b><u>Location
                                                                             :</u></b></label>
-                                                                <input type="text" class="form-control input-sm"
-                                                                    id="txtlocation" name="txtlocation[]" readonly>
+                                                                <select id="slcLocation" class="form-control input-sm">
+                                                                    <?php echo $getOptLocation; ?>
+                                                                </select>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -262,7 +312,7 @@
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <input type="hidden" id="txtIdForm" value="">
+                                        <input type="hidden" id="txtIdInventory" value="">
                                         <button type="button" class="btn btn-secondary"
                                             data-dismiss="modal">Close</button>
                                         <button type="button" class="btn btn-primary" id="saveInventory">Save
