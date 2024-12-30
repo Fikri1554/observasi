@@ -106,10 +106,12 @@
                         newRow += "<td align='center'>" + response.project_reference +
                             "</td>";
                         newRow += "<td align='center'>" + response.purpose + "</td>";
-                        newRow += "<td align='left'>" + response.company + "</td>";
+                        newRow += "<td align='center'>" + response.company + "</td>";
                         newRow += "<td align='center'>" + response.location + "</td>";
-                        newRow += "<td align='left'>" + response.divisi + "</td>";
-                        newRow += "<td align='left'>" + statusText + "</td>";
+                        newRow += "<td align='center'>" + response.divisi + "</td>";
+                        newRow += "<td align='center'>" + response.jenis_perangkat +
+                            "</td>";
+                        newRow += "<td align='center'>" + statusText + "</td>";
                         newRow += "<td align='center'><button onclick=\"ViewPrint('" +
                             response.id +
                             "', 'request');\" class=\"btn btn-success btn-xs\" type=\"button\" title=\"View\"><i class=\"fa fa-eye\"></i> View</button>" +
@@ -196,7 +198,7 @@
                     $("#txtlocationEdit").val(formData.location);
                     $("#slcCompanyEdit").val(formData.company);
                     $("#slcDivisiEdit").val(formData.divisi);
-                    $("#txtJenisPerangkatEdit").val(formData.jenisperangkat);
+                    $("#txtJenisPerangkatEdit").val(formData.jenis_perangkat);
 
                     setTimeout(() => {
                         $("#slcDepartmentEdit").val(formData.department);
@@ -354,6 +356,7 @@
             formData.append('slcCompanyText', $("#slcCompanyEdit option:selected").text());
             formData.append('txtlocationEdit', $("#txtlocationEdit").val());
             formData.append('slcDivisiEdit', $("#slcDivisiEdit").val());
+            formData.append('txtJenisPerangkatEdit', $("#txtJenisPerangkat").val());
             formData.append('slcDepartmentEdit', $("#slcDepartmentEdit").val());
             formData.append('txtRequiredDateEdit', $("#txtRequiredDateEdit").val());
             formData.append('slcAcknowledgeEdit', $("#slcAcknowledgeEdit").val());
@@ -442,6 +445,9 @@
                 $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(6) td')
                     .html(data.form
                         .required_date || 'N/A');
+                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(7) td')
+                    .html(data.form
+                        .jenis_perangkat || 'N/A');
 
                 var detailHtml = '';
                 if (data.form_details && data.form_details.length > 0) {
@@ -658,6 +664,7 @@
                                 '<td style="text-align:center;">' + item.company + '</td>' +
                                 '<td style="text-align:center;">' + item.location + '</td>' +
                                 '<td style="text-align:center;">' + item.divisi + '</td>' +
+                                '<td style="text-align:center;">' + item.jenisperangkat + '</td>' +
                                 '<td style="text-align:center;">' +
                                 '<button onclick="ViewPrint(' + item.id + ', \'' + type +
                                 '\');" class="btn btn-success btn-xs" type="button">' +
@@ -706,6 +713,7 @@
                                 '<td style="text-align:center;">' + item.company + '</td>' +
                                 '<td style="text-align:center;">' + item.location + '</td>' +
                                 '<td style="text-align:center;">' + item.divisi + '</td>' +
+                                '<td style="text-align:center;">' + item.jenisperangkat + '</td>' +
                                 '<td style="text-align:center;">' +
                                 '<button onclick="ViewPrint(' + item.id + ', \'' + type +
                                 '\');" class="btn btn-primary btn-xs" type="button">' +
@@ -1087,9 +1095,6 @@
                                                 Divisi
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
-                                                Department
-                                            </th>
-                                            <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Jenis Perangkat
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
@@ -1136,6 +1141,9 @@
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Divisi
+                                            </th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Jenis Perangkat
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Action

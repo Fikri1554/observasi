@@ -77,6 +77,7 @@ class Inventory Extends CI_Controller{
         $valData['company'] = isset($data['company']) ? $data['company'] : '';  
         $valData['divisi'] = isset($data['divisi']) ? $data['divisi'] : '';  
         $valData['location'] = isset($data['location']) ? $data['location'] : '';
+        $valData['jenisperangkat'] = isset($data['jenisperangkat']) ? $data['jenisperangkat'] : '';
         $valData['harddisk'] = isset($data['harddisk']) ? $data['harddisk'] : '';
         $valData['windows'] = isset($data['windows']) ? $data['windows'] : '';
         $valData['win_serial'] = isset($data['winserial']) ? $data['winserial'] : '';
@@ -156,11 +157,11 @@ class Inventory Extends CI_Controller{
 
     function getOptJenisPerangkat()
     {
-        $sql = "SELECT DISTINCT jenisperangkat FROM form WHERE sts_delete = '0' ORDER BY jenisperangkat ASC";
+        $sql = "SELECT DISTINCT jenis_perangkat FROM form WHERE sts_delete = '0' ORDER BY jenis_perangkat ASC";
         $result = $this->myapp->getDataQueryDB6($sql);
         $options = '<option value="">-Select-</option>';
         foreach ($result as $row) {
-            $options .= '<option value ="'.$row->jenisperangkat.'">'.$row->jenisperangkat.'</option>';
+            $options .= '<option value ="'.$row->jenis_perangkat.'">'.$row->jenis_perangkat.'</option>';
         }
         return $options;
     }

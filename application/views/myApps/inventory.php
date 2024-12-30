@@ -24,7 +24,7 @@
             var formData = new FormData();
             var fields = [
                 'idname', 'ram', 'harddisk', 'windows', 'winserial', 'user', 'tanggalbeli',
-                'historyuser', 'po', 'status', 'brand', 'port', 'size', 'txtIdInventory'
+                'historyuser', 'po', 'status', 'brand', 'port', 'processor', 'txtIdInventory'
             ];
 
             // Ambil nilai dari elemen input biasa
@@ -200,7 +200,7 @@
                                                             <div class="inventory-group">
                                                                 <label for="slcDivisi"><b><u>Divisi :</u></b></label>
                                                                 <select id="slcDivisi" class="form-control input-sm">
-                                                                    <option value="">Select Divisi</option>
+
                                                                 </select>
                                                             </div>
                                                         </div>
@@ -227,9 +227,29 @@
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
+                                                                <label for="slcJenisPerangkat"><b><u>Jenis Perangkat
+                                                                            Khusus
+                                                                            :</u></b></label>
+                                                                <select id="slcJenisPerangkat"
+                                                                    class="form-control input-sm">
+                                                                    <?php echo $getOptJenisPerangkat; ?>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row inventoryRow">
+                                                        <div class="col-md-6">
+                                                            <div class="inventory-group">
                                                                 <label for="ram"><b><u>RAM :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="ram" name="ram[]">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="inventory-group">
+                                                                <label for="size"><b><u>Processor :</u></b></label>
+                                                                <input type="text" class="form-control input-sm"
+                                                                    id="processor" name="size[]">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -312,13 +332,6 @@
                                                                 <label for="port"><b><u>Port :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="port" name="port[]">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <div class="inventory-group">
-                                                                <label for="size"><b><u>Size :</u></b></label>
-                                                                <input type="text" class="form-control input-sm"
-                                                                    id="size" name="size[]">
                                                             </div>
                                                         </div>
                                                     </div>
