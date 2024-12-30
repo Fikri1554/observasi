@@ -40,7 +40,9 @@ class Inventory Extends CI_Controller{
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->divisi . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->location . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->jenisperangkat . "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->jenisperangkatkhusus . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->ram . "</td>";
+                //$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->processor . "</td>";
                 $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->harddisk . "</td>";
                 $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->windows. "</td>";
                 $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->win_serial . "</td>";
@@ -49,9 +51,6 @@ class Inventory Extends CI_Controller{
                 $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->history_user . "</td>";
                 $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->po ."</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;' id='status_" . $value->id . "'>".$value->status."</td>";
-                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->brand . "</td>";
-                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->port . "</td>";
-                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->size . "</td>";
 				$tr .= "</tr>";
             $no++;
         }
@@ -59,6 +58,7 @@ class Inventory Extends CI_Controller{
         $dataOut['tr'] = $tr;
         $dataOut['getOptReqName'] = $this->getOptReqName();
         $dataOut['getOptCompany'] = $this->getOptCompany(); 
+        $dataOut['getOptJenisPerangkatKhusus'] = $this->getOptJenisPerangkatKhusus();
         $dataOut['getOptJenisPerangkat'] = $this->getOptJenisPerangkat();
         $dataOut['getOptLocation'] = $this->getOptLocation();
 
@@ -74,10 +74,12 @@ class Inventory Extends CI_Controller{
         $valData['id'] = isset($data['txtIdInventory']) ? $data['txtIdInventory'] : '';
         $valData['id_name'] = isset($data['idname']) ? $data['idname'] : '';
         $valData['ram'] = isset($data['ram']) ? $data['ram'] : '';
+        $valData['processor '] = isset($data['processor']) ? $data['processor'] : '';
         $valData['company'] = isset($data['company']) ? $data['company'] : '';  
         $valData['divisi'] = isset($data['divisi']) ? $data['divisi'] : '';  
         $valData['location'] = isset($data['location']) ? $data['location'] : '';
         $valData['jenisperangkat'] = isset($data['jenisperangkat']) ? $data['jenisperangkat'] : '';
+        $valData['jenisperangkatkhusus'] = isset($data['jenisperangkatkhusus']) ? $data['jenisperangkatkhusus'] : '';
         $valData['harddisk'] = isset($data['harddisk']) ? $data['harddisk'] : '';
         $valData['windows'] = isset($data['windows']) ? $data['windows'] : '';
         $valData['win_serial'] = isset($data['winserial']) ? $data['winserial'] : '';
@@ -85,10 +87,7 @@ class Inventory Extends CI_Controller{
         $valData['tanggal_beli'] = date("Y-m-d"); 
         $valData['history_user'] = isset($data['historyuser']) ? $data['historyuser'] : '';
         $valData['po'] = isset($data['po']) ? $data['po'] : '';
-        $valData['status'] = isset($data['status']) ? $data['status'] : '';
-        $valData['brand'] = isset($data['brand']) ? $data['brand'] : '';
-        $valData['port'] = isset($data['port']) ? $data['port'] : '';
-        $valData['size'] = isset($data['size']) ? $data['size'] : '';
+        $valData['status'] = isset($data['status']) ? $data['status'] : ''; 
 
         if ($data['txtIdInventory'] == "") {
             try {
@@ -157,14 +156,37 @@ class Inventory Extends CI_Controller{
 
     function getOptJenisPerangkat()
     {
-        $sql = "SELECT DISTINCT jenis_perangkat FROM form WHERE sts_delete = '0' ORDER BY jenis_perangkat ASC";
+        $sql = "SELECT DISTINCT jenis_perangkat 
+                FROM form 
+                WHERE sts_delete = '0' 
+                AND jenis_perangkat NOT IN ('PC', 'PC SERVER', 'LAPTOP', 'KOMPUTER') 
+                ORDER BY jenis_perangkat ASC";
+        
+        $result = $this->myapp->getDataQueryDB6($sql);
+        $options = '<option value="">-Select-</option>';
+        
+        foreach ($result as $row) {
+            $options .= '<option value ="' . htmlspecialchars($row->jenis_perangkat, ENT_QUOTES, 'UTF-8') . '">'
+                        . htmlspecialchars($row->jenis_perangkat, ENT_QUOTES, 'UTF-8') . '</option>';
+        }
+        
+        return $options;
+    }
+
+
+    function getOptJenisPerangkatKhusus()
+    {
+        $sql = "SELECT DISTINCT jenis_perangkat FROM form 
+                WHERE sts_delete = '0' AND jenis_perangkat IN ('PC', 'PC SERVER', 'KOMPUTER','LAPTOP') 
+                ORDER BY jenis_perangkat ASC";
         $result = $this->myapp->getDataQueryDB6($sql);
         $options = '<option value="">-Select-</option>';
         foreach ($result as $row) {
-            $options .= '<option value ="'.$row->jenis_perangkat.'">'.$row->jenis_perangkat.'</option>';
+            $options .= '<option value ="' . $row->jenis_perangkat . '">' . $row->jenis_perangkat . '</option>';
         }
         return $options;
     }
+
  
     function getOptReqName()
     {

@@ -26,6 +26,9 @@
             changeYear: true,
             defaultDate: new Date(),
         });
+        $('#txtJenisPerangkat').on('input', function() {
+            $(this).val($(this).val().toUpperCase());
+        });
         $('#saveFormRequest').click(function() {
             var projectReference = $('#txtprojectReference').val();
             var purpose = $('#txtpurpose').val();
@@ -33,7 +36,7 @@
             var location = $("#txtlocation").val();
             var divisi = $("#slcDivisi").val();
             var department = $("#slcDepartment").val();
-            var jenisperangkat = $("#txtJenisPerangkat").val();
+            var jenisperangkat = $("#txtJenisPerangkat").val().toUpperCase();
             var requiredDate = $("#txtRequiredDate").val();
             var acknowledge = $("#slcAcknowledge").val();
             var approve = $("#slcApprove").val();
@@ -986,7 +989,7 @@
                                                 <div class="col-md-2 col-xs-12"
                                                     style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
                                                     <div class="form-group">
-                                                        <label for="txttype"><u>Type:</u></label>
+                                                        <label for="txttype"><u>Type/Brand:</u></label>
                                                         <input type="text" name="txttype[]"
                                                             class="form-control input-sm txttype" placeholder="Type"
                                                             autocomplete="off">

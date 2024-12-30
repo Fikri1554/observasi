@@ -24,7 +24,7 @@
             var formData = new FormData();
             var fields = [
                 'idname', 'ram', 'harddisk', 'windows', 'winserial', 'user', 'tanggalbeli',
-                'historyuser', 'po', 'status', 'brand', 'port', 'processor', 'txtIdInventory'
+                'historyuser', 'po', 'status', 'processor', 'txtIdInventory'
             ];
 
             // Ambil nilai dari elemen input biasa
@@ -38,6 +38,8 @@
             formData.append('divisi', $('#slcDivisi option:selected').val() || '');
             formData.append('location', $('#slcLocation option:selected').val() || '');
             formData.append('jenisperangkat', $('#slcJenisPerangkat option:selected').val() || '');
+            formData.append('jenisperangkatkhusus', $('#slcJenisPerangkatKhusus option:selected')
+            .val() || '');
 
             // Kirim data ke server melalui AJAX
             $.ajax({
@@ -99,59 +101,6 @@
             console.warn("No company selected.");
         }
     }
-
-
-    document.addEventListener('DOMContentLoaded', () => {
-        var slcJenisPerangkat = document.getElementById("slcJenisPerangkat");
-        var inputsToToggle = {
-            pc: ["brand", "port", "size"], // PC SERVER, PC DESKTOP, LAPTOP
-            network: ["ram", "harddisk", "windows", "winserial", "user", "historyuser",
-                "status"
-            ], // ROUTER, SWITCH, ACCESS POINT
-            storage: ["ram", "harddisk", "windows", "winserial", "user", "historyuser",
-                "status"
-            ] // HARDDISK, MEMORY
-        };
-
-        slcJenisPerangkat.addEventListener("change", () => {
-            var selectedValue = slcJenisPerangkat.value.toUpperCase();
-
-
-            var allInputs = [
-                "ram", "harddisk", "windows", "winserial", "user", "historyuser", "status",
-                "brand", "port", "size"
-            ];
-
-            // Tentukan input yang harus disembunyikan berdasarkan pilihan
-            let inputsToHide = [];
-            if (["PC SERVER", "PC DESKTOP", "LAPTOP"].includes(selectedValue)) {
-                inputsToHide = inputsToToggle.pc;
-            } else if (["ROUTER", "SWITCH", "ACCESS POINT"].includes(selectedValue)) {
-                inputsToHide = inputsToToggle.network;
-            } else if (["HARDDISK", "MEMORY"].includes(selectedValue)) {
-                inputsToHide = inputsToToggle.storage;
-            }
-
-            // Tentukan input yang harus ditampilkan
-            var inputsToShow = allInputs.filter(input => !inputsToHide.includes(input));
-
-            // Sembunyikan input yang sesuai
-            inputsToHide.forEach(id => {
-                var input = document.getElementById(id);
-                var label = document.querySelector(`label[for='${id}']`);
-                if (input) input.style.display = "none";
-                if (label) label.style.display = "none";
-            });
-
-            // Tampilkan input yang sesuai
-            inputsToShow.forEach(id => {
-                var input = document.getElementById(id);
-                var label = document.querySelector(`label[for='${id}']`);
-                if (input) input.style.display = "block";
-                if (label) label.style.display = "block";
-            });
-        });
-    });
     </script>
 </head>
 
@@ -227,12 +176,13 @@
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="slcJenisPerangkat"><b><u>Jenis Perangkat
+                                                                <label for="slcJenisPerangkatKhusus"><b><u>Jenis
+                                                                            Perangkat
                                                                             Khusus
                                                                             :</u></b></label>
-                                                                <select id="slcJenisPerangkat"
+                                                                <select id="slcJenisPerangkatKhusus"
                                                                     class="form-control input-sm">
-                                                                    <?php echo $getOptJenisPerangkat; ?>
+                                                                    <?php echo $getOptJenisPerangkatKhusus; ?>
                                                                 </select>
                                                             </div>
                                                         </div>
@@ -384,8 +334,13 @@
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">Jenis
                                                 Perangkat
                                             </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Jenis
+                                                Perangkat Khusus
+                                            </th>
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">
                                                 RAM</th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
+                                                Processor</th>
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">
                                                 Harddisk</th>
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">
@@ -403,12 +358,6 @@
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">PO
                                             </th>
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">Status
-                                            </th>
-                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Brand
-                                            </th>
-                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Port
-                                            </th>
-                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Size
                                             </th>
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">Action
                                             </th>
