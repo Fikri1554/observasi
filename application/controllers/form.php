@@ -130,6 +130,7 @@ class Form extends CI_Controller
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->company . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->location . "</td>";
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->divisi . "</td>";
+				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->department . "</td>";
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;'>" . $value->jenisperangkat . "</td>";
 				$tr .= "<td align='left' style='font-size:12px;vertical-align:top;' id='status_" . $value->id . "'>" . $status . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$btnExport.$btnDelete."</td>";
@@ -144,7 +145,6 @@ class Form extends CI_Controller
 
 		$dataOut['tr'] = $tr;
 		$dataOut["listPage"] = $dataOut['listPage'];
-		$dataOut['getOptJenisPerangkat'] = $this->getOptJenisPerangkat();
 		$dataOut['getOptAcknowledge'] = $this->getOptAcknowledge();
 		$dataOut['getOptApprove'] = $this->getOptApprove();	
 		$dataOut['getOptCompany'] = $this->getOptCompany(); 
@@ -287,6 +287,8 @@ class Form extends CI_Controller
 			'company' => $this->input->post('slcCompanyText'),
 			'init_cmp' => $this->input->post('slcCompanyEdit'),
 			'divisi' => $this->input->post('slcDivisiEdit'),
+			'department' => $this->input->post('slcDepartmentEdit'),
+			'jenisperangkat' => $this->input->post('txtJenisPerangkatEdit'),
 			'required_date' => $this->input->post('txtRequiredDateEdit'),
 			'name_acknowledge' => $this->input->post('slcAcknowledgeText'),
 			'userid_acknowledge' => $this->input->post('slcAcknowledgeEdit'),
@@ -990,7 +992,7 @@ class Form extends CI_Controller
 				return !empty($detail->description) && !empty($detail->type) && !empty($detail->reason) && $detail->quantity > 0;
 			});
 
-			$qrCodeImgPath = base_url("assets/imgQRCodeForm/" . base64_encode($form[0]->batchno) . ".jpg");
+			$qrCodeImgPath = base_url("assets/imgQRCodeForm/".base64_encode($form[0]->batchno).".jpg");
 				
 			$data = array(
 				'form' => $form[0],
@@ -1125,6 +1127,7 @@ class Form extends CI_Controller
 				'department' => $data['slcDepartment'],
 				'location' => $data['txtlocation'],
 				'divisi' => $data['slcDivisi'],
+				'jenisperangkat' => $data['txtjenisperangkat'],
 				'required_date' => isset($data['txtRequiredDate']) ? $data['txtRequiredDate'] : $dateNow,
 				'userid_submit' => $userId,
 				'add_date' => $dateNow,
@@ -1278,33 +1281,21 @@ class Form extends CI_Controller
 		return $optNya;
 	}
 
-	function getOptJenisPerangkat()
-    {
-        $opt = "<option value=\"\">- Select -</option>";
-
-        $sql = "SELECT * FROM jenis_perangkat WHERE sts_delete = '0'";
-        
-        $rsl = $this->myapp->getDataQueryDB6($sql);
-
-        foreach($rsl as $key => $val)
-        {
-            $opt .= "<option value=\"".$val->nama_perangkat."\">".$val->nama_perangkat."</option>";
-        }
-
-        return $opt;
-    }
-
 	function getOptAcknowledge()
 	{
 		$inputUserId = $this->session->userdata('userIdMyApps');
+		$inputUserType = $this->session->userdata('userTypeMyApps');
+		
 		$optNya = "<option value=\"\">- Select -</option>";
 
 		if ($inputUserId === '00005') {
 			
 			$sql = "SELECT userid, userfullnm, useremail FROM login WHERE deletests = 0 AND active = 'Y' ORDER BY userfullnm ASC";
+		}else if ($inputUserType == 'admin' ) 
+		{
+			$sql = "SELECT userid, userfullnm, useremail FROM login WHERE deletests = 0 AND active = 'Y' ORDER BY userfullnm ASC";
 		}
 		else {
-			
 			$sql = "SELECT userid, userfullnm, useremail FROM login WHERE userid IN ('00121', '00027', '00130', '00162', 
 					'00092', '00118', '00178', '00002', '00128', '00172', '00030', '00151', '00012', '00107') 
 					AND deletests = 0 AND active = 'Y' ORDER BY userfullnm ASC";
@@ -1323,12 +1314,18 @@ class Form extends CI_Controller
 	function getOptApprove()
 	{
 		$inputUserId = $this->session->userdata('userIdMyApps');
+		$inputUserType = $this->session->userdata('userTypeMyApps');
+		
 		$optNya = "<option value=\"\">- Select -</option>";
 
 		if ($inputUserId === '00005') {
 			
 			$sql = "SELECT userid, userfullnm, useremail FROM login WHERE deletests = 0 AND active = 'Y' ORDER BY userfullnm ASC";
-		} else {
+		}else if ($inputUserType == 'admin' ) 
+		{
+			$sql = "SELECT userid, userfullnm, useremail FROM login WHERE deletests = 0 AND active = 'Y' ORDER BY userfullnm ASC";
+		}
+		 else {
 			
 			$sql = "SELECT userid, userfullnm, useremail FROM login WHERE userid IN ('00054', '00061', '00116', '00166', 
 					'00053', '00032') 

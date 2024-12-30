@@ -26,7 +26,6 @@ class Inventory Extends CI_Controller{
         $data = $this->myapp->getDataQueryDB6($sql);
    
         foreach ($data as $key => $value) {
-            $status = '';
             $btnDetail = '';        
 
             if ($value->sts_input == 'Y') {
@@ -34,27 +33,31 @@ class Inventory Extends CI_Controller{
 			}
 
             $tr .= "<tr id='row_" . $value->id . "'>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $no . "</td>";
-            $tr .= "<td align='center'>" . $btnDetail . "</td>"; 
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->id_name . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->ram . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->company . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->divisi . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->location . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->harddisk . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->windows . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->win_serial . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->user . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->tanggal_beli . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->history_user . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>" . $value->po . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;' id='status_" . $value->id . "'>" . $status . "</td>";
-            $tr .= "<td style='text-align: center; font-size: 12px; padding: 8px; border: 1px solid #ddd;'>Action</td>";
-            $tr .= "</tr>";
+				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $no . "</td>";
+				$tr .= "<td align='center'>" . $btnDetail . "</td>"; 
+				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$value->company."</td>";
+				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->id_name . "</td>";
+				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->divisi . "</td>";
+				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->location . "</td>";
+				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->jenisperangkat . "</td>";
+				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->ram . "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->harddisk . "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->windows. "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->win_serial . "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->user . "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->tanggal_beli . "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->history_user . "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->po ."</td>";
+				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;' id='status_" . $value->id . "'>".$value->status."</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->brand . "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->port . "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->size . "</td>";
+				$tr .= "</tr>";
             $no++;
         }
 
         $dataOut['tr'] = $tr;
+        $dataOut['getOptReqName'] = $this->getOptReqName();
         $dataOut['getOptCompany'] = $this->getOptCompany(); 
         $dataOut['getOptJenisPerangkat'] = $this->getOptJenisPerangkat();
         $dataOut['getOptLocation'] = $this->getOptLocation();
@@ -72,9 +75,8 @@ class Inventory Extends CI_Controller{
         $valData['id_name'] = isset($data['idname']) ? $data['idname'] : '';
         $valData['ram'] = isset($data['ram']) ? $data['ram'] : '';
         $valData['company'] = isset($data['company']) ? $data['company'] : '';  
-        $valData['init_cmp'] = isset($data['init_cmp']) ? $data['init_cmp'] : '';  
         $valData['divisi'] = isset($data['divisi']) ? $data['divisi'] : '';  
-        $valData['location'] = isset($data['txtlocation']) ? $data['txtlocation'] : '';
+        $valData['location'] = isset($data['location']) ? $data['location'] : '';
         $valData['harddisk'] = isset($data['harddisk']) ? $data['harddisk'] : '';
         $valData['windows'] = isset($data['windows']) ? $data['windows'] : '';
         $valData['win_serial'] = isset($data['winserial']) ? $data['winserial'] : '';
@@ -114,16 +116,17 @@ class Inventory Extends CI_Controller{
         print json_encode($stData); 
     }
 
-
     function getOptCompany() {
         $sql = "SELECT DISTINCT company FROM form WHERE sts_delete = '0' ORDER BY company ASC";
         $result = $this->myapp->getDataQueryDB6($sql);
-        $options = '<option value="">Select Company</option>';
+        $options = '<option value="">-Select-</option>';
         foreach ($result as $row) {
-            $options .= '<option value="' . $row->company . '">' . $row->company . '</option>';
+            $company = htmlspecialchars($row->company);
+            $options .= '<option value="' . $company . '">' . $company . '</option>';
         }
         return $options;
     }
+
 
     function getOptDivisiByCompany() {
         $company = $this->input->post('company'); 
@@ -133,7 +136,7 @@ class Inventory Extends CI_Controller{
         $sql = "SELECT DISTINCT divisi FROM form WHERE sts_delete = '0' AND company = $company ORDER BY divisi ASC";
         $result = $this->myapp->getDataQueryDB6($sql);
 
-        $options = '<option value="">Select Divisi</option>';
+        $options = '<option value="">-Select-</option>';
         foreach ($result as $row) {
             $options .= '<option value="' . htmlspecialchars($row->divisi) . '">' . htmlspecialchars($row->divisi) . '</option>';
         }
@@ -141,11 +144,10 @@ class Inventory Extends CI_Controller{
         echo $options; 
     }
 
-
     function getOptLocation() {
         $sql = "SELECT DISTINCT location FROM form WHERE sts_delete = '0' ORDER BY location ASC";
         $result = $this->myapp->getDataQueryDB6($sql);
-        $options = '<option value="">Select Location</option>';
+        $options = '<option value="">-Select-</option>';
         foreach ($result as $row) {
             $options .= '<option value="' . $row->location . '">' . $row->location . '</option>';
         }
@@ -154,19 +156,24 @@ class Inventory Extends CI_Controller{
 
     function getOptJenisPerangkat()
     {
-        $opt = "<option value=\"\">- Select -</option>";
-
-        $sql = "SELECT * FROM jenis_perangkat WHERE sts_delete = '0'";
-        
-        $rsl = $this->myapp->getDataQueryDB6($sql);
-
-        foreach($rsl as $key => $val)
-        {
-            $opt .= "<option value=\"".$val->nama_perangkat."\">".$val->nama_perangkat."</option>";
+        $sql = "SELECT DISTINCT jenisperangkat FROM form WHERE sts_delete = '0' ORDER BY jenisperangkat ASC";
+        $result = $this->myapp->getDataQueryDB6($sql);
+        $options = '<option value="">-Select-</option>';
+        foreach ($result as $row) {
+            $options .= '<option value ="'.$row->jenisperangkat.'">'.$row->jenisperangkat.'</option>';
         }
-
-        return $opt;
+        return $options;
     }
-
+ 
+    function getOptReqName()
+    {
+        $sql = "SELECT DISTINCT request_name FROM form WHERE sts_delete = '0' ORDER BY request_name ASC";
+        $result = $this->myapp->getDataQueryDB6($sql);
+        $options = '<option value="">-Select-</option>';
+        foreach ($result as $row) {
+            $options .- '<option value ="'.$row->request_name.'">'.$row->request_name.'</option>';
+        }
+        return $options;
+    }
     
 }

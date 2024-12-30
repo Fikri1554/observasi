@@ -23,17 +23,23 @@
         $("#saveInventory").click(function() {
             var formData = new FormData();
             var fields = [
-                'company', 'init_cmp', 'idname', 'divisi', 'txtlocation', 'jenisperangkat',
-                'ram', 'harddisk', 'windows', 'winserial', 'user', 'tanggalbeli',
+                'idname', 'ram', 'harddisk', 'windows', 'winserial', 'user', 'tanggalbeli',
                 'historyuser', 'po', 'status', 'brand', 'port', 'size', 'txtIdInventory'
             ];
 
+            // Ambil nilai dari elemen input biasa
             fields.forEach(function(field) {
                 var value = $("#" + field).val();
                 formData.append(field, value || '');
             });
 
+            // Ambil nilai yang dipilih dari dropdown menggunakan :selected
+            formData.append('company', $('#slcCompany option:selected').val() || '');
+            formData.append('divisi', $('#slcDivisi option:selected').val() || '');
+            formData.append('location', $('#slcLocation option:selected').val() || '');
+            formData.append('jenisperangkat', $('#slcJenisPerangkat option:selected').val() || '');
 
+            // Kirim data ke server melalui AJAX
             $.ajax({
                 url: "<?php echo base_url('inventory/addInventory'); ?>",
                 type: "POST",
@@ -50,6 +56,7 @@
                 }
             });
         });
+
         $('#slcCompany').on('change', function() {
             var selectedCompany = $(this).val();
 
@@ -72,23 +79,31 @@
     });
 
     function generateIDName() {
-        const slcCompany = document.getElementById("slcCompany");
-        const selectedOption = slcCompany.options[slcCompany.selectedIndex];
-        const cmpcode = selectedOption.getAttribute("data-cmpcode");
-        const idnameInput = document.getElementById("idname");
+        var slcCompany = document.getElementById("slcCompany");
+        var idnameInput = document.getElementById("idname");
 
-        if (cmpcode) {
-            const randomNumber = Math.floor(10 + Math.random() * 200);
-            const idName = `${cmpcode}-${randomNumber}`;
+        if (!slcCompany || !idnameInput) {
+            console.error("Element slcCompany or idname not found!");
+            return;
+        }
+
+        var selectedValue = slcCompany.value.trim();
+
+        if (selectedValue) {
+            var randomNumber = Math.floor(10 + Math.random() * 200);
+            var sanitizedValue = selectedValue.replace(/\s+/g, '-').toUpperCase();
+            var idName = `${sanitizedValue}-${randomNumber}`;
             idnameInput.value = idName;
         } else {
             idnameInput.value = "";
+            console.warn("No company selected.");
         }
     }
 
+
     document.addEventListener('DOMContentLoaded', () => {
-        const slcJenisPerangkat = document.getElementById("slcJenisPerangkat");
-        const inputsToToggle = {
+        var slcJenisPerangkat = document.getElementById("slcJenisPerangkat");
+        var inputsToToggle = {
             pc: ["brand", "port", "size"], // PC SERVER, PC DESKTOP, LAPTOP
             network: ["ram", "harddisk", "windows", "winserial", "user", "historyuser",
                 "status"
@@ -99,10 +114,10 @@
         };
 
         slcJenisPerangkat.addEventListener("change", () => {
-            const selectedValue = slcJenisPerangkat.value.toUpperCase();
+            var selectedValue = slcJenisPerangkat.value.toUpperCase();
 
 
-            const allInputs = [
+            var allInputs = [
                 "ram", "harddisk", "windows", "winserial", "user", "historyuser", "status",
                 "brand", "port", "size"
             ];
@@ -118,20 +133,20 @@
             }
 
             // Tentukan input yang harus ditampilkan
-            const inputsToShow = allInputs.filter(input => !inputsToHide.includes(input));
+            var inputsToShow = allInputs.filter(input => !inputsToHide.includes(input));
 
             // Sembunyikan input yang sesuai
             inputsToHide.forEach(id => {
-                const input = document.getElementById(id);
-                const label = document.querySelector(`label[for='${id}']`);
+                var input = document.getElementById(id);
+                var label = document.querySelector(`label[for='${id}']`);
                 if (input) input.style.display = "none";
                 if (label) label.style.display = "none";
             });
 
             // Tampilkan input yang sesuai
             inputsToShow.forEach(id => {
-                const input = document.getElementById(id);
-                const label = document.querySelector(`label[for='${id}']`);
+                var input = document.getElementById(id);
+                var label = document.querySelector(`label[for='${id}']`);
                 if (input) input.style.display = "block";
                 if (label) label.style.display = "block";
             });
@@ -337,58 +352,53 @@
                     <div class="row mt" id="idData1">
                         <div class="col-md-12">
                             <div class="table-responsive">
-                                <table class="table table-border table-striped table-bordered"
+                                <table
+                                    class="table table-border table-striped table-bordered table-condensed table-advance table-hover"
                                     style="border-collapse: collapse; width: 100%; font-size: 12px;">
                                     <thead>
                                         <tr style="background-color: #ba5500; color: #FFF;">
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
-                                                No</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
-                                                ID Name</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
-                                                Jenis Perangkat</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
-                                                RAM</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
+                                            <th colspan="2"
+                                                style="vertical-align: middle; text-align: center; padding: 8px;">No
+                                            </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
                                                 Company</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
-                                                Divisi</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
+                                                ID Name</th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Divisi
+                                            </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
                                                 Location</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Jenis
+                                                Perangkat
+                                            </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
+                                                RAM</th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
                                                 Harddisk</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
                                                 Windows</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
-                                                Win Serial</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Win
+                                                Serial
+                                            </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
                                                 User</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
                                                 Tanggal Beli</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
-                                                History User</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
-                                                PO</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
-                                                Status</th>
-                                            <th
-                                                style="vertical-align: middle; text-align: center; padding: 8px; border: 1px solid #ddd;">
-                                                Action</th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
+                                                History User
+                                            </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">PO
+                                            </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Status
+                                            </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Brand
+                                            </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Port
+                                            </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Size
+                                            </th>
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Action
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody id="idTbody">
@@ -398,6 +408,7 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
             </section>
         </section>

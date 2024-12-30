@@ -33,6 +33,7 @@
             var location = $("#txtlocation").val();
             var divisi = $("#slcDivisi").val();
             var department = $("#slcDepartment").val();
+            var jenisperangkat = $("#txtJenisPerangkat").val();
             var requiredDate = $("#txtRequiredDate").val();
             var acknowledge = $("#slcAcknowledge").val();
             var approve = $("#slcApprove").val();
@@ -52,6 +53,7 @@
             formData.append('txtlocation', location);
             formData.append('slcDivisi', divisi);
             formData.append('slcDepartment', department);
+            formData.append('txtJenisPerangkat', jenisperangkat);
             formData.append('txtRequiredDate', requiredDate);
             formData.append('slcAcknowledgeText', $("#slcAcknowledge option:selected").text());
             formData.append('slcAcknowledge', acknowledge);
@@ -194,6 +196,7 @@
                     $("#txtlocationEdit").val(formData.location);
                     $("#slcCompanyEdit").val(formData.company);
                     $("#slcDivisiEdit").val(formData.divisi);
+                    $("#txtJenisPerangkatEdit").val(formData.jenisperangkat);
 
                     setTimeout(() => {
                         $("#slcDepartmentEdit").val(formData.department);
@@ -919,12 +922,11 @@
                                                         </div>
                                                         <div class="col-md-3 col-xs-12">
                                                             <div class="form-group">
-                                                                <label for="slcJenisPerangkat"><b><u>Jenis Perangkat
-                                                                            :</u></b></label>
-                                                                <select id="slcJenisPerangkat"
-                                                                    class="form-control input-sm">
-                                                                    <?php echo $getOptJenisPerangkat; ?>
-                                                                </select>
+                                                                <label for="txtJenisPerangkat"><u>Jenis
+                                                                        Perangkat:</u></label>
+                                                                <input type="text" name="txtjenisperangkat[]"
+                                                                    class="form-control input-sm" id="txtJenisPerangkat"
+                                                                    autocomplete="off">
                                                             </div>
                                                         </div>
                                                         <div class="col-md-3 col-xs-12">
@@ -1085,6 +1087,9 @@
                                                 Divisi
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
+                                                Department
+                                            </th>
+                                            <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Jenis Perangkat
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
@@ -1243,6 +1248,14 @@
                                                         <select id="slcDepartmentEdit" class="form-control input-sm">
                                                             <option value="">- Select Department -</option>
                                                         </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label for="txtJenisPerangkat"><b><u>Jenis Perangkat
+                                                                    :</u></b></label>
+                                                        <input type="text" class="form-control input-sm"
+                                                            id="txtJenisPerangkatEdit" name="txtJenisPerangkat">
                                                     </div>
                                                 </div>
                                                 <div class="col-md-2 col-xs-12"
