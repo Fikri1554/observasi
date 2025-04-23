@@ -101,6 +101,7 @@ class Form extends CI_Controller
 			
 		foreach ($data as $key => $value) {
 			$status = '';
+			$btnDetail = '';
 			
 			if ($value->st_submit == 'Y' && $value->st_acknowledge == 'N') {
 				$status = "Waiting Acknowledge <i class='fa fa-clock-o'></i>";
@@ -130,7 +131,6 @@ class Form extends CI_Controller
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->company . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->location . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->divisi . "</td>";
-				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->jenis_perangkat . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;' id='status_" . $value->id . "'>" . $status . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>".$btnExport.$btnDelete."</td>";
 				$tr .= "</tr>";
@@ -144,6 +144,7 @@ class Form extends CI_Controller
 
 		$dataOut['tr'] = $tr;
 		$dataOut["listPage"] = $dataOut['listPage'];
+		$dataOut['getOptJenisPerangkat'] = $this->getOptJenisPerangkat();
 		$dataOut['getOptAcknowledge'] = $this->getOptAcknowledge();
 		$dataOut['getOptApprove'] = $this->getOptApprove();	
 		$dataOut['getOptCompany'] = $this->getOptCompany(); 
@@ -287,7 +288,6 @@ class Form extends CI_Controller
 			'init_cmp' => $this->input->post('slcCompanyEdit'),
 			'divisi' => $this->input->post('slcDivisiEdit'),
 			'department' => $this->input->post('slcDepartmentEdit'),
-			'jenis_perangkat' => $this->input->post('txtJenisPerangkatEdit'),
 			'required_date' => $this->input->post('txtRequiredDateEdit'),
 			'name_acknowledge' => $this->input->post('slcAcknowledgeText'),
 			'userid_acknowledge' => $this->input->post('slcAcknowledgeEdit'),
@@ -301,6 +301,7 @@ class Form extends CI_Controller
 		$responseMessage = $formUpdateSuccess ? "Update Success..!!" : "Update form failed.";
 
 		$details = array();
+		$arrJenisPerangkat = is_array($data['slcJenisPerangkatEdit']) ? $data['slcJenisPerangkatEdit'] : array();
 		$arrDescriptions = is_array($data['txtdescriptionEdit']) ? $data['txtdescriptionEdit'] : array();
 		$arrTypes = is_array($data['txttypeEdit']) ? $data['txttypeEdit'] : array();
 		$arrReasons = is_array($data['txtreasonEdit']) ? $data['txtreasonEdit'] : array();
@@ -470,10 +471,10 @@ class Form extends CI_Controller
 		
 
 		if ($userType == 'admin') {
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, jenis_perangkat, department, sts_delete, batchno
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
 		} elseif ($userDiv === 'OFFICE OPERATION' && $userDept === 'INFORMATION TECHNOLOGY'){
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, jenis_perangkat, department, sts_delete, batchno
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
                 FROM form " . $where;
 		} 
 		else {
@@ -505,7 +506,7 @@ class Form extends CI_Controller
 				}
 			}
 
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, jenis_perangkat, department, sts_delete, batchno
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
 		}
 
@@ -660,7 +661,7 @@ class Form extends CI_Controller
 				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; font-weight:bold;\">Required Date</td>";
 				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; color:#0056b3;\">".$this->convertReturnName($value->required_date)."</td>";
 				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; font-weight:bold;\">Jenis Peragkat</td>";
-				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; color:#0056b3;\">".$value->jenis_perangkat."</td>";
+				$tr .= "<td style=\"vertical-align:top; width:35%; padding:12px; background-color:#fefefe; border: 1px solid #ddd; color:#0056b3;\">".$value."</td>";
 				$tr .= "</tr>";
 				$tr .= "<tr>";
 				$tr .= "<td style=\"vertical-align:top; width:15%; padding:12px; background-color:#f9fbff; border: 1px solid #ddd; font-weight:bold;\">Request Name</td>";
@@ -708,10 +709,10 @@ class Form extends CI_Controller
 				(divisi = 'NON DIVISION' AND department IN ('SECRETARY', 'NON DEPARTMENT')) OR
 				(divisi = 'OFFICE OPERATION' AND department IN ('IT', 'LEGAL', 'PROCUREMENT'))
 			)";
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, jenis_perangkat, department, sts_delete, batchno
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
 		} elseif ($userType == 'admin') {
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, jenis_perangkat, department, sts_delete, batchno
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
 		} else {
 			
@@ -737,7 +738,7 @@ class Form extends CI_Controller
 				$where .= " AND divisi = '" . $userDiv . "'";
 			}
 
-			$sql = "SELECT id, project_reference, purpose, company, location, divisi, jenis_perangkat, department, sts_delete, batchno
+			$sql = "SELECT id, project_reference, purpose, company, location, divisi, department, sts_delete, batchno
 					FROM form " . $where;
 		}
 
@@ -1128,7 +1129,6 @@ class Form extends CI_Controller
 				'department' => $data['slcDepartment'],
 				'location' => $data['txtlocation'],
 				'divisi' => $data['slcDivisi'],
-				'jenis_perangkat' => $data['txtJenisPerangkat'],
 				'required_date' => isset($data['txtRequiredDate']) ? $data['txtRequiredDate'] : $dateNow,
 				'userid_submit' => $userId,
 				'add_date' => $dateNow,
@@ -1166,7 +1166,6 @@ class Form extends CI_Controller
 				'department' => $data['slcDepartment'],
 				'location' => $data['txtlocation'],
 				'divisi' => $data['slcDivisi'],
-				'jenis_perangkat' => $data['txtJenisPerangkat'],
 				'required_date' => isset($data['txtRequiredDate']) ? $data['txtRequiredDate'] : $dateNow,
 				'update_userid' => $userId,
 				'update_date' => $dateNow,
@@ -1194,6 +1193,7 @@ class Form extends CI_Controller
 		}
 
 		$txtIdForm = $IdForm;  
+		$arrJenisPerangkat = explode('*', $data['slcJenisPerangkat']);
 		$arrDescriptions = explode('*', $data['descriptions']);
 		$arrTypes = explode('*', $data['types']);
 		$arrReasons = explode('*', $data['reasons']);
@@ -1209,6 +1209,7 @@ class Form extends CI_Controller
 			
 			$dataToInsert = array(
 				'id_form'       => $txtIdForm,  
+				'jenisperangkat'=> $arrJenisPerangkat[$i],
 				'description'   => $arrDescriptions[$i],
 				'type'          => $arrTypes[$i],
 				'reason'        => $arrReasons[$i],
@@ -1312,6 +1313,23 @@ class Form extends CI_Controller
 
 		return $optNya;
 	}
+
+	function getOptJenisPerangkat()
+    {
+        $sql = "SELECT DISTINCT nama_perangkat 
+                FROM jenis_perangkat
+                WHERE sts_delete = '0' 
+                ORDER BY nama_perangkat ASC";
+        
+        $result = $this->myapp->getDataQueryDB6($sql);
+        $options = '<option value="">-Select-</option>';
+        
+        foreach ($result as $row) {
+            $options .= '<option value ="'.$row->nama_perangkat.'">'.$row->nama_perangkat.'</option>';
+        }
+        
+        return $options;
+    }
 
 	function getOptApprove()
 	{

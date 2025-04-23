@@ -149,6 +149,7 @@ ob_start();
     <table class="detail">
         <thead>
             <tr>
+                <th>JENIS PERANGKAT</th>
                 <th>DESKRIPSI</th>
                 <th>TYPE / BRAND</th>
                 <th>QUANTITY</th>
@@ -158,6 +159,7 @@ ob_start();
         <tbody>
             <?php foreach ($form_details as $detail): ?>
             <tr>
+                <td><?php echo isset($detail->jenisperangkat) ? $detail->jenisperangkat : ''; ?></td>
                 <td><?php echo isset($detail->description) ? $detail->description : ''; ?></td>
                 <td><?php echo isset($detail->type) ? $detail->type : ''; ?></td>
                 <td><?php echo isset($detail->quantity) ? $detail->quantity : ''; ?></td>
@@ -206,9 +208,6 @@ ob_start();
                 </tr>
             </table>
         </div>
-
-
-
     </div>
 </body>
 

@@ -40,9 +40,8 @@ class Inventory Extends CI_Controller{
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->divisi . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->location . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->jenisperangkat . "</td>";
-                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->jenisperangkatkhusus . "</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->ram . "</td>";
-                //$tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->processor . "</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->processor . "</td>";
                 $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->harddisk . "</td>";
                 $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->windows. "</td>";
                 $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->win_serial . "</td>";
@@ -51,14 +50,13 @@ class Inventory Extends CI_Controller{
                 $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->history_user . "</td>";
                 $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->po ."</td>";
 				$tr .= "<td align='center' style='font-size:12px;vertical-align:top;' id='status_" . $value->id . "'>".$value->status."</td>";
+                $tr .= "<td align='center' style='font-size:12px;vertical-align:top;'>" . $value->brand ."</td>";
 				$tr .= "</tr>";
             $no++;
         }
 
         $dataOut['tr'] = $tr;
-        $dataOut['getOptReqName'] = $this->getOptReqName();
         $dataOut['getOptCompany'] = $this->getOptCompany(); 
-        $dataOut['getOptJenisPerangkatKhusus'] = $this->getOptJenisPerangkatKhusus();
         $dataOut['getOptJenisPerangkat'] = $this->getOptJenisPerangkat();
         $dataOut['getOptLocation'] = $this->getOptLocation();
 
@@ -69,51 +67,99 @@ class Inventory Extends CI_Controller{
     {
         $data = $_POST;
         $valData = array();
+        $requiredFields = array(
+            'idname', 'ram', 'harddisk', 'windows', 'winserial', 
+            'user', 'tanggalbeli', 'historyuser', 'po', 
+            'status', 'brand', 'processor', 'company', 
+            'divisi', 'location', 'jenisperangkat'
+        );
         $stData = "";
-        
+        $missingFields = array();
+
+        foreach ($requiredFields as $field) {
+            if (empty($data[$field])) {
+                $missingFields[] = $field;
+            }
+        }
+
+        if (isset($data['txtIdInventory']) && empty($data['txtIdInventory'])) {
+            echo json_encode(array('status' => 'error', 'message' => 'ID Inventory tidak valid!'));
+            return;
+        }
+
+        if (!empty($missingFields)) {
+            echo json_encode(array(
+                'status' => 'error',
+                'message' => 'Field berikut tidak boleh kosong: ' . implode(', ', $missingFields)
+            ));
+            return;
+        }
+
+
         $valData['id'] = isset($data['txtIdInventory']) ? $data['txtIdInventory'] : '';
         $valData['id_name'] = isset($data['idname']) ? $data['idname'] : '';
         $valData['ram'] = isset($data['ram']) ? $data['ram'] : '';
-        $valData['processor '] = isset($data['processor']) ? $data['processor'] : '';
-        $valData['company'] = isset($data['company']) ? $data['company'] : '';  
-        $valData['divisi'] = isset($data['divisi']) ? $data['divisi'] : '';  
+        $valData['processor'] = isset($data['processor']) ? $data['processor'] : '';
+        $valData['company'] = isset($data['company']) ? $data['company'] : '';
+        $valData['divisi'] = isset($data['divisi']) ? $data['divisi'] : '';
         $valData['location'] = isset($data['location']) ? $data['location'] : '';
         $valData['jenisperangkat'] = isset($data['jenisperangkat']) ? $data['jenisperangkat'] : '';
-        $valData['jenisperangkatkhusus'] = isset($data['jenisperangkatkhusus']) ? $data['jenisperangkatkhusus'] : '';
         $valData['harddisk'] = isset($data['harddisk']) ? $data['harddisk'] : '';
         $valData['windows'] = isset($data['windows']) ? $data['windows'] : '';
         $valData['win_serial'] = isset($data['winserial']) ? $data['winserial'] : '';
         $valData['user'] = isset($data['user']) ? $data['user'] : '';
-        $valData['tanggal_beli'] = date("Y-m-d"); 
+        $valData['tanggal_beli'] = date("Y-m-d");
         $valData['history_user'] = isset($data['historyuser']) ? $data['historyuser'] : '';
         $valData['po'] = isset($data['po']) ? $data['po'] : '';
-        $valData['status'] = isset($data['status']) ? $data['status'] : ''; 
+        $valData['status'] = isset($data['status']) ? $data['status'] : '';
+        $valData['brand'] = isset($data['brand']) ? $data['brand'] : '';
 
-        if ($data['txtIdInventory'] == "") {
+        if (!empty($data['txtIdInventory'])) { 
+            // Proses UPDATE
+            try {
+                $where = array('id' => $data['txtIdInventory']); 
+                $this->myapp->updateDataDb6('inventory', $valData, $where);  
+
+                $this->db->set('sts_input', 'Y');
+                $this->db->where('id', $data['txtIdInventory']);
+                $this->db->update('inventory');  
+
+                $stData = "Update Success..!!";
+            } catch (Exception $e) {
+                $stData = "Failed => " . $e->getMessage();
+            }
+        } else { 
             try {
                 $this->myapp->insDataDb6($valData, "inventory");  
                 $txtIdInventory = $this->db->insert_id();
+
                 $this->db->set('sts_input', 'Y');
                 $this->db->where('id', $txtIdInventory);
-                $this->db->update('inventory');
+                $this->db->update('inventory');  
+
                 $stData = "Insert Success..!!";
             } catch (Exception $e) {
-                $stData = "Failed =>" . $e;
-            }
-        } else {
-            try {
-                $where = "id = '" . $data['txtIdInventory'] . "'";
-                $this->myapp->updateDataDb6($where, $valData, "inventory");
-                $this->db->set('sts_input', 'Y');
-                $this->db->where('id', $data['txtIdInventory']);
-                $this->db->update('inventory');
-                $stData = "Update Success..!!";
-            } catch (Exception $e) {
-                $stData = "Failed =>" . $e;
+                $stData = "Failed => " . $e->getMessage();
             }
         }
 
-        print json_encode($stData); 
+        print json_encode($stData);
+    }
+
+    
+    function getInvetoryById()
+    {
+        $id = $this->input->get('id');
+        $sql = "SELECT * FROM inventory WHERE id = '".$id."'";  
+        $result = $this->myapp->getDataQueryDB6($sql);
+
+        if(!empty($result))
+        {
+            echo json_encode(array('success' => true, 'data' => $result[0]));
+        }
+        else{
+             echo json_encode(array('error' => false));
+        }
     }
 
     function getOptCompany() {
@@ -156,47 +202,21 @@ class Inventory Extends CI_Controller{
 
     function getOptJenisPerangkat()
     {
-        $sql = "SELECT DISTINCT jenis_perangkat 
-                FROM form 
+        $sql = "SELECT DISTINCT jenisperangkat 
+                FROM form_detail
                 WHERE sts_delete = '0' 
-                AND jenis_perangkat NOT IN ('PC', 'PC SERVER', 'LAPTOP', 'KOMPUTER') 
-                ORDER BY jenis_perangkat ASC";
+                ORDER BY jenisperangkat ASC";
         
         $result = $this->myapp->getDataQueryDB6($sql);
         $options = '<option value="">-Select-</option>';
         
         foreach ($result as $row) {
-            $options .= '<option value ="' . htmlspecialchars($row->jenis_perangkat, ENT_QUOTES, 'UTF-8') . '">'
-                        . htmlspecialchars($row->jenis_perangkat, ENT_QUOTES, 'UTF-8') . '</option>';
+            $options .= '<option value ="' . htmlspecialchars($row->jenisperangkat, ENT_QUOTES, 'UTF-8') . '">'
+                        . htmlspecialchars($row->jenisperangkat, ENT_QUOTES, 'UTF-8') . '</option>';
         }
         
         return $options;
     }
 
-
-    function getOptJenisPerangkatKhusus()
-    {
-        $sql = "SELECT DISTINCT jenis_perangkat FROM form 
-                WHERE sts_delete = '0' AND jenis_perangkat IN ('PC', 'PC SERVER', 'KOMPUTER','LAPTOP') 
-                ORDER BY jenis_perangkat ASC";
-        $result = $this->myapp->getDataQueryDB6($sql);
-        $options = '<option value="">-Select-</option>';
-        foreach ($result as $row) {
-            $options .= '<option value ="' . $row->jenis_perangkat . '">' . $row->jenis_perangkat . '</option>';
-        }
-        return $options;
-    }
-
- 
-    function getOptReqName()
-    {
-        $sql = "SELECT DISTINCT request_name FROM form WHERE sts_delete = '0' ORDER BY request_name ASC";
-        $result = $this->myapp->getDataQueryDB6($sql);
-        $options = '<option value="">-Select-</option>';
-        foreach ($result as $row) {
-            $options .- '<option value ="'.$row->request_name.'">'.$row->request_name.'</option>';
-        }
-        return $options;
-    }
     
 }

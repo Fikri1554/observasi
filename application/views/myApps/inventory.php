@@ -21,27 +21,50 @@
             defaultDate: new Date(),
         });
         $("#saveInventory").click(function() {
+            var isEmpty = false;
             var formData = new FormData();
+            var idInventory = $("#txtIdInventory").val();
+
             var fields = [
                 'idname', 'ram', 'harddisk', 'windows', 'winserial', 'user', 'tanggalbeli',
-                'historyuser', 'po', 'status', 'processor', 'txtIdInventory'
+                'historyuser', 'po', 'status', 'brand', 'processor'
             ];
 
-            // Ambil nilai dari elemen input biasa
             fields.forEach(function(field) {
                 var value = $("#" + field).val();
-                formData.append(field, value || '');
+                if (!value) {
+                    alert("Field " + field + " tidak boleh kosong!");
+                    isEmpty = true;
+                    return false;
+                }
+                formData.append(field, value);
             });
 
-            // Ambil nilai yang dipilih dari dropdown menggunakan :selected
-            formData.append('company', $('#slcCompany option:selected').val() || '');
-            formData.append('divisi', $('#slcDivisi option:selected').val() || '');
-            formData.append('location', $('#slcLocation option:selected').val() || '');
-            formData.append('jenisperangkat', $('#slcJenisPerangkat option:selected').val() || '');
-            formData.append('jenisperangkatkhusus', $('#slcJenisPerangkatKhusus option:selected')
-            .val() || '');
+            var dropdowns = {
+                'slcCompany': 'company',
+                'slcDivisi': 'divisi',
+                'slcLocation': 'location',
+                'slcJenisPerangkat': 'jenisperangkat'
+            };
 
-            // Kirim data ke server melalui AJAX
+            $.each(dropdowns, function(dropdownId, fieldName) {
+                var value = $('#' + dropdownId + ' option:selected').val();
+                if (!value) {
+                    alert("Pilih nilai untuk " + dropdownId + "!");
+                    isEmpty = true;
+                    return false;
+                }
+                formData.append(fieldName, value);
+            });
+
+
+
+            if (idInventory) {
+                formData.append('txtIdInventory', idInventory);
+            }
+
+            if (isEmpty) return;
+
             $.ajax({
                 url: "<?php echo base_url('inventory/addInventory'); ?>",
                 type: "POST",
@@ -50,7 +73,7 @@
                 processData: false,
                 success: function(response) {
                     alert(response);
-                    location.reload(); // Reload untuk memperbarui tampilan
+                    location.reload();
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
@@ -79,6 +102,106 @@
         });
 
     });
+
+    function editData(id) {
+        $.ajax({
+            url: '<?php echo base_url('inventory/getInvetoryById'); ?>',
+            type: 'GET',
+            data: {
+                id: id
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+
+                    $('#txtIdInventory').val(response.data.id);
+                    $('#slcCompany').val(response.data.company);
+                    $('#idname').val(response.data.id_name);
+                    $('#slcDivisi').val(response.data.divisi);
+                    $('#slcLocation').val(response.data.location);
+                    $('#slcJenisPerangkat').val(response.data.jenisperangkat);
+                    $('#ram').val(response.data.ram);
+                    $('#processor').val(response.data.processor);
+                    $('#harddisk').val(response.data.harddisk);
+                    $('#windows').val(response.data.windows);
+                    $('#winserial').val(response.data.win_serial);
+                    $('#user').val(response.data.user);
+                    $('#tanggalbeli').val(response.data.tanggal_beli);
+                    $('#historyuser').val(response.data.history_user);
+                    $('#po').val(response.data.po);
+                    $('#status').val(response.data.status);
+                    $('#brand').val(response.data.brand);
+                    $('#port').val(response.data.port);
+
+                    const jenisPerangkat = response.data.jenisperangkat.toLowerCase();
+                    const devicesToShow = ['laptop', 'pc server', 'pc', 'komputer'];
+                    const inputsToToggle = [
+                        'ram', 'processor', 'harddisk', 'windows', 'winserial',
+                        'user', 'historyuser', 'tanggalbeli', 'po', 'status', 'brand'
+                    ];
+
+                    if (devicesToShow.includes(jenisPerangkat)) {
+                        inputsToToggle.forEach(id => {
+                            $('#' + id).parent().parent().show();
+                        });
+                    } else {
+                        inputsToToggle.forEach(id => {
+                            $('#' + id).parent().parent().hide();
+                        });
+                    }
+
+                    $('.modal-title').text('Edit Inventory');
+                    $('#idInventoryModal').modal('show');
+                } else {
+                    alert('Data tidak ditemukan!');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Terjadi kesalahan saat mengambil data.');
+            }
+        });
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const slcJenisPerangkat = document.getElementById('slcJenisPerangkat');
+        const inputsToToggle = [
+            'ram', 'processor', 'harddisk', 'windows', 'winserial',
+            'user', 'historyuser', 'tanggalbeli', 'po', 'status', 'brand'
+        ];
+
+        window.toggleInputs = function(show) {
+            inputsToToggle.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.parentElement.parentElement.style.display = show ? 'block' : 'none';
+                }
+            });
+        };
+
+        toggleInputs(false);
+
+        slcJenisPerangkat.addEventListener('change', function() {
+            const selectedValue = slcJenisPerangkat.value.toLowerCase();
+            const devicesToShow = ['pc server', 'laptop', 'pc', 'komputer'];
+
+            if (devicesToShow.includes(selectedValue)) {
+                toggleInputs(true);
+            } else {
+                toggleInputs(false);
+            }
+        });
+    });
+
+    function resetModal() {
+        $('#idInventoryModal input').val('');
+        $('#idInventoryModal select').val('');
+        $('#slcJenisPerangkat').val('');
+        toggleInputs(false); // Accessible via window.toggleInputs
+    }
+
+
 
     function generateIDName() {
         var slcCompany = document.getElementById("slcCompany");
@@ -176,25 +299,13 @@
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="slcJenisPerangkatKhusus"><b><u>Jenis
-                                                                            Perangkat
-                                                                            Khusus
-                                                                            :</u></b></label>
-                                                                <select id="slcJenisPerangkatKhusus"
-                                                                    class="form-control input-sm">
-                                                                    <?php echo $getOptJenisPerangkatKhusus; ?>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row inventoryRow">
-                                                        <div class="col-md-6">
-                                                            <div class="inventory-group">
                                                                 <label for="ram"><b><u>RAM :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="ram" name="ram[]">
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                    <div class="row inventoryRow">
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="size"><b><u>Processor :</u></b></label>
@@ -202,8 +313,6 @@
                                                                     id="processor" name="size[]">
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="row inventoryRow">
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="harddisk"><b><u>Harddisk :</u></b></label>
@@ -211,6 +320,8 @@
                                                                     id="harddisk" name="harddisk[]">
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                    <div class="row inventoryRow">
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="windows"><b><u>Windows :</u></b></label>
@@ -218,8 +329,6 @@
                                                                     id="windows" name="windows[]">
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="row inventoryRow">
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="winserial"><b><u>Win Serial
@@ -228,11 +337,21 @@
                                                                     id="winserial" name="winserial[]">
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                    <div class="row inventoryRow">
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
                                                                 <label for="user"><b><u>User :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="user" name="user[]">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="inventory-group">
+                                                                <label for="historyuser"><b><u>History User
+                                                                            :</u></b></label>
+                                                                <input type="text" class="form-control input-sm"
+                                                                    id="historyuser" name="historyuser[]">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -248,19 +367,18 @@
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="historyuser"><b><u>History User
-                                                                            :</u></b></label>
-                                                                <input type="text" class="form-control input-sm"
-                                                                    id="historyuser" name="historyuser[]">
+                                                                <label for="po"><b><u>PO :</u></b></label>
+                                                                <input type="text" class="form-control input-sm" id="po"
+                                                                    name="po[]">
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="row inventoryRow">
                                                         <div class="col-md-6">
                                                             <div class="inventory-group">
-                                                                <label for="po"><b><u>PO :</u></b></label>
-                                                                <input type="text" class="form-control input-sm" id="po"
-                                                                    name="po[]">
+                                                                <label for="brand"><b><u>Brand/Merk :</u></b></label>
+                                                                <input type="text" class="form-control input-sm"
+                                                                    id="brand" name="brand[]">
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6">
@@ -268,20 +386,6 @@
                                                                 <label for="status"><b><u>Status :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
                                                                     id="status" name="status[]">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <div class="inventory-group">
-                                                                <label for="brand"><b><u>Brand :</u></b></label>
-                                                                <input type="text" class="form-control input-sm"
-                                                                    id="brand" name="brand[]">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <div class="inventory-group">
-                                                                <label for="port"><b><u>Port :</u></b></label>
-                                                                <input type="text" class="form-control input-sm"
-                                                                    id="port" name="port[]">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -302,7 +406,7 @@
 
                         <div class="col-md-2" style="margin-top: 5px;">
                             <button type="button" class="btn btn-primary btn-sm btn-block" data-toggle="modal"
-                                data-target="#idInventoryModal">
+                                data-target="#idInventoryModal" onclick="resetModal()">
                                 Add Inventory
                             </button>
                         </div>
@@ -334,9 +438,6 @@
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">Jenis
                                                 Perangkat
                                             </th>
-                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Jenis
-                                                Perangkat Khusus
-                                            </th>
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">
                                                 RAM</th>
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">
@@ -359,8 +460,10 @@
                                             </th>
                                             <th style="vertical-align: middle; text-align: center; padding: 8px;">Status
                                             </th>
-                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">Action
+                                            <th style="vertical-align: middle; text-align: center; padding: 8px;">
+                                                Brand/Type/Merk
                                             </th>
+
                                         </tr>
                                     </thead>
                                     <tbody id="idTbody">

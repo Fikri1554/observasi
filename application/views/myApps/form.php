@@ -26,9 +26,7 @@
             changeYear: true,
             defaultDate: new Date(),
         });
-        $('#txtJenisPerangkat').on('input', function() {
-            $(this).val($(this).val().toUpperCase());
-        });
+
         $('#saveFormRequest').click(function() {
             var projectReference = $('#txtprojectReference').val();
             var purpose = $('#txtpurpose').val();
@@ -36,7 +34,7 @@
             var location = $("#txtlocation").val();
             var divisi = $("#slcDivisi").val();
             var department = $("#slcDepartment").val();
-            var jenisperangkat = $("#txtJenisPerangkat").val().toUpperCase();
+            var jenisperangkat = $("#slcJenisPerangkat").val().toUpperCase();
             var requiredDate = $("#txtRequiredDate").val();
             var acknowledge = $("#slcAcknowledge").val();
             var approve = $("#slcApprove").val();
@@ -56,7 +54,7 @@
             formData.append('txtlocation', location);
             formData.append('slcDivisi', divisi);
             formData.append('slcDepartment', department);
-            formData.append('txtJenisPerangkat', jenisperangkat);
+            formData.append('slcJenisPerangkat', jenisperangkat);
             formData.append('txtRequiredDate', requiredDate);
             formData.append('slcAcknowledgeText', $("#slcAcknowledge option:selected").text());
             formData.append('slcAcknowledge', acknowledge);
@@ -71,6 +69,7 @@
                 formData.append(fieldName, values.join('*'));
             }
 
+            appendData('jenisperangkat', "input[name^='txtJenisPerangkat']");
             appendData('descriptions', "input[name^='txtdescription']");
             appendData('types', "input[name^='txttype']");
             appendData('reasons', "input[name^='txtreason']");
@@ -112,8 +111,6 @@
                         newRow += "<td align='center'>" + response.company + "</td>";
                         newRow += "<td align='center'>" + response.location + "</td>";
                         newRow += "<td align='center'>" + response.divisi + "</td>";
-                        newRow += "<td align='center'>" + response.jenis_perangkat +
-                            "</td>";
                         newRow += "<td align='center'>" + statusText + "</td>";
                         newRow += "<td align='center'><button onclick=\"ViewPrint('" +
                             response.id +
@@ -201,7 +198,7 @@
                     $("#txtlocationEdit").val(formData.location);
                     $("#slcCompanyEdit").val(formData.company);
                     $("#slcDivisiEdit").val(formData.divisi);
-                    $("#txtJenisPerangkatEdit").val(formData.jenis_perangkat);
+                    $("#slcJenisPerangkatEdit").val(formData.jenisperangkat);
 
                     setTimeout(() => {
                         $("#slcDepartmentEdit").val(formData.department);
@@ -256,6 +253,28 @@
         });
     }
 
+    function loadJenisPerangkatOptions(selectElement, selectedValue = '') {
+        $.ajax({
+            url: '<?php echo base_url('form/getOptJenisPerangkat'); ?>',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                let options = '<option value="">-Select-</option>';
+                data.forEach(function(item) {
+                    let isSelected = item.nama_perangkat === selectedValue ? 'selected' : '';
+                    options +=
+                        `<option value="${item.nama_perangkat}" ${isSelected}>${item.nama_perangkat}</option>`;
+                });
+                $(selectElement).html(options);
+            },
+            error: function(xhr, status, error) {
+                console.error("Error: " + error);
+                alert("Gagal memuat data Jenis Perangkat.");
+            }
+        });
+    }
+
+
     function createDetailRow(index, detail = {}, showRemoveButton = '') {
         return '<div class="row" style="margin-bottom: 15px;">' +
             '<div class="col-md-12">' +
@@ -263,6 +282,15 @@
             '<input type="hidden" id="txtIdDetail_' + index + '" name="txtIdDetail[]" value="' + (detail.id || '') +
             '">' +
             '<input type="hidden" id="txtIdEditForm" name="txtIdEditForm" value="' + (detail.id_form || '') + '">' +
+            '<div class="col-md-2 col-xs-12">' +
+            '<div class="form-group">' +
+            '<label for="slcJenisPerangkatEdit' + index + '"><u>Jenis Perangkat:</u></label>' +
+            '<select id="slcJenisPerangkatEdit' + index +
+            '" name="slcJenisPerangkatEdit[]" class="form-control input-sm">' +
+            '<?php echo $getOptJenisPerangkat; ?>' +
+            '</select>' +
+            '</div>' +
+            '</div>' +
             '<div class="col-md-2 col-xs-12">' +
             '<div class="form-group">' +
             '<label for="txtdescription_' + index + '"><u>Description:</u></label>' +
@@ -291,19 +319,19 @@
             '" value="' + (detail.quantity || '') + '" onkeypress="return isNumber(event)">' +
             '</div>' +
             '</div>' +
-            '<div class="col-md-3 col-xs-12">' +
+            '<div class="col-md-2 col-xs-12">' +
             '<div class="form-group">' +
             '<label for="txtnote_' + index + '"><u>Note:</u></label>' +
             '<input type="text" name="txtnoteEdit[]" class="form-control input-sm" id="txtnoteEdit_' + index +
             '" value="' + (detail.note || '') + '">' +
             '</div>' +
             '</div>' +
-            '<div class="col-md-2 col-xs-2" style="flex: 1 1 auto;">' +
-            '<button type="button" class="btn btn-primary btn-xs btnAddRowEdit" style="margin-top: 25px;">' +
+            '<div class="col-md-1 col-xs-2" style="flex: 1 1 auto;">' +
+            '<button type="button" class="btn btn-primary btn-xs btnAddRowEdit" style="margin-top: 10px;">' +
             '<i class="glyphicon glyphicon-plus"></i>' +
             '</button>' +
             '<button type="button" class="btn btn-danger btn-xs btnRemoveRowEdit" ' + showRemoveButton +
-            ' style="margin-top: 25px;">' +
+            ' style="margin-top: 10px;">' +
             '<i class="glyphicon glyphicon-minus"></i>' +
             '</button>' +
             '</div>' +
@@ -359,7 +387,7 @@
             formData.append('slcCompanyText', $("#slcCompanyEdit option:selected").text());
             formData.append('txtlocationEdit', $("#txtlocationEdit").val());
             formData.append('slcDivisiEdit', $("#slcDivisiEdit").val());
-            formData.append('txtJenisPerangkatEdit', $("#txtJenisPerangkat").val());
+            formData.append('slcJenisPerangkatEdit', $("#slcJenisPerangkatEdit").val());
             formData.append('slcDepartmentEdit', $("#slcDepartmentEdit").val());
             formData.append('txtRequiredDateEdit', $("#txtRequiredDateEdit").val());
             formData.append('slcAcknowledgeEdit', $("#slcAcknowledgeEdit").val());
@@ -448,20 +476,18 @@
                 $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(6) td')
                     .html(data.form
                         .required_date || 'N/A');
-                $('#ictRequestModal .modal-bodyPreview .table-bordered tr:eq(7) td')
-                    .html(data.form
-                        .jenis_perangkat || 'N/A');
 
                 var detailHtml = '';
                 if (data.form_details && data.form_details.length > 0) {
                     data.form_details.forEach(function(detail) {
                         detailHtml +=
                             '<tr>' +
-                            '<td>' + (detail.description || '') + '</td>' +
-                            '<td>' + (detail.type || '') + '</td>' +
-                            '<td>' + (detail.quantity || '') + '</td>' +
-                            '<td>' + (detail.reason || '') + '</td>' +
-                            '<td>' + (detail.note || '') + '</td>' +
+                            '<td>' + (detail.jenisperangkat || '-') + '<td>' +
+                            '<td>' + (detail.description || '-') + '</td>' +
+                            '<td>' + (detail.type || '-') + '</td>' +
+                            '<td>' + (detail.quantity || '-') + '</td>' +
+                            '<td>' + (detail.reason || '-') + '</td>' +
+                            '<td>' + (detail.note || '-') + '</td>' +
                             '</tr>';
 
                     });
@@ -667,7 +693,6 @@
                                 '<td style="text-align:center;">' + item.company + '</td>' +
                                 '<td style="text-align:center;">' + item.location + '</td>' +
                                 '<td style="text-align:center;">' + item.divisi + '</td>' +
-                                '<td style="text-align:center;">' + item.jenisperangkat + '</td>' +
                                 '<td style="text-align:center;">' +
                                 '<button onclick="ViewPrint(' + item.id + ', \'' + type +
                                 '\');" class="btn btn-success btn-xs" type="button">' +
@@ -716,7 +741,6 @@
                                 '<td style="text-align:center;">' + item.company + '</td>' +
                                 '<td style="text-align:center;">' + item.location + '</td>' +
                                 '<td style="text-align:center;">' + item.divisi + '</td>' +
-                                '<td style="text-align:center;">' + item.jenisperangkat + '</td>' +
                                 '<td style="text-align:center;">' +
                                 '<button onclick="ViewPrint(' + item.id + ', \'' + type +
                                 '\');" class="btn btn-primary btn-xs" type="button">' +
@@ -878,7 +902,7 @@
                                             <div class="col-md-12">
                                                 <div id="requestContainer">
                                                     <div class="row requestRow">
-                                                        <div class="col-md-3 col-xs-12">
+                                                        <div class="col-md-6 col-xs-12">
                                                             <div class="form-group">
                                                                 <label for="txtprojectReference"><b><u>Project Ref
                                                                             :</u></b></label>
@@ -887,7 +911,7 @@
                                                                     value="">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3 col-xs-12">
+                                                        <div class="col-md-6 col-xs-12">
                                                             <div class="form-group">
                                                                 <label for="txtpurpose"><b><u>Purpose :</u></b></label>
                                                                 <input type="text" class="form-control input-sm"
@@ -933,15 +957,6 @@
                                                         </div>
                                                         <div class="col-md-3 col-xs-12">
                                                             <div class="form-group">
-                                                                <label for="txtJenisPerangkat"><u>Jenis
-                                                                        Perangkat:</u></label>
-                                                                <input type="text" name="txtjenisperangkat[]"
-                                                                    class="form-control input-sm" id="txtJenisPerangkat"
-                                                                    autocomplete="off">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-3 col-xs-12">
-                                                            <div class="form-group">
                                                                 <label for="txtRequiredDate"><u>Required
                                                                         Date:</u></label>
                                                                 <input type="text" name="txtrequired_date[]"
@@ -977,6 +992,15 @@
                                             <legend><label id="lblForm">Add Request Detail</label></legend>
                                             <div class="detailRow" style="display: flex; flex-wrap: wrap;">
                                                 <!-- Detail fields -->
+                                                <div class="col-md-2 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label for="slcJenisPerangkat"><u>Jenis Perangkat
+                                                            </u></label>
+                                                        <select id="slcJenisPerangkat" class="form-control input-sm">
+                                                            <?php echo $getOptJenisPerangkat; ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
                                                 <div class="col-md-2 col-xs-12"
                                                     style="padding-right: 10px; padding-left: 10px; flex: 1 1 auto;">
                                                     <div class="form-group">
@@ -1023,11 +1047,11 @@
                                                 </div>
                                                 <div class="col-md-1 col-xs-2" style="flex: 1 1 auto;">
                                                     <button type="button" class="btn btn-primary btn-xs btnAddRow"
-                                                        style="margin-top: 25px;">
+                                                        style="margin-top: 10px;">
                                                         <i class="glyphicon glyphicon-plus"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-danger btn-xs btnRemoveRow"
-                                                        style="margin-top: 25px; display:none;">
+                                                        style="margin-top: 10px; display:none;">
                                                         <i class="glyphicon glyphicon-minus"></i>
                                                     </button>
                                                 </div>
@@ -1051,21 +1075,7 @@
                                 Add Request
                             </button>
                         </div>
-                        <!-- <div class="col-md-2">
-                            <select class="form-control input-sm" id="idSlcType">
-                                <option value="projectreference">Project Refference</option>
-                                <option value="purpose">Purpose</option>
-                                <option value="company">Company</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <input type="text" class="form-control input-sm" id="txtSearch" value=""
-                                placeholder="Search Text" autocomplete="off">
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" id="btnSearch" class="btn btn-warning btn-sm btn-block" title="Add"><i
-                                    class="fa fa-search"></i> Search</button>
-                        </div> -->
+
                         <div class="col-md-2">
                             <button type="button" id="idBtnRefresh" onclick="reloadPage();"
                                 class="btn btn-success btn-sm btn-block" title="Refresh"><i
@@ -1096,9 +1106,6 @@
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Divisi
-                                            </th>
-                                            <th style="vertical-align: middle; width:20%;text-align:center;">
-                                                Jenis Perangkat
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Status
@@ -1144,9 +1151,6 @@
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Divisi
-                                            </th>
-                                            <th style="vertical-align: middle; width:20%;text-align:center;">
-                                                Jenis Perangkat
                                             </th>
                                             <th style="vertical-align: middle; width:20%;text-align:center;">
                                                 Action
@@ -1216,7 +1220,8 @@
                                             <div class="row requestRow">
                                                 <div class="col-md-3 col-xs-12">
                                                     <div class="form-group">
-                                                        <label for="txtprojectReference"><b><u>Project Reff
+                                                        <label for="txtprojectReference"><b><u>Project
+                                                                    Reff
                                                                     :</u></b></label>
                                                         <input type="text" class="form-control input-sm"
                                                             id="txtprojectReferenceEdit" name="txtprojectReference[]"
@@ -1225,7 +1230,8 @@
                                                 </div>
                                                 <div class="col-md-3 col-xs-12">
                                                     <div class="form-group">
-                                                        <label for="txtpurpose"><b><u>Purpose :</u></b></label>
+                                                        <label for="txtpurpose"><b><u>Purpose
+                                                                    :</u></b></label>
                                                         <input type="text" class="form-control input-sm"
                                                             id="txtpurposeEdit" name="txtpurpose">
                                                     </div>
@@ -1240,7 +1246,8 @@
                                                 </div>
                                                 <div class="col-md-3 col-xs-12">
                                                     <div class="form-group">
-                                                        <label for="txtlocation"><b><u>Location :</u></b></label>
+                                                        <label for="txtlocation"><b><u>Location
+                                                                    :</u></b></label>
                                                         <input type="text" class="form-control input-sm"
                                                             id="txtlocationEdit" name="txtlocation">
                                                     </div>
@@ -1255,15 +1262,18 @@
                                                 </div>
                                                 <div class="col-md-3 col-xs-12">
                                                     <div class="form-group">
-                                                        <label for="slcDepartment"><b><u>Department :</u></b></label>
+                                                        <label for="slcDepartment"><b><u>Department
+                                                                    :</u></b></label>
                                                         <select id="slcDepartmentEdit" class="form-control input-sm">
-                                                            <option value="">- Select Department -</option>
+                                                            <option value="">- Select Department
+                                                                -</option>
                                                         </select>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-3 col-xs-12">
                                                     <div class="form-group">
-                                                        <label for="txtJenisPerangkat"><b><u>Jenis Perangkat
+                                                        <label for="txtJenisPerangkat"><b><u>Jenis
+                                                                    Perangkat
                                                                     :</u></b></label>
                                                         <input type="text" class="form-control input-sm"
                                                             id="txtJenisPerangkatEdit" name="txtJenisPerangkat">
@@ -1272,7 +1282,8 @@
                                                 <div class="col-md-2 col-xs-12"
                                                     style="padding-right: 10px; padding-left: 10px;">
                                                     <div class="form-group">
-                                                        <label for="txtRequiredDate"><u>Required Date:</u></label>
+                                                        <label for="txtRequiredDate"><u>Required
+                                                                Date:</u></label>
                                                         <input type="date" name="txtrequired_date[]"
                                                             class="form-control input-sm" id="txtRequiredDateEdit"
                                                             autocomplete="off">
@@ -1294,7 +1305,8 @@
                                                         <select id="slcApproveEdit" class="form-control input-sm">
                                                             <?php echo $getOptApprove; ?>
                                                             <option value="00172"
-                                                                data-email="adhitya.ilham@andhika.com"></option>
+                                                                data-email="adhitya.ilham@andhika.com">
+                                                            </option>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -1303,7 +1315,8 @@
                                     </div>
                                 </div>
                                 <div id="idFieldDetailEdit">
-                                    <legend><label id="lblForm">Edit Request Detail</label></legend>
+                                    <legend><label id="lblForm">Edit Request Detail</label>
+                                    </legend>
                                     <div class="detailRowEdit" style="display: flex; flex-wrap: wrap;"></div>
 
                                 </div>
@@ -1318,13 +1331,13 @@
                     </div>
                 </div>
 
-
                 <div class="modal fade bd-example-modal-lg" id="ictRequestModal" tabindex="-1" role="dialog"
                     aria-labelledby="ictRequestModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-lg" role="document">
                         <div class="modal-content">
                             <div class="modal-header" style="background-color:#D46D16;border-bottom:1px solid #e7e7e7">
-                                <h5 class="modal-title" id="ictRequestModalLabel">ICT Tools and Equipment Request</h5>
+                                <h5 class="modal-title" id="ictRequestModalLabel">ICT Tools and
+                                    Equipment Request</h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
@@ -1367,14 +1380,11 @@
                                         <th>Required Date</th>
                                         <td></td>
                                     </tr>
-                                    <tr>
-                                        <th>Device Type / Jenis Perangkat</th>
-                                        <td></td>
-                                    </tr>
                                 </table>
                                 <table class="table table-striped">
                                     <thead>
                                         <tr>
+                                            <th>JENIS PERANGKAT</th>
                                             <th>DESKRIPSI</th>
                                             <th>TYPE / BRAND</th>
                                             <th>QTY</th>
@@ -1401,7 +1411,8 @@
 
                                                     </div>
                                                 </td>
-                                                <td style="text-align: center;">Acknowledge by<br>
+                                                <td style="text-align: center;">Acknowledge
+                                                    by<br>
                                                     <div class="signature-box"
                                                         style="text-align: center; margin-bottom: 5px;">
 
